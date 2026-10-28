@@ -1,3 +1,9 @@
+import { listCustomers } from '@/lib/api/customers';
+import {
+  mergeDeliveryReport,
+  type DeliveryReportRow,
+  type DeliveryReportStatusFilter,
+} from '@/lib/dashboard/metrics';
 import { supabase } from '@/lib/supabase/client';
 import type { Database, DeliveryStatus } from '@/types/database';
 
@@ -64,4 +70,46 @@ export async function listDeliveriesForWorkerSince(
     .order('delivery_date', { ascending: false });
   if (error) throw error;
   return data ?? [];
+}
+
+/**
+ * All deliveries for a single date. RLS scopes this automatically — an
+ * admin sees every worker's rows, a worker only their own — so this same
+ * function serves both the admin dashboard/report and could be reused
+ * worker-side without any extra filtering here.
+ */
+export async function listDeliveriesForDate(date: string): Promise<DeliveryRow[]> {
+  const { data, error } = await supabase.from('deliveries').select('*').eq('delivery_date', date);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export type DeliveryReportFilters = {
+  date: string; // YYYY-MM-DD
+  workerId?: string;
+  routeId?: string;
+  customerSearch?: string;
+  status?: DeliveryReportStatusFilter;
+};
+
+/**
+ * The admin daily delivery report: every currently-active, in-scope
+ * customer for the given date, left-joined with that date's delivery (if
+ * any reached the server) — see mergeDeliveryReport for why a missing row
+ * is never treated as a missed delivery.
+ */
+export async function listDailyDeliveryReport(
+  filters: DeliveryReportFilters,
+): Promise<DeliveryReportRow[]> {
+  const [customers, deliveries] = await Promise.all([
+    listCustomers({
+      status: 'active',
+      workerId: filters.workerId,
+      routeId: filters.routeId,
+      search: filters.customerSearch,
+    }),
+    listDeliveriesForDate(filters.date),
+  ]);
+
+  return mergeDeliveryReport(customers, deliveries, filters.status ?? null);
 }

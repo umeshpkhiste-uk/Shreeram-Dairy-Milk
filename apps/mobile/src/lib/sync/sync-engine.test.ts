@@ -104,7 +104,10 @@ describe('runSync', () => {
   });
 
   it('does nothing when offline', async () => {
-    (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: false, isInternetReachable: false });
+    (NetInfo.fetch as jest.Mock).mockResolvedValue({
+      isConnected: false,
+      isInternetReachable: false,
+    });
     (listDueOutboxItems as jest.Mock).mockReturnValue([outboxItem()]);
     await runSync();
     expect(submitDeliveryEvent).not.toHaveBeenCalled();

@@ -9,7 +9,7 @@ as each stage completes.
 | 1 | Project Foundation | ✅ Complete |
 | 2 | Supabase, Authentication, Customers and Workers | ✅ Complete |
 | 3 | Offline Delivery Recording and Synchronization | ✅ Complete |
-| 4 | Admin Delivery Monitoring | Not started |
+| 4 | Admin Delivery Monitoring | ✅ Complete |
 | 5 | Monthly Billing, Payments and PDF Reports | Not started |
 | 6 | Security, Testing and Android Release | Not started |
 | 7 | Future Website and Vercel Deployment | Not started |
@@ -139,11 +139,40 @@ airplane-mode test procedure: [`docs/offline-sync.md`](offline-sync.md).
   available in this build environment — documented in `docs/offline-sync.md` for the user to
   run.
 
-## Stage 4 — Admin Delivery Monitoring
+## Stage 4 — Admin Delivery Monitoring ✅
 
-Real dashboard numbers and a daily delivery report from actual Supabase records, with
-filters and a clear distinction between "genuinely pending" and "completed offline, not
-yet synced."
+Full design, metric definitions, and verification: [`docs/admin-monitoring.md`](admin-monitoring.md).
+
+**Delivered:**
+- Dashboard (`src/screens/admin/dashboard.tsx`): active customers/workers, scheduled/
+  completed/partial/missed/no-record-yet today, total ml delivered today, and an estimated
+  sales figure — all computed by pure, unit-tested functions
+  (`src/lib/dashboard/metrics.ts`) from real Supabase queries, never hardcoded. Quick actions
+  to the screens that already exist (Add Customer/Worker, Assign Route, View Today's
+  Deliveries).
+- Daily delivery report (`src/screens/admin/daily-delivery-report.tsx`): one row per scheduled
+  customer for the selected date, left-joined with that date's `deliveries` so a customer with
+  no delivery row still appears, honestly labeled "No record yet" — never "Missed" — per the
+  checklist's explicit requirement not to treat a missing record as proof of non-delivery.
+  Filters: date, worker, route, customer search, status.
+- `deliveries` added to the `supabase_realtime` publication; both screens subscribe for
+  push-based refresh, with their existing `useFocusEffect` pull-based refresh kept as the
+  recovery path.
+
+**Verified:**
+- `npx tsc --noEmit` — 0 errors. `npx eslint .` — 0 errors. `npx jest` — 50/50 passing.
+- `npx expo-doctor` — 20/20. `npx expo export --platform web` — all routes bundle.
+- `supabase db advisors --linked --type all` — unchanged from Stage 3 (same two documented
+  exceptions).
+- Live check against the real project: temporary worker + 4 customers + 3 deliveries
+  (completed/partial/missed, one customer left with no record), REST queries matching the
+  app's exact calls returned results matching the unit-tested aggregation exactly. All test
+  data deleted afterward.
+
+**Explicitly not implemented yet** (by design — Stage 5's scope):
+- Outstanding balances, monthly billing summary, and the Record Payment/Generate Reports/View
+  Monthly Bills quick actions — no `bills`/`payments` tables exist yet.
+- No admin action to resolve a flagged delivery conflict (`has_conflict`) beyond direct SQL.
 
 ## Stage 5 — Monthly Billing, Payments and PDF Reports
 

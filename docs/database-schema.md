@@ -81,6 +81,14 @@ delivery's date via `resolve_milk_price_paise`; and applies a `created` event as
 `corrected` event as a version-checked update — a version mismatch or a same-day duplicate
 creation is stored and flagged `conflict`, never silently merged or overwritten.
 
+## Realtime (Stage 4)
+
+`public.deliveries` is in the `supabase_realtime` publication
+(`supabase/migrations/20261028100000_stage4_realtime.sql`), so admin screens can subscribe to
+`postgres_changes` for useful online updates. Postgres Changes authorizes each event
+per-subscriber against the table's existing RLS policy — no separate Realtime-specific
+authorization was needed. Full client-side design: [`docs/admin-monitoring.md`](admin-monitoring.md).
+
 ## Verification (2026-10-28)
 
 Run with the Supabase CLI against the live project (`supabase db advisors --linked`,
@@ -131,6 +139,20 @@ Run with the Supabase CLI against the live project (`supabase db advisors --link
   - `corrected` event with the correct `expected_version` → applied, `version` incremented.
   - All test data (delivery, events, receipt, customer, worker) deleted afterward; project back
     to its pre-test state.
+
+## Verification — Stage 4 (2026-10-28)
+
+- `supabase db push` — the Realtime publication migration applied cleanly; confirmed via
+  `select * from pg_publication_tables where pubname = 'supabase_realtime'` that `deliveries`
+  is now listed.
+- `supabase db advisors --type all` — unchanged from Stage 3 (same two documented exceptions).
+- Live check against the real project: created a temporary worker and 4 customers (via
+  `admin-create-worker` + direct SQL), recorded 3 deliveries for "today" (one each of
+  completed/partial/missed), left the 4th customer with no delivery row, then issued the exact
+  REST queries the app's `listCustomers`/`listDeliveriesForDate`/`listWorkers` functions make
+  (as the admin). Results matched the pure-function unit tests exactly: 4 active customers, 1
+  active worker, 1/1/1 completed/partial/missed, 1 no-record, 1,100 ml total, ₹60.50 estimated
+  sales. All test data deleted afterward.
 
 ## Known follow-ups
 

@@ -10,6 +10,7 @@ import { Screen } from '@/components/screen';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Text } from '@/components/text';
 import { useAuth } from '@/lib/auth/auth-provider';
+import { todayInBusinessTimezone } from '@/lib/date';
 import {
   getCachedMilkTypeName,
   listCachedCustomers,
@@ -26,11 +27,6 @@ import { Spacing } from '@/theme/tokens';
 
 import { DeliveryEntrySheet, type DeliveryEntryValues } from './delivery-entry-sheet';
 
-/** The current business day in Asia/Kolkata — docs/architecture.md rule 9. */
-function todayDateString(): string {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-}
-
 const STATUS_LABEL: Record<string, string> = {
   completed: 'Delivered',
   partial: 'Partial',
@@ -45,7 +41,7 @@ const STATUS_TONE: Record<string, StatusTone> = {
 export function TodayRouteScreen() {
   const auth = useAuth();
   const isOnline = useIsOnline();
-  const deliveryDate = useMemo(() => todayDateString(), []);
+  const deliveryDate = useMemo(() => todayInBusinessTimezone(), []);
 
   const [customers, setCustomers] = useState<CachedCustomer[] | null>(null);
   const [deliveries, setDeliveries] = useState<Record<string, LocalDelivery>>({});
