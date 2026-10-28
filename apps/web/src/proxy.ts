@@ -21,7 +21,28 @@ const PUBLIC_PATHS = ['/login'];
  * back out again. /login itself handles the "already signed in as an admin"
  * case by redirecting to "/".
  */
+/**
+ * Checked in-function (plain string checks) rather than relied on purely
+ * via `proxyConfig.matcher`'s regex — verified live against the production
+ * deployment that the matcher alone let `_next/static/**` requests reach
+ * this function and get redirected to `/login`, breaking every static
+ * asset (CSS/JS) for a signed-out visitor. The matcher below is kept as a
+ * first-pass filter for efficiency, but this check is what actually
+ * guarantees correctness regardless of matcher/path-to-regexp quirks.
+ */
+function isAlwaysPublicPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/_next/') ||
+    pathname === '/favicon.ico' ||
+    /\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff2?|ttf)$/.test(pathname)
+  );
+}
+
 export async function proxy(request: NextRequest) {
+  if (isAlwaysPublicPath(request.nextUrl.pathname)) {
+    return NextResponse.next({ request });
+  }
+
   const response = NextResponse.next({ request });
 
   const supabase = createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
