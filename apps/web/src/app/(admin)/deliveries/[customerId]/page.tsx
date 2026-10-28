@@ -41,12 +41,12 @@ const STATUS_TONE: Record<DeliveryStatus, 'success' | 'warning' | 'danger' | 'ne
 };
 
 const DAY_CELL_CLASS: Record<DeliveryStatus | 'no_record' | 'future', string> = {
-  completed: 'bg-success-bg text-success',
-  partial: 'bg-success-bg text-success',
-  missed: 'bg-danger-bg text-danger',
-  skipped: 'bg-warning-bg text-warning',
-  no_record: 'bg-surface text-text-secondary',
-  future: 'bg-surface text-text-secondary opacity-40',
+  completed: 'bg-success-bg text-success border-transparent',
+  partial: 'bg-success-bg text-success border-transparent',
+  missed: 'bg-danger-bg text-danger border-transparent',
+  skipped: 'bg-warning-bg text-warning border-transparent',
+  no_record: 'bg-surface text-text-secondary border-border hover:bg-surface-muted',
+  future: 'bg-surface text-text-secondary/40 border-border/60',
 };
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -126,55 +126,67 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
       />
 
       <Card>
-        <div className="mb-4 flex items-center justify-between">
-          <Link href={`?month=${shiftMonth(month, -1)}`}>
-            <SecondaryButton type="button">‹ Prev</SecondaryButton>
-          </Link>
-          <h2 className="text-lg font-semibold text-text">{monthLabel}</h2>
-          <Link href={`?month=${shiftMonth(month, 1)}`}>
-            <SecondaryButton type="button">Next ›</SecondaryButton>
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-text-secondary">
-          {WEEKDAY_LABELS.map((w) => (
-            <div key={w} className="py-1">
-              {w}
-            </div>
-          ))}
-        </div>
-
-        {grid.map((week, i) => (
-          <div key={i} className="grid grid-cols-7 gap-1">
-            {week.map((date, j) => {
-              if (!date) return <div key={j} className="aspect-square" />;
-              const entry = entriesByDate.get(date);
-              const isFuture = date > today;
-              const key: DeliveryStatus | 'no_record' | 'future' = isFuture
-                ? 'future'
-                : (entry?.status ?? 'no_record');
-              const isSelected = date === day;
-              const isToday = date === today;
-              return (
-                <Link key={date} href={`?month=${month}&day=${date}`}>
-                  <div
-                    className={`flex aspect-square items-center justify-center rounded-md text-sm transition ${DAY_CELL_CLASS[key]} ${
-                      isSelected ? 'ring-2 ring-primary' : isToday ? 'ring-1 ring-primary' : ''
-                    }`}
-                  >
-                    {Number(date.slice(8, 10))}
-                  </div>
-                </Link>
-              );
-            })}
+        <div className="mx-auto w-full max-w-xs">
+          <div className="mb-3 flex items-center justify-between">
+            <Link href={`?month=${shiftMonth(month, -1)}`}>
+              <SecondaryButton type="button" className="!px-2 !py-1 text-xs">
+                ‹
+              </SecondaryButton>
+            </Link>
+            <h2 className="text-sm font-semibold text-text">{monthLabel}</h2>
+            <Link href={`?month=${shiftMonth(month, 1)}`}>
+              <SecondaryButton type="button" className="!px-2 !py-1 text-xs">
+                ›
+              </SecondaryButton>
+            </Link>
           </div>
-        ))}
 
-        <div className="mt-3 flex flex-wrap gap-3 text-xs text-text-secondary">
-          <LegendDot className="bg-success-bg" label="Delivered" />
-          <LegendDot className="bg-danger-bg" label="Missed" />
-          <LegendDot className="bg-warning-bg" label="Customer informed — no delivery" />
-          <LegendDot className="bg-surface border border-border" label="No record" />
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wide text-text-secondary">
+            {WEEKDAY_LABELS.map((w) => (
+              <div key={w} className="py-1">
+                {w}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            {grid.map((week, i) => (
+              <div key={i} className="grid grid-cols-7 gap-1">
+                {week.map((date, j) => {
+                  if (!date) return <div key={j} className="aspect-square" />;
+                  const entry = entriesByDate.get(date);
+                  const isFuture = date > today;
+                  const key: DeliveryStatus | 'no_record' | 'future' = isFuture
+                    ? 'future'
+                    : (entry?.status ?? 'no_record');
+                  const isSelected = date === day;
+                  const isToday = date === today;
+                  return (
+                    <Link key={date} href={`?month=${month}&day=${date}`}>
+                      <div
+                        className={`flex aspect-square items-center justify-center rounded-md border text-xs font-medium transition ${DAY_CELL_CLASS[key]} ${
+                          isSelected
+                            ? 'ring-2 ring-primary ring-offset-1'
+                            : isToday
+                              ? 'ring-1 ring-primary'
+                              : ''
+                        }`}
+                      >
+                        {Number(date.slice(8, 10))}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-text-secondary">
+            <LegendDot className="bg-success-bg" label="Delivered" />
+            <LegendDot className="bg-danger-bg" label="Missed" />
+            <LegendDot className="bg-warning-bg" label="Customer informed" />
+            <LegendDot className="border border-border bg-surface" label="No record" />
+          </div>
         </div>
       </Card>
 
