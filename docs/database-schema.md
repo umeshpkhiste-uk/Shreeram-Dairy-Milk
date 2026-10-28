@@ -25,6 +25,8 @@ entirely version-controlled in `supabase/migrations/`; this file explains the *w
 
 Full design, the sync engine, and conflict-handling rules: [`docs/offline-sync.md`](offline-sync.md).
 Full billing policy, RPC contracts, and the late-delivery flagging flow: [`docs/billing.md`](billing.md).
+Stage 6 security audit (what was tested, two defects fixed) and the Android release
+procedure: [`docs/security-review.md`](security-review.md), [`docs/android-release.md`](android-release.md).
 
 ## Conventions
 
@@ -71,6 +73,10 @@ Full billing policy, RPC contracts, and the late-delivery flagging flow: [`docs/
     their own rows; an admin reads all. **No insert/update policy at all** for `authenticated`
     on any of the three — the only write path is the `submit_delivery_event` RPC (below),
     which performs its own authorization checks and is `SECURITY DEFINER`.
+  - **Stage 6 hardening**: `customers`/`routes`/`deliveries`/`delivery_events`'s worker-read
+    policies also require `public.is_active_worker()` now, not just "assigned to me" — a
+    deactivated worker loses read access immediately, not just at next token refresh. See
+    `docs/security-review.md`.
 
 ## Offline delivery sync (Stage 3)
 

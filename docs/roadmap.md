@@ -11,7 +11,7 @@ as each stage completes.
 | 3 | Offline Delivery Recording and Synchronization | ✅ Complete |
 | 4 | Admin Delivery Monitoring | ✅ Complete |
 | 5 | Monthly Billing, Payments and PDF Reports | ✅ Complete |
-| 6 | Security, Testing and Android Release | Not started |
+| 6 | Security, Testing and Android Release | ✅ Complete |
 | 7 | Future Website and Vercel Deployment | Not started |
 
 ## Stage 1 — Project Foundation ✅
@@ -215,11 +215,48 @@ Full billing policy, RPC contracts, and verification: [`docs/billing.md`](billin
 - Dedicated email/WhatsApp API integrations — the native share sheet already covers this.
 - A broader reports suite beyond the one CSV export.
 
-## Stage 6 — Security, Testing and Android Release
+## Stage 6 — Security, Testing and Android Release ✅
 
-Production-readiness review: RLS verification across roles, data-integrity tests
-(duplicates, conflicts, late records), mobile reliability tests, and Android release
-preparation.
+Full audit, fixes, manual Android checklist, and release procedure:
+[`docs/security-review.md`](security-review.md), [`docs/android-release.md`](android-release.md).
+
+**Delivered:**
+- Two real defects found and fixed: a deactivated worker could keep reading their former
+  customers/deliveries via RLS until their token expired (write path was already correct);
+  the local SQLite cache/outbox was never cleared on sign-out. Both fixed and verified live
+  — see `docs/security-review.md`, "Findings fixed".
+- `public.is_active_worker()` + tightened RLS on `customers`/`routes`/`deliveries`/
+  `delivery_events` (1 migration).
+- `src/lib/sqlite/clear-local-data.ts`, wired into `AuthProvider.signOut()`; the worker
+  profile screen now warns with an exact count and requires confirmation before discarding
+  unsynced deliveries.
+- New tests: local-database-migration-runner coverage (fresh install, idempotent restart,
+  downgrade-protection) and the local-data-clearing unit test.
+- New live tests: historical price changes never retroactively alter an already-recorded
+  delivery's price; a deactivated worker's RLS access closes immediately.
+- A full manual Android testing checklist (10 scenarios needing a physical device) and an
+  Android build/release procedure (EAS build profiles, signing, Play Store prep,
+  backup/recovery, GitHub workflow).
+
+**Verified:**
+- `npx tsc --noEmit` — 0 errors. `npx eslint .` — 0 errors. `npx jest` — 77/77 passing.
+- `npx expo-doctor` — 20/20. `npx expo export --platform web` — all routes bundle.
+- `npx expo prebuild --platform android --no-install` — valid native project generated
+  (correct `applicationId`/`versionCode`/`versionName`), then discarded (git-ignored,
+  regenerated on demand).
+- `supabase db advisors --linked --type all` — 0 issues beyond the now-11 documented
+  "callable by `authenticated`"/"`anon`" exceptions and the pre-existing leaked-password
+  toggle.
+- Full checklist of what was live-tested vs. code-reviewed vs. deferred to a physical
+  device: `docs/security-review.md`.
+
+**Explicitly not implemented yet** (documented, not silently dropped):
+- No real `eas build` cloud build was run — needs the user's EAS account and may consume
+  paid build minutes; the exact command is in `docs/android-release.md`.
+- The 10-item manual Android device checklist has not been executed — no physical device in
+  this environment.
+- Leaked-password protection remains disabled (dashboard-only toggle, flagged since Stage 2).
+- No automated end-to-end UI test suite (Detox/Maestro) — unit + live API/DB tests only.
 
 ## Stage 7 — Future Website and Vercel Deployment
 

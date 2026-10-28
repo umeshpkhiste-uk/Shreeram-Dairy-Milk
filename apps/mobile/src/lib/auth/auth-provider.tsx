@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import { clearAllLocalData } from '@/lib/sqlite/clear-local-data';
 import { supabase } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -68,6 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut: AuthContextValue['signOut'] = async () => {
     await supabase.auth.signOut();
+    try {
+      // Always clear the local cache/outbox on sign-out, so a different
+      // account signing in on this device next never sees a previous
+      // worker's cached customers or queued deliveries. Best-effort: a
+      // failure here must never block sign-out itself.
+      clearAllLocalData();
+    } catch {
+      // ignore
+    }
   };
 
   return (
