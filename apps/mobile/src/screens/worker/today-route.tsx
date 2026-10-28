@@ -9,6 +9,7 @@ import { LoadingState } from '@/components/loading-state';
 import { Screen } from '@/components/screen';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Text } from '@/components/text';
+import { Button } from '@/components/button';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { todayInBusinessTimezone } from '@/lib/date';
 import {
@@ -22,7 +23,7 @@ import {
   type LocalDelivery,
 } from '@/lib/sqlite/deliveries-repo';
 import { useIsOnline } from '@/lib/sync/connectivity';
-import { pullLatestData, runSync } from '@/lib/sync/sync-engine';
+import { pullLatestData, runSync, useSyncStatus } from '@/lib/sync/sync-engine';
 import { Spacing } from '@/theme/tokens';
 
 import { DeliveryEntrySheet, type DeliveryEntryValues } from './delivery-entry-sheet';
@@ -41,6 +42,7 @@ const STATUS_TONE: Record<string, StatusTone> = {
 export function TodayRouteScreen() {
   const auth = useAuth();
   const isOnline = useIsOnline();
+  const syncStatus = useSyncStatus();
   const deliveryDate = useMemo(() => todayInBusinessTimezone(), []);
 
   const [customers, setCustomers] = useState<CachedCustomer[] | null>(null);
@@ -117,6 +119,29 @@ export function TodayRouteScreen() {
   return (
     <Screen>
       <Text variant="title">Today&rsquo;s Route</Text>
+      {syncStatus.pendingCount > 0 || syncStatus.failedCount > 0 ? (
+        <Card style={styles.syncBanner}>
+          <View style={styles.syncBannerText}>
+            <Text variant="label">
+              {syncStatus.failedCount > 0
+                ? `${syncStatus.failedCount} delivery${syncStatus.failedCount === 1 ? '' : 'ies'} failed to sync`
+                : `${syncStatus.pendingCount} delivery${syncStatus.pendingCount === 1 ? '' : 'ies'} not yet synced — admin won't see ${syncStatus.pendingCount === 1 ? 'it' : 'them'} yet`}
+            </Text>
+            {!isOnline ? (
+              <Text variant="caption" color="secondary">
+                Waiting for a connection
+              </Text>
+            ) : null}
+          </View>
+          <Button
+            label={syncStatus.phase === 'syncing' ? 'Syncing…' : 'Sync now'}
+            variant="secondary"
+            onPress={() => runSync()}
+            loading={syncStatus.phase === 'syncing'}
+            disabled={!isOnline}
+          />
+        </Card>
+      ) : null}
       {customers.length === 0 ? (
         <EmptyState
           title="No customers assigned"
@@ -169,6 +194,7 @@ function CustomerRow({
   const milkTypeName = getCachedMilkTypeName(customer.milk_type_id) ?? 'Milk';
   const label = delivery ? (STATUS_LABEL[delivery.status] ?? 'Pending') : 'Pending';
   const tone: StatusTone = delivery ? (STATUS_TONE[delivery.status] ?? 'neutral') : 'neutral';
+  const notSyncedYet = !!delivery && delivery.sync_status !== 'synced';
 
   return (
     <Pressable accessibilityRole="button" onPress={onPress}>
@@ -183,6 +209,13 @@ function CustomerRow({
         <Text variant="caption" color="secondary">
           {milkTypeName} · {customer.default_daily_quantity_ml} ml
         </Text>
+        {notSyncedYet ? (
+          <Text variant="caption" color={delivery?.sync_status === 'failed' ? 'danger' : 'secondary'}>
+            {delivery?.sync_status === 'failed'
+              ? `Not synced — ${delivery.last_sync_error ?? 'failed'}`
+              : 'Saved on this device — not synced to admin yet'}
+          </Text>
+        ) : null}
       </Card>
     </Pressable>
   );
@@ -192,4 +225,12 @@ const styles = StyleSheet.create({
   list: { gap: Spacing.sm },
   row: { gap: Spacing.xs },
   rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  syncBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  syncBannerText: { flex: 1, gap: Spacing.xs },
 });
