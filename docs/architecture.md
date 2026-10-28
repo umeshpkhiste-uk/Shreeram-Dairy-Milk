@@ -65,12 +65,20 @@ colours, and a 48dp minimum touch target (workers tap screens outdoors, often on
 Both light and dark system appearances are supported; dark mode is not the primary design
 target for this operations tool.
 
-## Database (added in Stage 2)
+## Database (Stage 2)
 
 Normalized PostgreSQL schema with UUID primary keys, foreign keys, unique constraints,
-timestamps, and indexes on customer/worker IDs, delivery dates, and bill periods. Full
-table list and RLS policy design are documented once Stage 2 lands
-(`docs/database-schema.md`, to be added).
+timestamps, and indexes on customer/worker IDs. Row-Level Security is enabled on every
+table and has been live-tested with real, distinct admin and worker sessions — not just
+read from the policy SQL. Full table list, RLS design, the admin-bootstrap and
+worker-provisioning flows, and verification results: [`docs/database-schema.md`](database-schema.md).
+
+## Authentication (Stage 2)
+
+Supabase Auth. No public sign-up screen in the app — the only ways an account comes into
+existence are (1) a one-time, manually-bootstrapped first admin account and (2) the
+`admin-create-worker` Edge Function, callable only by an authenticated admin. See
+`docs/database-schema.md` for the full flow.
 
 ## Offline synchronization (added in Stage 3)
 

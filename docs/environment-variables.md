@@ -21,6 +21,23 @@
 - In CI and in EAS Build, set the real values as encrypted environment variables /
   secrets in that platform's settings — never commit them.
 
+## Supabase project (CLI / migrations)
+
+The repo root is linked to the Supabase project via `supabase link --project-ref
+bdrtsrbmsoanrqjhesop` (run once; the link itself isn't a secret and isn't stored in the
+repo — `supabase/.temp/` is git-ignored). To work on the database:
+
+```bash
+supabase db push --dry-run     # preview pending migrations
+supabase db push                # apply them
+supabase db advisors --linked --type all   # security/performance lint
+```
+
+No service-role key is needed for any of the above — the CLI authenticates with your own
+Supabase account (`supabase login`), a separate, stronger trust boundary than the project's
+API keys. See `docs/database-schema.md` for the schema itself and how the first admin
+account is bootstrapped.
+
 ## Future website (`apps/web`, added in Stage 7)
 
 Will reuse `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Next.js's public

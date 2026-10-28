@@ -2,10 +2,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
 import { useTheme } from '@/hooks/use-theme';
+import { RouteGuard } from '@/lib/auth/route-guard';
 
 export default function WorkerTabsLayout() {
   const theme = useTheme();
 
+  return (
+    <RouteGuard role="worker">
+      <WorkerTabs theme={theme} />
+    </RouteGuard>
+  );
+}
+
+function WorkerTabs({ theme }: { theme: ReturnType<typeof useTheme> }) {
   return (
     <Tabs
       screenOptions={{

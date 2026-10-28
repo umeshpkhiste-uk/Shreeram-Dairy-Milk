@@ -7,7 +7,7 @@ as each stage completes.
 | Stage | Name | Status |
 |---|---|---|
 | 1 | Project Foundation | ✅ Complete |
-| 2 | Supabase, Authentication, Customers and Workers | Not started |
+| 2 | Supabase, Authentication, Customers and Workers | ✅ Complete |
 | 3 | Offline Delivery Recording and Synchronization | Not started |
 | 4 | Admin Delivery Monitoring | Not started |
 | 5 | Monthly Billing, Payments and PDF Reports | Not started |
@@ -53,11 +53,48 @@ as each stage completes.
 - App icon/splash use the default Expo placeholder artwork; final brand artwork (milk-drop
   logo) is a known gap to fill before release, not a blocker for later stages.
 
-## Stage 2 — Supabase, Authentication, Customers and Workers
+## Stage 2 — Supabase, Authentication, Customers and Workers ✅
 
-Database foundation (`profiles`, `customers`, `workers`, `routes`, `route_assignments`,
-`milk_types`, `customer_milk_rates`, `business_settings`, `audit_logs`), Supabase Auth,
-RLS policies enforced in PostgreSQL (not just hidden UI), and customer/worker/route CRUD.
+Project: `bdrtsrbmsoanrqjhesop`, Seoul region. Full detail, verification results, and the
+admin-bootstrap / worker-provisioning flows: [`docs/database-schema.md`](database-schema.md).
+
+**Delivered:**
+- Schema: `profiles`, `customers`, `workers`, `routes`, `milk_types`,
+  `customer_milk_rates` (effective-dated), `business_settings`, `audit_logs` — 7 migrations,
+  all applied via `supabase db push`.
+- RLS enabled and live-tested on all 8 tables with real, distinct admin/worker sessions
+  (not simulated) — see verification log in `docs/database-schema.md`.
+- Audit triggers on `profiles`, `workers`, `customers`, `customer_milk_rates` — append-only,
+  unwritable directly by any role.
+- Supabase Auth wired into the mobile app: `AuthProvider`, secure AES-encrypted session
+  storage (`src/lib/supabase/large-secure-store.ts`), sign-in screen, role-based route
+  guards (`RouteGuard`), pending-activation screen. No public sign-up screen.
+- `admin-create-worker` Edge Function (`supabase/functions/admin-create-worker`) — the only
+  way a worker account is created, admin-only, deployed and live-tested end-to-end.
+- Customer management: list (search + status/worker/route filters), add, edit, deactivate/
+  reactivate, duplicate-mobile-number confirmation, customer-specific effective-dated
+  pricing.
+- Worker & route management: list, add worker (via the Edge Function), route assignment,
+  assigned-customer list with up/down reorder (`route_sequence`).
+- `src/types/database.ts` — hand-written types matching the live schema (to be replaced by
+  `supabase gen types` once that tool path is reliable in this environment).
+
+**Verified:**
+- `npx tsc --noEmit` — 0 errors. `npx eslint .` — 0 errors. `npx jest` — 25/25 passing.
+- `npx expo-doctor` — 20/20. `npx expo export --platform web` — all routes bundle.
+- `supabase db advisors --type security` / `--type performance` — 0 issues besides one
+  documented, intentional exception.
+- Live RLS and Edge Function tests against the real project, with all test data cleaned up
+  afterward (see `docs/database-schema.md`).
+
+**Explicitly not implemented yet** (by design — later stages' scope):
+- No offline storage, no delivery recording of any kind (Stage 3).
+- No worker self-service password change or invite-email flow (admin sets an initial
+  password directly; a reasonable gap for this stage, not a blocker).
+- No milk-type management UI (two sensible defaults are seeded; editable via SQL until
+  Stage 5 adds a screen).
+- Leaked-password protection is not yet enabled in Supabase Auth settings (dashboard-only
+  toggle, flagged by advisors, worth doing before go-live).
 
 ## Stage 3 — Offline Delivery Recording and Synchronization
 

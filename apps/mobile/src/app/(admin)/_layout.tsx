@@ -2,10 +2,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
 import { useTheme } from '@/hooks/use-theme';
+import { RouteGuard } from '@/lib/auth/route-guard';
 
 export default function AdminTabsLayout() {
   const theme = useTheme();
 
+  return (
+    <RouteGuard role="admin">
+      <AdminTabs theme={theme} />
+    </RouteGuard>
+  );
+}
+
+function AdminTabs({ theme }: { theme: ReturnType<typeof useTheme> }) {
   return (
     <Tabs
       screenOptions={{
