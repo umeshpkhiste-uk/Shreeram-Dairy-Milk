@@ -43,7 +43,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
         title={customer.full_name}
         description={customer.mobile_number}
         actions={
-          <form action={async () => setCustomerStatusAction(id, nextStatus)}>
+          <form action={setCustomerStatusAction.bind(null, id, nextStatus)}>
             <SecondaryButton type="submit">
               {customer.status === 'active' ? 'Deactivate' : 'Reactivate'}
             </SecondaryButton>
