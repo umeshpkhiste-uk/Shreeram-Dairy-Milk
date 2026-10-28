@@ -19,3 +19,10 @@ export function shiftMonth(firstOfMonthDate: string, deltaMonths: number): strin
   d.setUTCMonth(d.getUTCMonth() + deltaMonths);
   return d.toISOString().slice(0, 10);
 }
+
+/** Last day (YYYY-MM-DD) of the month containing `firstOfMonthDate` (any day of that month works). */
+export function lastOfMonth(firstOfMonthDate: string): string {
+  const d = new Date(`${firstOfMonth(firstOfMonthDate)}T00:00:00Z`);
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
+  return last.toISOString().slice(0, 10);
+}

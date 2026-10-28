@@ -135,6 +135,18 @@ export function listLocalDeliveriesForDate(deliveryDate: string): LocalDelivery[
   );
 }
 
+/** All local records for one customer within an inclusive date range — used by the worker's per-customer calendar. */
+export function listLocalDeliveriesForCustomerInRange(
+  customerId: string,
+  startDate: string,
+  endDate: string,
+): LocalDelivery[] {
+  return getDb().getAllSync<LocalDelivery>(
+    'select * from local_deliveries where customer_id = ? and delivery_date >= ? and delivery_date <= ?',
+    [customerId, startDate, endDate],
+  );
+}
+
 export function listLocalDeliveriesSince(sinceDate: string): LocalDelivery[] {
   return getDb().getAllSync<LocalDelivery>(
     'select * from local_deliveries where delivery_date >= ? order by delivery_date desc',

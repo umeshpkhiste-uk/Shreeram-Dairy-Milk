@@ -84,6 +84,26 @@ export async function listDeliveriesForDate(date: string): Promise<DeliveryRow[]
   return data ?? [];
 }
 
+/**
+ * One customer's deliveries within an inclusive date range — used by the
+ * worker's per-customer calendar. RLS scopes this to the worker's own
+ * records automatically (deliveries_select_admin_or_own_worker).
+ */
+export async function listDeliveriesForCustomerInRange(
+  customerId: string,
+  startDate: string,
+  endDate: string,
+): Promise<DeliveryRow[]> {
+  const { data, error } = await supabase
+    .from('deliveries')
+    .select('*')
+    .eq('customer_id', customerId)
+    .gte('delivery_date', startDate)
+    .lte('delivery_date', endDate);
+  if (error) throw error;
+  return data ?? [];
+}
+
 export type DeliveryReportFilters = {
   date: string; // YYYY-MM-DD
   workerId?: string;

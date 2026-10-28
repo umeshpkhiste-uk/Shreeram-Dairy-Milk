@@ -109,9 +109,14 @@ airplane-mode test procedure: [`docs/offline-sync.md`](offline-sync.md).
 - Mobile: Expo SQLite local database (`src/lib/sqlite/`) — cached customers/milk types, a
   `local_deliveries` table, and a durable `sync_outbox` queue, with a versioned migration
   runner.
-- "Today's Route" (`src/screens/worker/today-route.tsx`): assigned customers with a
-  delivery-entry sheet (quick-quantity chips, status, conditional reason field) that saves
-  instantly to SQLite and enqueues the sync outbox in one transaction — no network wait.
+- "Today's Route" (`src/screens/worker/today-route.tsx`): assigned customers, selection-only —
+  tapping one opens their delivery calendar (`src/screens/worker/customer-delivery-calendar.tsx`,
+  redesigned post-launch per real-world feedback): a month grid, today's cell opens a Yes/No
+  "milk delivered?" popup, saving instantly to SQLite and enqueuing the sync outbox in one
+  transaction — no network wait, no quantity entry (the admin-set quantity is used as-is once
+  delivered), no future-date selection, and no editing once today's delivery is marked
+  delivered (a `missed` mark stays editable same-day in case the worker corrects themselves;
+  past days are read-only).
 - Sync engine (`src/lib/sync/sync-engine.ts`): triggers on app startup, foreground,
   connectivity restored (`@react-native-community/netinfo`), and manual retry; bounded
   exponential backoff for transient failures; permanent rejections (unauthorized customer,

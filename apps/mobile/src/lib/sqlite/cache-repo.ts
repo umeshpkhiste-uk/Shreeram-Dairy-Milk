@@ -57,6 +57,13 @@ export function listCachedCustomers(): CachedCustomer[] {
   );
 }
 
+export function getCachedCustomer(id: string): CachedCustomer | null {
+  return (
+    getDb().getFirstSync<CachedCustomer>('select * from cached_customers where id = ?', [id]) ??
+    null
+  );
+}
+
 export function getCachedMilkTypeName(milkTypeId: string): string | null {
   const row = getDb().getFirstSync<{ name: string }>(
     'select name from cached_milk_types where id = ?',

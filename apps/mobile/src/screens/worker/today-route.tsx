@@ -1,6 +1,6 @@
-import { useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
@@ -9,7 +9,6 @@ import { LoadingState } from '@/components/loading-state';
 import { Screen } from '@/components/screen';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Text } from '@/components/text';
-import { Button } from '@/components/button';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { todayInBusinessTimezone } from '@/lib/date';
 import {
@@ -17,16 +16,10 @@ import {
   listCachedCustomers,
   type CachedCustomer,
 } from '@/lib/sqlite/cache-repo';
-import {
-  listLocalDeliveriesForDate,
-  recordDelivery,
-  type LocalDelivery,
-} from '@/lib/sqlite/deliveries-repo';
+import { listLocalDeliveriesForDate, type LocalDelivery } from '@/lib/sqlite/deliveries-repo';
 import { useIsOnline } from '@/lib/sync/connectivity';
-import { pullLatestData, runSync, useSyncStatus } from '@/lib/sync/sync-engine';
+import { pullLatestData } from '@/lib/sync/sync-engine';
 import { Spacing } from '@/theme/tokens';
-
-import { DeliveryEntrySheet, type DeliveryEntryValues } from './delivery-entry-sheet';
 
 const STATUS_LABEL: Record<string, string> = {
   completed: 'Delivered',
@@ -39,17 +32,21 @@ const STATUS_TONE: Record<string, StatusTone> = {
   missed: 'danger',
 };
 
+/**
+ * Worker's customer list for today. Selecting a customer opens their
+ * delivery calendar (src/screens/worker/customer-delivery-calendar.tsx),
+ * where today's delivery is marked — this screen is selection-only, no
+ * quantity/status editing here (the admin-set quantity is fixed).
+ */
 export function TodayRouteScreen() {
   const auth = useAuth();
   const isOnline = useIsOnline();
-  const syncStatus = useSyncStatus();
   const deliveryDate = useMemo(() => todayInBusinessTimezone(), []);
 
   const [customers, setCustomers] = useState<CachedCustomer[] | null>(null);
   const [deliveries, setDeliveries] = useState<Record<string, LocalDelivery>>({});
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<CachedCustomer | null>(null);
 
   const loadLocal = useCallback(() => {
     setCustomers(listCachedCustomers());
@@ -82,22 +79,6 @@ export function TodayRouteScreen() {
     }, []),
   );
 
-  function handleSave(values: DeliveryEntryValues) {
-    if (!selectedCustomer) return;
-    recordDelivery({
-      customerId: selectedCustomer.id,
-      deliveryDate,
-      milkTypeId: selectedCustomer.milk_type_id,
-      scheduledQuantityMl: selectedCustomer.default_daily_quantity_ml,
-      deliveredQuantityMl: values.deliveredQuantityMl,
-      status: values.status,
-      reason: values.reason,
-    });
-    setSelectedCustomer(null);
-    loadLocal();
-    runSync();
-  }
-
   if (auth.status !== 'signedIn') return null;
 
   if (error && customers === null) {
@@ -119,29 +100,6 @@ export function TodayRouteScreen() {
   return (
     <Screen>
       <Text variant="title">Today&rsquo;s Route</Text>
-      {syncStatus.pendingCount > 0 || syncStatus.failedCount > 0 ? (
-        <Card style={styles.syncBanner}>
-          <View style={styles.syncBannerText}>
-            <Text variant="label">
-              {syncStatus.failedCount > 0
-                ? `${syncStatus.failedCount} delivery${syncStatus.failedCount === 1 ? '' : 'ies'} failed to sync`
-                : `${syncStatus.pendingCount} delivery${syncStatus.pendingCount === 1 ? '' : 'ies'} not yet synced — admin won't see ${syncStatus.pendingCount === 1 ? 'it' : 'them'} yet`}
-            </Text>
-            {!isOnline ? (
-              <Text variant="caption" color="secondary">
-                Waiting for a connection
-              </Text>
-            ) : null}
-          </View>
-          <Button
-            label={syncStatus.phase === 'syncing' ? 'Syncing…' : 'Sync now'}
-            variant="secondary"
-            onPress={() => runSync()}
-            loading={syncStatus.phase === 'syncing'}
-            disabled={!isOnline}
-          />
-        </Card>
-      ) : null}
       {customers.length === 0 ? (
         <EmptyState
           title="No customers assigned"
@@ -155,69 +113,36 @@ export function TodayRouteScreen() {
           refreshing={refreshing}
           onRefresh={refreshFromServer}
           renderItem={({ item }) => (
-            <CustomerRow
-              customer={item}
-              delivery={deliveries[item.id]}
-              onPress={() => setSelectedCustomer(item)}
-            />
+            <CustomerRow customer={item} delivery={deliveries[item.id]} />
           )}
         />
       )}
-
-      <Modal
-        visible={!!selectedCustomer}
-        animationType="slide"
-        onRequestClose={() => setSelectedCustomer(null)}
-      >
-        {selectedCustomer ? (
-          <DeliveryEntrySheet
-            customer={selectedCustomer}
-            existing={deliveries[selectedCustomer.id] ?? null}
-            onCancel={() => setSelectedCustomer(null)}
-            onSave={handleSave}
-          />
-        ) : null}
-      </Modal>
     </Screen>
   );
 }
 
-function CustomerRow({
-  customer,
-  delivery,
-  onPress,
-}: {
-  customer: CachedCustomer;
-  delivery?: LocalDelivery;
-  onPress: () => void;
-}) {
+function CustomerRow({ customer, delivery }: { customer: CachedCustomer; delivery?: LocalDelivery }) {
   const milkTypeName = getCachedMilkTypeName(customer.milk_type_id) ?? 'Milk';
   const label = delivery ? (STATUS_LABEL[delivery.status] ?? 'Pending') : 'Pending';
   const tone: StatusTone = delivery ? (STATUS_TONE[delivery.status] ?? 'neutral') : 'neutral';
-  const notSyncedYet = !!delivery && delivery.sync_status !== 'synced';
 
   return (
-    <Pressable accessibilityRole="button" onPress={onPress}>
-      <Card style={styles.row}>
-        <View style={styles.rowHeader}>
-          <Text variant="subtitle">{customer.full_name}</Text>
-          <StatusBadge label={label} tone={tone} />
-        </View>
-        <Text variant="body" color="secondary">
-          {customer.address}
-        </Text>
-        <Text variant="caption" color="secondary">
-          {milkTypeName} · {customer.default_daily_quantity_ml} ml
-        </Text>
-        {notSyncedYet ? (
-          <Text variant="caption" color={delivery?.sync_status === 'failed' ? 'danger' : 'secondary'}>
-            {delivery?.sync_status === 'failed'
-              ? `Not synced — ${delivery.last_sync_error ?? 'failed'}`
-              : 'Saved on this device — not synced to admin yet'}
+    <Link href={`/(worker)/today/${customer.id}`} asChild>
+      <Pressable accessibilityRole="button">
+        <Card style={styles.row}>
+          <View style={styles.rowHeader}>
+            <Text variant="subtitle">{customer.full_name}</Text>
+            <StatusBadge label={label} tone={tone} />
+          </View>
+          <Text variant="body" color="secondary">
+            {customer.address}
           </Text>
-        ) : null}
-      </Card>
-    </Pressable>
+          <Text variant="caption" color="secondary">
+            {milkTypeName} · {customer.default_daily_quantity_ml} ml
+          </Text>
+        </Card>
+      </Pressable>
+    </Link>
   );
 }
 
@@ -225,12 +150,4 @@ const styles = StyleSheet.create({
   list: { gap: Spacing.sm },
   row: { gap: Spacing.xs },
   rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  syncBanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  syncBannerText: { flex: 1, gap: Spacing.xs },
 });
