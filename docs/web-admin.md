@@ -70,7 +70,7 @@ All under `src/app/(admin)/*` except `/login` — the route group's `layout.tsx`
 | `/workers` | Worker accounts (create via the Edge Function), routes, route assignment, activate/deactivate — closes a gap neither app had before (no deactivate-worker UI existed anywhere). |
 | `/deliveries` | The daily delivery report — same left-join logic as the mobile app's admin screen, same "no record yet ≠ missed" rule. Each customer name links to `/deliveries/[customerId]`. |
 | `/deliveries/[customerId]` | Per-customer delivery calendar (added post-launch, admin-website-only, per owner feedback) — see "Per-customer delivery calendar" below. |
-| `/billing`, `/billing/[id]`, `/billing/[id]/print` | Month picker, create/view bills, full breakdown, adjustments, payments, finalize/recalculate/void, the flagged-for-review banner, and the website's PDF path (see below). |
+| `/billing`, `/billing/[id]`, `/billing/[id]/print` | Month picker, create/view bills, full breakdown, adjustments, payments, finalize/recalculate/void, the flagged-for-review banner, a back button, a delivery summary (days delivered / total quantity / average per delivery), and the website's PDF path (see below). |
 | `/payments` | Cross-customer payments ledger. |
 | `/reports` | Billing-summary table + CSV export (`/api/reports/billing-summary`, a Route Handler — see the Next.js data-patterns reference for why a file download needs one). |
 | `/settings` | Business settings + milk type management. |
