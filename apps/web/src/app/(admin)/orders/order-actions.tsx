@@ -21,7 +21,7 @@ import { OrderItemsEditor } from './order-items-editor';
 type Product = { id: string; name: string; unit: 'litre' | 'kg' };
 type SelectOption = { id: string; label: string };
 
-type Panel = 'payment' | 'worker' | 'reschedule' | 'update' | 'reset' | 'cancel' | null;
+type Panel = 'payment' | 'worker' | 'reschedule' | 'update' | 'cancel' | null;
 
 const smallButtonClass = '!px-3 !py-1.5 text-xs';
 
@@ -70,13 +70,6 @@ export function OrderActions({
         <SecondaryButton
           type="button"
           className={smallButtonClass}
-          onClick={() => setPanel(panel === 'reset' ? null : 'reset')}
-        >
-          Reset the order
-        </SecondaryButton>
-        <SecondaryButton
-          type="button"
-          className={smallButtonClass}
           onClick={() => setPanel(panel === 'update' ? null : 'update')}
         >
           Update the order
@@ -106,14 +99,6 @@ export function OrderActions({
       {panel === 'worker' ? <ChangeWorkerPanel orderId={orderId} workers={workers} onDone={close} /> : null}
       {panel === 'reschedule' ? <ReschedulePanel orderId={orderId} onDone={close} /> : null}
       {panel === 'update' ? (
-        <OrderItemsEditor
-          orderId={orderId}
-          products={products}
-          initialQuantitiesBaseUnit={currentQuantitiesBaseUnit}
-          onDone={close}
-        />
-      ) : null}
-      {panel === 'reset' ? (
         <OrderItemsEditor
           orderId={orderId}
           products={products}

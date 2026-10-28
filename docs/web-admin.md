@@ -153,12 +153,18 @@ asked for more control over it:
   there's no payment gateway, so nothing confirms automatically), **Generate bill** (opens
   `/orders/[orderId]/print`, the same browser-print-to-PDF mechanism as the monthly bill, for
   sharing via email/WhatsApp), **Change the worker**, **Reschedule the delivery**, **Update the
-  order** / **Reset the order** (both open the same item-quantity editor — Update prefills the
-  order's current quantities, Reset opens it blank for re-entry from scratch; both save through
-  `update_order_items`, which re-resolves prices from the current `products` row), and **Cancel
-  the order**.
+  order** (opens an item-quantity editor prefilled with the order's current quantities, saves
+  through `update_order_items`, which re-resolves prices from the current `products` row), and
+  **Cancel the order**. (An earlier "Reset the order" button that opened the same editor blank was
+  removed as redundant with Update.)
 - `update_order_items(order_id, items)`: admin-only, replaces an order's `order_items` wholesale
   (delete + reinsert) — mirrors `create_order`'s price-resolution logic exactly.
+- **Settings** no longer has a "Milk types" editor — it was replaced outright by an "Order items"
+  section (same add/edit-price/deactivate UI, now over the `products` table) per owner request.
+  This was a deliberate trade-off the owner confirmed: there is now no website UI to edit the
+  recurring daily-subscription milk price (`milk_types.default_price_paise`) — `listAllMilkTypes`
+  is still used elsewhere (customer forms, billing) to read milk type names, but `createMilkType`/
+  `updateMilkType` were removed as dead code alongside the UI.
 
 **Worker-app sync (closed in a follow-up pass)**: an admin's `skipped` marking needed no new sync
 plumbing — `admin_mark_delivery_skipped` attributes the row to the customer's real assigned

@@ -1,18 +1,18 @@
 import { Card, PageHeader } from '@/components/ui';
 import { getBusinessSettings } from '@/lib/data/business-settings';
-import { listAllMilkTypes } from '@/lib/data/milk-types';
+import { listAllProducts } from '@/lib/data/products';
 import { createClient } from '@/lib/supabase/server';
 
-import { createMilkTypeAction, updateBusinessSettingsAction } from './actions';
+import { createOrderItemAction, updateBusinessSettingsAction } from './actions';
 import { BusinessSettingsForm } from './business-settings-form';
-import { MilkTypeRowItem } from './milk-type-row';
-import { NewMilkTypeForm } from './new-milk-type-form';
+import { NewOrderItemForm } from './new-order-item-form';
+import { OrderItemRow } from './order-item-row';
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const [settings, milkTypes] = await Promise.all([
+  const [settings, products] = await Promise.all([
     getBusinessSettings(supabase),
-    listAllMilkTypes(supabase),
+    listAllProducts(supabase),
   ]);
 
   return (
@@ -28,12 +28,16 @@ export default async function SettingsPage() {
       </Card>
 
       <Card>
-        <h2 className="mb-3 text-lg font-semibold text-text">Milk types</h2>
-        <NewMilkTypeForm action={createMilkTypeAction} />
-        {milkTypes.length > 0 ? (
+        <h2 className="mb-3 text-lg font-semibold text-text">Order items</h2>
+        <p className="mb-4 text-sm text-text-secondary">
+          The catalog used on the New Order page (paneer, ghee, dahi, milk by the one-off, etc.).
+          Update a price here and it applies to every order placed from now on.
+        </p>
+        <NewOrderItemForm action={createOrderItemAction} />
+        {products.length > 0 ? (
           <ul className="mt-4">
-            {milkTypes.map((m) => (
-              <MilkTypeRowItem key={m.id} milkType={m} />
+            {products.map((p) => (
+              <OrderItemRow key={p.id} product={p} />
             ))}
           </ul>
         ) : null}

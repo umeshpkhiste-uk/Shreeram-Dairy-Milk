@@ -6,7 +6,7 @@ import { ErrorText, SecondaryButton } from '@/components/ui';
 
 import type { SettingsActionState } from './actions';
 
-export function NewMilkTypeForm({
+export function NewOrderItemForm({
   action,
 }: {
   action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
@@ -24,7 +24,19 @@ export function NewMilkTypeForm({
         />
       </label>
       <label className="flex flex-col gap-1 text-sm font-medium text-text">
-        Default price per litre (₹)
+        Unit
+        <select
+          name="unit"
+          required
+          defaultValue="kg"
+          className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
+        >
+          <option value="litre">Litre</option>
+          <option value="kg">Kg</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-sm font-medium text-text">
+        Price per unit (₹)
         <input
           name="priceRupees"
           required
@@ -33,7 +45,7 @@ export function NewMilkTypeForm({
         />
       </label>
       <SecondaryButton type="submit" disabled={pending}>
-        {pending ? 'Adding…' : 'Add milk type'}
+        {pending ? 'Adding…' : 'Add item'}
       </SecondaryButton>
       {state.error ? <ErrorText message={state.error} /> : null}
     </form>

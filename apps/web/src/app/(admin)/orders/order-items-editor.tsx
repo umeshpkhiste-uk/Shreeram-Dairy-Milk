@@ -8,11 +8,7 @@ import { updateOrderItemsAction, type ActionState } from './actions';
 
 type Product = { id: string; name: string; unit: 'litre' | 'kg' };
 
-/**
- * Shared by both "Update the order" and "Reset the order": same quantity
- * form, just a different starting point — Update prefills current
- * quantities, Reset starts blank so the admin re-enters from scratch.
- */
+/** Opened by "Update the order" — prefilled with the order's current quantities, editable. */
 export function OrderItemsEditor({
   orderId,
   products,
