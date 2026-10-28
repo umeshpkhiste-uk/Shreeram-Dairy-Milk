@@ -109,32 +109,62 @@ detail.
 
 ## Deployment
 
-- Vercel project `shreeram-daily-milk-web`, root directory `apps/web`, connected to the
-  `umeshpkhiste-uk/Shreeram-Dairy-Milk` GitHub repository's `main` branch — every push to `main`
-  auto-deploys to production; every other branch/PR gets a preview deployment.
+- Live at **<https://shreeram-dairy-milk.vercel.app>**. Vercel project `shreeram-dairy-milk`
+  (team `umeshpkhiste-6627`), root directory `apps/web`, connected to the
+  `umeshpkhiste-uk/Shreeram-Dairy-Milk` GitHub repository's `main` branch via the Vercel-for-
+  GitHub app — every push to `main` auto-deploys to production; every other branch/PR gets a
+  preview deployment.
 - Environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) are set in
-  Vercel's own project settings (Production + Preview), never committed — see
+  Vercel's own project settings (Production + Preview + Development), never committed — see
   `apps/web/.env.example`.
 - No service-role key anywhere in this app or its Vercel configuration.
+- One-time setup this stage needed that a future redeploy won't: granting the Vercel connection
+  access to the team, and installing the Vercel-for-GitHub app on the repository — both done via
+  the dashboard's own consent flows, not something a CLI/API call can do unattended.
+
+## Two deployment-time bugs found and fixed
+
+Both only showed up against the real deployed build — neither `next build` nor `next dev`
+locally exercises what Vercel's own install step or edge runtime does:
+
+1. **`Module not found: Can't resolve 'zod'`, building `packages/shared/src/lib/validation/*.ts`.**
+   Worked locally only because `npm install` had been run by hand inside `packages/shared`,
+   creating a `node_modules` there — git-ignored, so it never existed on Vercel's fresh clone.
+   Node resolves a bare import from the *importing file's own* directory upward; `apps/web`'s own
+   `zod` dependency was never on that path. Fixed by turning the repo root into an npm workspace
+   (`package.json` → `"workspaces": ["apps/web", "packages/shared"]`) so dependencies hoist into
+   one shared root `node_modules` — `apps/mobile` deliberately excluded (see "Deliberately not
+   shared" above).
+2. **The proxy redirected `/_next/static/**` (CSS/JS) to `/login` for signed-out visitors**,
+   breaking the login page's own styling/scripts in production — not reproducible with `next
+   dev`. `proxyConfig.matcher`'s negative-lookahead regex (copied from a commonly-documented
+   pattern) didn't actually exclude those paths at runtime. Fixed by adding a plain-JS early
+   return inside `proxy()` itself (`isAlwaysPublicPath()`), which doesn't depend on matcher/
+   path-to-regexp semantics — confirmed live afterward: the CSS file returns `200` with real
+   content, `/`, `/billing`, and the CSV report API route all correctly `307` to `/login` for an
+   anonymous request.
 
 ## Verification
 
-- `npx tsc --noEmit`, `npx eslint .`, `npx next build` — all clean (see the Stage 7 commit for
+- `npx tsc --noEmit`, `npx eslint .`, `npx next build` — all clean (see the Stage 7 commits for
   exact output); `packages/shared`'s own `npx tsc --noEmit` / `npx jest` also clean (31/31).
 - `apps/mobile`'s full suite re-run after the `customer-rates.ts` fix: unchanged, still green.
 - Live tests against the real Supabase project: the pricing-gap bug (confirmed, then fixed, then
   re-confirmed closed) and the cross-platform consistency check above. All temporary data
   created inside rolled-back transactions — nothing persisted.
-- Deployed site: `curl` confirmed `/login` returns 200 with real content and that an
-  unauthenticated request to `/` redirects to `/login` (the proxy's session check works in
-  production, not just locally).
+- **The actual deployed production site**, verified with `curl` after each of the two fixes
+  above: `/login` returns `200` with real rendered HTML; a static CSS asset returns `200` with
+  real font-face/stylesheet content; `/`, `/billing`, and
+  `/api/reports/billing-summary?month=2026-01-01` all correctly `307`-redirect an unauthenticated
+  request to `/login` — the proxy's session check works in production, not just locally.
 
 **Not verified — explicitly, not silently**: no interactive click-through of the deployed site
-was performed (no browser-automation tool available in this environment) — an admin should sign
-in once and walk through creating a customer, a bill, a payment, and printing a bill before
-relying on this for real business use. No real `eas build`-equivalent concern here (web, not
-native), but see `docs/android-release.md` for the mobile app's own outstanding manual-testing
-gap.
+(signing in, creating a customer, a bill, a payment, printing one) was performed — no browser-
+automation tool is available in this environment, only `curl`, which can't submit the
+Supabase-authenticated sign-in form or exercise Server Actions the way a real browser does. An
+admin should sign in once and walk through that full flow before relying on this for real
+business use. No real `eas build`-equivalent concern here (web, not native), but see
+`docs/android-release.md` for the mobile app's own outstanding manual-testing gap.
 
 ## Explicitly deferred (documented, not silently dropped)
 

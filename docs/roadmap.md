@@ -279,7 +279,7 @@ business logic. Full design and verification: [`docs/web-admin.md`](web-admin.md
   shared bill template as the mobile app's `expo-print` PDF — no server-side Chromium
   dependency.
 - Deployed to Vercel (`apps/web` as the project root), connected to this repo's `main` branch
-  for continuous deployment.
+  for continuous deployment — live at <https://shreeram-dairy-milk.vercel.app>.
 
 **Verified:**
 - `npx tsc --noEmit`, `npx eslint .`, `npx next build` — all clean. `packages/shared`'s own
@@ -293,8 +293,14 @@ business logic. Full design and verification: [`docs/web-admin.md`](web-admin.md
   neither the old nor new rate (silent fallback to the milk type default). Confirmed live, fixed
   in both `apps/mobile` and `apps/web`, re-confirmed live. Mobile's full test suite re-run
   unchanged/green after the fix.
-- Deployed site: confirmed `/login` returns real content and an unauthenticated request to `/`
-  redirects to `/login` in production, not just locally.
+- Two deployment-only bugs, found only once actually deployed and fixed before calling this
+  done: a missing root npm workspace left `zod` unresolvable from `packages/shared` on Vercel's
+  clean install (worked locally only by accident); the proxy's matcher regex didn't really
+  exclude `/_next/static/**`, redirecting every CSS/JS asset to `/login` for signed-out visitors
+  in production. See `docs/web-admin.md`, "Two deployment-time bugs found and fixed".
+- The actual deployed site, re-verified with `curl` after both fixes: `/login` returns real
+  rendered HTML and real CSS loads with a 200; `/`, `/billing`, and the CSV report API route all
+  correctly redirect an unauthenticated request to `/login`.
 
 **Explicitly not implemented yet** (documented, not silently dropped):
 - No interactive click-through of the deployed site — no browser-automation tool available in

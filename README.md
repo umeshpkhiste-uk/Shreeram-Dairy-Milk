@@ -41,6 +41,8 @@ project-specific setup (environment variables, linting, testing).
 
 ### Admin website
 
+Live at <https://shreeram-dairy-milk.vercel.app>.
+
 ```bash
 cd apps/web
 npm install
