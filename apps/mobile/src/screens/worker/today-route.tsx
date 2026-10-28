@@ -25,11 +25,13 @@ const STATUS_LABEL: Record<string, string> = {
   completed: 'Delivered',
   partial: 'Partial',
   missed: 'Missed',
+  skipped: 'No delivery — customer informed',
 };
 const STATUS_TONE: Record<string, StatusTone> = {
   completed: 'success',
   partial: 'warning',
   missed: 'danger',
+  skipped: 'warning',
 };
 
 /**
@@ -140,6 +142,11 @@ function CustomerRow({ customer, delivery }: { customer: CachedCustomer; deliver
           <Text variant="caption" color="secondary">
             {milkTypeName} · {customer.default_daily_quantity_ml} ml
           </Text>
+          {delivery?.status === 'skipped' && delivery.reason ? (
+            <Text variant="caption" color="secondary">
+              Note: {delivery.reason}
+            </Text>
+          ) : null}
         </Card>
       </Pressable>
     </Link>

@@ -19,11 +19,13 @@ const STATUS_LABEL: Record<string, string> = {
   completed: 'Delivered',
   partial: 'Partial',
   missed: 'Missed',
+  skipped: 'No delivery — customer informed',
 };
 const STATUS_TONE: Record<string, StatusTone> = {
   completed: 'success',
   partial: 'warning',
   missed: 'danger',
+  skipped: 'warning',
 };
 const SYNC_LABEL: Record<string, string> = {
   pending: 'Not synced yet',

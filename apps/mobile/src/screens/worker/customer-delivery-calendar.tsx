@@ -27,11 +27,13 @@ const STATUS_LABEL: Record<string, string> = {
   completed: 'Delivered',
   partial: 'Partial',
   missed: 'Missed',
+  skipped: 'No delivery — customer informed',
 };
 const STATUS_TONE: Record<string, StatusTone> = {
   completed: 'success',
   partial: 'warning',
   missed: 'danger',
+  skipped: 'warning',
 };
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -187,7 +189,6 @@ export function CustomerDeliveryCalendarScreen() {
   }
 
   const grid = buildMonthGrid(month);
-  const isCurrentMonth = month === firstOfMonth(today);
 
   return (
     <Screen scroll>
@@ -205,12 +206,7 @@ export function CustomerDeliveryCalendarScreen() {
       <View style={styles.monthHeader}>
         <Button label="‹" variant="secondary" onPress={() => goToMonth(shiftMonth(month, -1))} />
         <Text variant="subtitle">{monthLabel(month)}</Text>
-        <Button
-          label="›"
-          variant="secondary"
-          onPress={() => goToMonth(shiftMonth(month, 1))}
-          disabled={isCurrentMonth}
-        />
+        <Button label="›" variant="secondary" onPress={() => goToMonth(shiftMonth(month, 1))} />
       </View>
 
       <View style={styles.weekdayRow}>
@@ -256,6 +252,12 @@ export function CustomerDeliveryCalendarScreen() {
               <StatusBadge label={selectedIsToday ? 'Not marked yet' : 'No record'} tone="neutral" />
             )}
           </View>
+
+          {selectedEntry?.reason ? (
+            <Text variant="caption" color="secondary">
+              Note: {selectedEntry.reason}
+            </Text>
+          ) : null}
 
           {selectedIsLocked ? (
             <Text variant="caption" color="secondary">
@@ -331,7 +333,7 @@ function DayCell({
   let bg = 'transparent';
   if (entry?.status === 'completed') bg = theme.successBg;
   else if (entry?.status === 'missed') bg = theme.dangerBg;
-  else if (entry?.status === 'partial') bg = theme.warningBg;
+  else if (entry?.status === 'partial' || entry?.status === 'skipped') bg = theme.warningBg;
   else if (isToday) bg = theme.primaryMuted;
 
   const dayNumber = Number(date.slice(8, 10));

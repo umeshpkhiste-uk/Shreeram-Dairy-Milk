@@ -35,11 +35,13 @@ const STATUS_LABEL: Record<string, string> = {
   completed: 'Delivered',
   partial: 'Partial',
   missed: 'Missed',
+  skipped: 'Customer informed',
 };
 const STATUS_TONE: Record<string, StatusTone> = {
   completed: 'success',
   partial: 'warning',
   missed: 'danger',
+  skipped: 'warning',
 };
 
 export function DailyDeliveryReportScreen() {

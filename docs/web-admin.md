@@ -111,13 +111,20 @@ billing (`create_draft_bill` already whitelists `completed`/`partial` only) and 
 satisfies the existing `deliveries` reason-required-unless-completed check constraint — no other
 schema or RPC changed.
 
-**Known gap, not addressed in this pass**: the worker's own app has no concept of a day an admin
-marked `skipped` in advance — a worker's Today's Route still lists that customer and still lets
-them mark Yes/No for that day, which could create a conflicting record (worker marking
-`completed`/`missed` the same day admin already marked `skipped`). Propagating this to the worker
-app (e.g., skipping it from their list, or showing it read-only) was out of scope for this change
-(admin-website-only, per the owner's explicit choice) and is left for a future pass if it proves
-to matter in practice.
+**Worker-app sync (closed in a follow-up pass)**: an admin's `skipped` marking needed no new sync
+plumbing — `admin_mark_delivery_skipped` attributes the row to the customer's real assigned
+worker (`deliveries.worker_id`), so it already flowed down through the existing
+`listDeliveriesForWorkerSince` → `applyServerDelivery` pull (apps/mobile/src/lib/sync/
+sync-engine.ts), same as any other delivery. The only real gap was display: the worker app's
+status label/tone maps (Today's Route, the per-customer calendar, Delivery History) didn't know
+the `skipped` value and fell back to a blank/wrong label. Fixed by adding it to each map
+(`STATUS_LABEL`/`STATUS_TONE`), showing the admin's reason text inline on Today's Route and the
+calendar's day-detail card, and letting the worker's own calendar browse forward into future
+months (previously capped at the current month) so an advance skip shows up before that day
+arrives — still view-only beyond today, same as always. A worker can still mark Yes/No on a day
+admin already marked `skipped` (e.g. if the customer changes their mind and the worker actually
+delivers) — that's a deliberate correction path, not a bug, via `submit_delivery_event`'s normal
+`corrected` event flow.
 
 ## Cross-platform data consistency
 
