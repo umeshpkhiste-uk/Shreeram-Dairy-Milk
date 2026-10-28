@@ -2,33 +2,33 @@
 
 A dairy business management system for daily doorstep milk delivery: customer and worker
 management, offline-first delivery recording by delivery workers, monthly billing, and
-customer payment tracking.
-
-The mobile app is the current focus. A future admin website will share the same Supabase
-backend, schema, and business rules (see [`docs/roadmap.md`](docs/roadmap.md), Stage 7).
+customer payment tracking — a mobile app for admins/workers and an admin website, sharing one
+Supabase backend.
 
 ## Repository layout
 
 ```
 apps/
   mobile/            Expo (React Native + TypeScript + Expo Router) app — admin and worker roles
-  web/               (future) Next.js admin website — added in Stage 7
+  web/               Next.js (App Router) admin website — added in Stage 7
 packages/
-  shared/            (future) shared TypeScript types and validation used by mobile + web
+  shared/            Framework-agnostic types/validation/logic used by apps/web (see docs/web-admin.md)
 supabase/
-  migrations/        version-controlled SQL schema migrations — added from Stage 2
-  functions/         server-side Edge Functions for sensitive operations — added from Stage 2
+  migrations/        version-controlled SQL schema migrations
+  functions/         server-side Edge Functions for sensitive operations
 docs/                architecture, environment variables, roadmap, and other project docs
 tests/               cross-cutting integration/E2E tests that span more than one app
 .github/workflows/   CI (lint, typecheck, test) for the mobile app
 ```
 
-## Getting started (mobile app)
+## Getting started
+
+### Mobile app
 
 ```bash
 cd apps/mobile
 npm install
-cp .env.example .env.local   # fill in once Supabase is configured (Stage 2)
+cp .env.example .env.local   # fill in from the Supabase dashboard
 npm start
 ```
 
@@ -39,15 +39,35 @@ See [`apps/mobile/README.md`](apps/mobile/README.md) for the full Expo-generated
 getting-started guide, and [`docs/getting-started.md`](docs/getting-started.md) for
 project-specific setup (environment variables, linting, testing).
 
+### Admin website
+
+```bash
+cd apps/web
+npm install
+cp .env.example .env.local   # same Supabase project URL/anon key as the mobile app
+npm run dev
+```
+
+See [`docs/web-admin.md`](docs/web-admin.md) for the design, and
+[`docs/android-release.md`](docs/android-release.md) for the Android build/release
+procedure (mobile) — the website deploys to Vercel instead (see `docs/web-admin.md`,
+"Deployment").
+
 ## Project status
 
-Being built in phases — see [`docs/roadmap.md`](docs/roadmap.md) for the full 7-stage plan
-and what each stage delivers. Current stage: **Stage 1 — Project Foundation** (complete).
+All 7 planned stages are complete — see [`docs/roadmap.md`](docs/roadmap.md) for what each
+stage delivered, what was verified, and what's explicitly deferred.
 
 ## Documentation
 
 - [`docs/roadmap.md`](docs/roadmap.md) — the 7-stage implementation plan and current status
 - [`docs/architecture.md`](docs/architecture.md) — technology stack and architectural rules
-- [`docs/getting-started.md`](docs/getting-started.md) — local development setup
+- [`docs/getting-started.md`](docs/getting-started.md) — local development setup (mobile)
 - [`docs/environment-variables.md`](docs/environment-variables.md) — required env vars per app
+- [`docs/database-schema.md`](docs/database-schema.md) — schema, RLS, auth bootstrap
+- [`docs/offline-sync.md`](docs/offline-sync.md) — the mobile offline sync engine
+- [`docs/billing.md`](docs/billing.md) — monthly billing/payments policy and RPCs
+- [`docs/security-review.md`](docs/security-review.md) — Stage 6 security/reliability audit
+- [`docs/android-release.md`](docs/android-release.md) — Android build and Play Store prep
+- [`docs/web-admin.md`](docs/web-admin.md) — the admin website's design and Vercel deployment
 - [`docs/reference/`](docs/reference/) — original Master Prompt and Implementation Checklist

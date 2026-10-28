@@ -15,7 +15,15 @@ export async function listRatesForCustomer(customerId: string): Promise<Customer
 
 /**
  * Sets a new customer-specific rate effective from `effectiveFrom`, closing
- * any currently-open rate for the same customer + milk type the day before.
+ * any currently-open rate for the same customer + milk type at that exact
+ * date. `resolve_milk_price_paise`'s window is `effective_from <= as_of <
+ * effective_to` (exclusive upper bound — see
+ * supabase/migrations/20261028090002_stage3_submit_delivery_event_rpc.sql),
+ * so `effective_to` must equal the new rate's `effective_from`, not the day
+ * before it — closing it a day early leaves that one day covered by neither
+ * rate, silently falling back to the milk type's default price. (Found and
+ * fixed in Stage 7 while building the website's equivalent of this
+ * function — confirmed live against the real project.)
  * Two sequential requests rather than a single DB transaction (acceptable
  * for low-concurrency admin-only usage) — a `customer_milk_rates_one_open_rate_idx`
  * unique index still prevents two open rates existing at once even if this
@@ -29,13 +37,9 @@ export async function setCustomerRate(input: {
   pricePaise: number;
   effectiveFrom: string; // YYYY-MM-DD
 }): Promise<CustomerMilkRateRow> {
-  const dayBefore = new Date(input.effectiveFrom);
-  dayBefore.setDate(dayBefore.getDate() - 1);
-  const effectiveTo = dayBefore.toISOString().slice(0, 10);
-
   const { error: closeError } = await supabase
     .from('customer_milk_rates')
-    .update({ effective_to: effectiveTo })
+    .update({ effective_to: input.effectiveFrom })
     .eq('customer_id', input.customerId)
     .eq('milk_type_id', input.milkTypeId)
     .is('effective_to', null);

@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/*
+ * Same visual identity as the mobile app (apps/mobile/src/theme/tokens.ts):
+ * white/light-neutral background, dark-green primary, restrained status
+ * colours. Kept in sync by hand — both are small, hand-written token sets.
+ */
+:root {
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f7f8f7;
+  --color-border: #dde1dd;
+  --color-text: #0b1210;
+  --color-text-secondary: #656d66;
+  --color-text-on-primary: #ffffff;
+  --color-primary: #174a30;
+  --color-primary-hover: #1f5b3b;
+  --color-primary-muted: #e6f2eb;
+  --color-success: #1f5b3b;
+  --color-success-bg: #e6f2eb;
+  --color-warning: #9a6b00;
+  --color-warning-bg: #fbf2dc;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fbeae9;
+  --color-info: #2463a8;
+  --color-info-bg: #e7f0fa;
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-border: var(--color-border);
+  --color-text: var(--color-text);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-on-primary: var(--color-text-on-primary);
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-muted: var(--color-primary-muted);
+  --color-success: var(--color-success);
+  --color-success-bg: var(--color-success-bg);
+  --color-warning: var(--color-warning);
+  --color-warning-bg: var(--color-warning-bg);
+  --color-danger: var(--color-danger);
+  --color-danger-bg: var(--color-danger-bg);
+  --color-info: var(--color-info);
+  --color-info-bg: var(--color-info-bg);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* The bill print page (app/(admin)/billing/[id]/print) is the one page meant
+   to be printed/saved as PDF via the browser — hide the admin nav chrome and
+   let only the bill content through. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

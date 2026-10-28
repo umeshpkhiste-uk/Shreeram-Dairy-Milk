@@ -12,7 +12,7 @@ as each stage completes.
 | 4 | Admin Delivery Monitoring | ✅ Complete |
 | 5 | Monthly Billing, Payments and PDF Reports | ✅ Complete |
 | 6 | Security, Testing and Android Release | ✅ Complete |
-| 7 | Future Website and Vercel Deployment | Not started |
+| 7 | Future Website and Vercel Deployment | ✅ Complete |
 
 ## Stage 1 — Project Foundation ✅
 
@@ -258,7 +258,48 @@ Full audit, fixes, manual Android checklist, and release procedure:
 - Leaked-password protection remains disabled (dashboard-only toggle, flagged since Stage 2).
 - No automated end-to-end UI test suite (Detox/Maestro) — unit + live API/DB tests only.
 
-## Stage 7 — Future Website and Vercel Deployment
+## Stage 7 — Future Website and Vercel Deployment ✅
 
 A Next.js admin website on the same Supabase project — no second database, no duplicated
-business logic — deployed to Vercel.
+business logic. Full design and verification: [`docs/web-admin.md`](web-admin.md).
+
+**Delivered:**
+- `apps/web`: Next.js 16 (App Router) admin console — login, dashboard, customer management,
+  worker & route management (including a deactivate-worker control neither app had before),
+  daily delivery monitoring, monthly billing (create/recalculate/finalize/void, adjustments,
+  payments, the flagged-for-review banner), a payments ledger, a reports page with CSV export,
+  and business settings + milk type management. Every page reuses the exact same Supabase
+  schema, RLS policies, and RPCs as the mobile app — no new migrations were needed.
+- `packages/shared`: a small framework-agnostic package (types, money/date/CSV helpers,
+  validation schemas, dashboard metrics, the bill HTML renderer) used by `apps/web` via a
+  TypeScript path alias — copied from the mobile app's already-tested pure logic rather than
+  retrofitting the mobile app to depend on it (would need Metro monorepo config changes in an
+  already-shipped app for no functional gain).
+- PDF bill generation via the browser's own print dialog (`window.print()`), rendering the same
+  shared bill template as the mobile app's `expo-print` PDF — no server-side Chromium
+  dependency.
+- Deployed to Vercel (`apps/web` as the project root), connected to this repo's `main` branch
+  for continuous deployment.
+
+**Verified:**
+- `npx tsc --noEmit`, `npx eslint .`, `npx next build` — all clean. `packages/shared`'s own
+  typecheck/tests — clean, 31/31.
+- Live tests against the real project (temporary worker/customer, inside rolled-back SQL
+  transactions, nothing persisted): a delivery recorded via a worker session was immediately
+  visible, with the correct amount, to the admin-session query the website's delivery report
+  uses; a bill created via the website's `create_draft_bill` call produced the correct subtotal.
+- A real cross-cutting defect found while porting `customer-rates.ts`: the "close the old rate"
+  logic in **both** apps closed a customer's rate one day too early, leaving one day resolved by
+  neither the old nor new rate (silent fallback to the milk type default). Confirmed live, fixed
+  in both `apps/mobile` and `apps/web`, re-confirmed live. Mobile's full test suite re-run
+  unchanged/green after the fix.
+- Deployed site: confirmed `/login` returns real content and an unauthenticated request to `/`
+  redirects to `/login` in production, not just locally.
+
+**Explicitly not implemented yet** (documented, not silently dropped):
+- No interactive click-through of the deployed site — no browser-automation tool available in
+  this environment; an admin should walk through the full customer → bill → payment → print
+  flow once before relying on it for real business use.
+- No Supabase Realtime on the website (the mobile admin screens have it from Stage 4) — every
+  page here is freshly server-rendered per request already.
+- No end-to-end (browser) test suite, consistent with the mobile app's own Stage 6 gap.

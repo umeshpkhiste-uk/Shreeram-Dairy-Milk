@@ -86,3 +86,13 @@ Expo SQLite holds cached route/customer data and a persistent outbox of pending 
 events. Synchronization is idempotent (unique device-generated event IDs + server-side
 idempotency via `submit_delivery_event`), retried with bounded exponential backoff, and never
 deletes a queued record until the server acknowledges it. Full design: `docs/offline-sync.md`.
+
+## Admin website (Stage 7)
+
+`apps/web` is a Next.js (App Router) admin console using the same Supabase project, schema,
+RLS, and RPCs as the mobile app — no second database, no duplicated business logic. Full
+design: `docs/web-admin.md`. `packages/shared` holds pure, framework-agnostic logic (types,
+money/date helpers, validation, dashboard metrics, the bill HTML template) that `apps/web`
+imports via a TypeScript path alias; it is copied from — not imported by — the mobile app's
+already-tested equivalents, to avoid retrofitting Metro monorepo resolution into an
+already-shipped app.

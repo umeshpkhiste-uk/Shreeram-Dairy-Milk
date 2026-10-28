@@ -1,0 +1,19 @@
+{
+  "name": "@shreeram/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Framework-agnostic types and pure logic shared by apps/mobile and apps/web. Imported via a TypeScript path alias (no build step, no publish) — see docs/web-admin.md.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.5.2",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

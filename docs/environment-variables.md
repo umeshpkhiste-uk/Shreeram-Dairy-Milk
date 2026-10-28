@@ -21,6 +21,19 @@
 - In CI and in EAS Build, set the real values as encrypted environment variables /
   secrets in that platform's settings — never commit them.
 
+## Admin website (`apps/web/.env.example`)
+
+| Variable | Added in | Required | Description |
+|---|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Stage 7 | Yes | Same Supabase project URL as the mobile app. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Stage 7 | Yes | Same anon/publishable key as the mobile app. |
+
+Same rules as the mobile app's `EXPO_PUBLIC_*` variables: only `NEXT_PUBLIC_*` reaches the
+browser bundle, never a secret. In Vercel, set both as the project's environment variables
+(Production and Preview) — never commit real values. No service-role key is used anywhere in
+this app; every server-side query still runs as the signed-in admin's own session, constrained
+by RLS, via `@supabase/ssr`.
+
 ## Supabase project (CLI / migrations)
 
 The repo root is linked to the Supabase project via `supabase link --project-ref
