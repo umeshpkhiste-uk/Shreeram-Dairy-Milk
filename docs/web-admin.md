@@ -65,7 +65,7 @@ All under `src/app/(admin)/*` except `/login` — the route group's `layout.tsx`
 
 | Route | Covers |
 |---|---|
-| `/` | Dashboard — identical metrics to the mobile app (shared `computeDashboardMetrics`). |
+| `/` | Dashboard — identical metrics to the mobile app (shared `computeDashboardMetrics`), with a `?date=` date picker (today or any past date — `computeDashboardMetrics`'s `today` param is just "the reference date", so it works unchanged for a historical date; future dates are blocked client-side, `max={today}`). |
 | `/customers`, `/customers/new`, `/customers/[id]` | List/filter/search, create, edit, deactivate/reactivate, customer-specific effective-dated pricing, billing history links. |
 | `/workers` | Worker accounts (create via the Edge Function), routes, route assignment, activate/deactivate — closes a gap neither app had before (no deactivate-worker UI existed anywhere). |
 | `/deliveries` | The daily delivery report — same left-join logic as the mobile app's admin screen, same "no record yet ≠ missed" rule. Each customer name links to `/deliveries/[customerId]`. |
