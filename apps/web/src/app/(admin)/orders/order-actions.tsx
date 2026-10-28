@@ -114,7 +114,12 @@ export function OrderActions({
         />
       ) : null}
       {panel === 'reset' ? (
-        <OrderItemsEditor orderId={orderId} products={products} initialQuantitiesBaseUnit={{}} onDone={close} />
+        <OrderItemsEditor
+          orderId={orderId}
+          products={products}
+          initialQuantitiesBaseUnit={currentQuantitiesBaseUnit}
+          onDone={close}
+        />
       ) : null}
       {panel === 'cancel' ? <CancelPanel orderId={orderId} onDone={close} /> : null}
     </div>
