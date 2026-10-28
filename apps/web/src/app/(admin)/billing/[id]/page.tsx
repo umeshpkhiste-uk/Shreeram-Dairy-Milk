@@ -20,6 +20,7 @@ import {
   voidPaymentAction,
 } from '../actions';
 import { AdjustmentForm } from './adjustment-form';
+import { BackButton } from './back-button';
 import { PaymentForm } from './payment-form';
 import { VoidBillForm } from './void-bill-form';
 import { VoidPaymentButton } from './void-payment-button';
@@ -55,6 +56,7 @@ export default async function BillDetailPage({ params }: PageProps) {
         description={`${customer?.full_name ?? 'Customer'} · ${bill.billing_month}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <BackButton />
             <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
             {!isVoided ? (
               <Link
