@@ -1,11 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
 
 import { useTheme } from '@/hooks/use-theme';
 import { RouteGuard } from '@/lib/auth/route-guard';
+import { initSyncEngine } from '@/lib/sync/sync-engine';
 
 export default function WorkerTabsLayout() {
   const theme = useTheme();
+
+  useEffect(() => {
+    // Starts the standard sync triggers (startup, foreground, connectivity
+    // restored) once a worker is in their tabs — see docs/offline-sync.md.
+    initSyncEngine();
+  }, []);
 
   return (
     <RouteGuard role="worker">

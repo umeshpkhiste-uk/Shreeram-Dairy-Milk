@@ -8,7 +8,7 @@ as each stage completes.
 |---|---|---|
 | 1 | Project Foundation | ✅ Complete |
 | 2 | Supabase, Authentication, Customers and Workers | ✅ Complete |
-| 3 | Offline Delivery Recording and Synchronization | Not started |
+| 3 | Offline Delivery Recording and Synchronization | ✅ Complete |
 | 4 | Admin Delivery Monitoring | Not started |
 | 5 | Monthly Billing, Payments and PDF Reports | Not started |
 | 6 | Security, Testing and Android Release | Not started |
@@ -96,11 +96,48 @@ admin-bootstrap / worker-provisioning flows: [`docs/database-schema.md`](databas
 - Leaked-password protection is not yet enabled in Supabase Auth settings (dashboard-only
   toggle, flagged by advisors, worth doing before go-live).
 
-## Stage 3 — Offline Delivery Recording and Synchronization
+## Stage 3 — Offline Delivery Recording and Synchronization ✅
 
-The highest-priority feature: Expo SQLite local database, the delivery-confirmation
-workflow on Today's Route, a persistent sync outbox with idempotent uploads, bounded
-retry/backoff, and conflict handling that never silently overwrites a delivery.
+The highest-priority feature per the Master Prompt. Full design, verification, and the manual
+airplane-mode test procedure: [`docs/offline-sync.md`](offline-sync.md).
+
+**Delivered:**
+- Server: `deliveries`, `delivery_events`, `delivery_sync_receipts` tables, RLS (read-only for
+  `authenticated`), and the `submit_delivery_event` RPC — the single write path, idempotent on
+  event id, with optimistic-concurrency conflict detection that flags rather than overwrites.
+  4 migrations, all applied via `supabase db push`.
+- Mobile: Expo SQLite local database (`src/lib/sqlite/`) — cached customers/milk types, a
+  `local_deliveries` table, and a durable `sync_outbox` queue, with a versioned migration
+  runner.
+- "Today's Route" (`src/screens/worker/today-route.tsx`): assigned customers with a
+  delivery-entry sheet (quick-quantity chips, status, conditional reason field) that saves
+  instantly to SQLite and enqueues the sync outbox in one transaction — no network wait.
+- Sync engine (`src/lib/sync/sync-engine.ts`): triggers on app startup, foreground,
+  connectivity restored (`@react-native-community/netinfo`), and manual retry; bounded
+  exponential backoff for transient failures; permanent rejections (unauthorized customer,
+  invalid data) surfaced for manual review instead of retried forever; reconciles the worker's
+  own recent server-side deliveries without ever clobbering an unsynced local edit.
+- Delivery History and Sync Status screens wired to real local data; `OfflineBanner` wired to
+  real connectivity + pending-outbox count.
+
+**Verified:**
+- `npx tsc --noEmit` — 0 errors. `npx eslint .` — 0 errors. `npx jest` — 42/42 passing.
+- `npx expo-doctor` — 20/20. `npx expo export --platform web` — all routes bundle (required
+  adding `.wasm` to Metro's asset extensions for `expo-sqlite`'s web build — native
+  Android/iOS is unaffected).
+- `supabase db advisors --linked --type all` — 0 issues besides the two documented, intentional
+  exceptions (`is_admin()`, `submit_delivery_event()`).
+- Live RPC tests against the real project with a real worker JWT: valid creation, idempotent
+  duplicate retry, rejected unassigned-customer submission, rejected invalid quantity, a
+  stale-version correction correctly flagged as a conflict with the original preserved, and a
+  correctly-versioned correction applied — all with test data cleaned up afterward. Full log in
+  `docs/database-schema.md`.
+
+**Explicitly not implemented yet** (by design — later stages' scope):
+- No admin-side view of flagged conflicts or failed-sync records (Stage 4).
+- The manual Android airplane-mode test procedure needs a physical device/emulator, not
+  available in this build environment — documented in `docs/offline-sync.md` for the user to
+  run.
 
 ## Stage 4 — Admin Delivery Monitoring
 

@@ -12,6 +12,8 @@
 
 export type UserRole = 'admin' | 'worker';
 export type CustomerStatus = 'active' | 'inactive';
+export type DeliveryStatus = 'completed' | 'partial' | 'missed';
+export type DeliveryEventType = 'created' | 'corrected';
 
 export interface Database {
   public: {
@@ -228,12 +230,89 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      deliveries: {
+        Row: {
+          id: string;
+          customer_id: string;
+          worker_id: string;
+          milk_type_id: string;
+          delivery_date: string;
+          scheduled_quantity_ml: number;
+          delivered_quantity_ml: number;
+          status: DeliveryStatus;
+          reason: string | null;
+          price_paise_snapshot: number;
+          device_recorded_at: string;
+          server_created_at: string;
+          version: number;
+          has_conflict: boolean;
+          created_by: string | null;
+          updated_at: string;
+        };
+        // Written only by the submit_delivery_event RPC — never inserted/updated directly.
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      delivery_events: {
+        Row: {
+          id: string;
+          delivery_id: string;
+          customer_id: string;
+          worker_id: string;
+          event_type: DeliveryEventType;
+          payload: Record<string, unknown>;
+          device_recorded_at: string;
+          server_received_at: string;
+          applied: boolean;
+          conflict: boolean;
+        };
+        Insert: Record<string, never>; // written only by submit_delivery_event
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      delivery_sync_receipts: {
+        Row: {
+          event_id: string;
+          delivery_id: string;
+          outcome: string;
+          processed_at: string;
+        };
+        Insert: Record<string, never>; // written only by submit_delivery_event
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      submit_delivery_event: {
+        Args: {
+          p_event_id: string;
+          p_delivery_id: string;
+          p_customer_id: string;
+          p_milk_type_id: string;
+          p_delivery_date: string;
+          p_event_type: DeliveryEventType;
+          p_status: DeliveryStatus;
+          p_delivered_quantity_ml: number;
+          p_reason: string | null;
+          p_expected_version: number | null;
+          p_device_recorded_at: string;
+        };
+        Returns: {
+          applied: boolean;
+          duplicate: boolean;
+          conflict: boolean;
+          outcome: string;
+          delivery: Database['public']['Tables']['deliveries']['Row'] | null;
+        };
+      };
+    };
     Enums: {
       user_role: UserRole;
       customer_status: CustomerStatus;
+      delivery_status: DeliveryStatus;
+      delivery_event_type: DeliveryEventType;
     };
     CompositeTypes: Record<string, never>;
   };

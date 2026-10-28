@@ -1,11 +1,5 @@
-import { PlaceholderScreen } from '@/components/placeholder-screen';
+import { DeliveryHistoryScreen } from '@/screens/worker/delivery-history';
 
 export default function WorkerHistoryScreen() {
-  return (
-    <PlaceholderScreen
-      title="Delivery History"
-      description="The worker's own past delivery records, both synced and locally pending."
-      comingInStage="Built in Stage 3 (offline delivery recording and synchronization)."
-    />
-  );
+  return <DeliveryHistoryScreen />;
 }

@@ -80,10 +80,9 @@ existence are (1) a one-time, manually-bootstrapped first admin account and (2) 
 `admin-create-worker` Edge Function, callable only by an authenticated admin. See
 `docs/database-schema.md` for the full flow.
 
-## Offline synchronization (added in Stage 3)
+## Offline synchronization (Stage 3)
 
 Expo SQLite holds cached route/customer data and a persistent outbox of pending delivery
 events. Synchronization is idempotent (unique device-generated event IDs + server-side
-idempotency), retried with bounded exponential backoff, and never deletes a queued record
-until the server acknowledges it. Full design documented in `docs/offline-sync.md` once
-Stage 3 lands.
+idempotency via `submit_delivery_event`), retried with bounded exponential backoff, and never
+deletes a queued record until the server acknowledges it. Full design: `docs/offline-sync.md`.

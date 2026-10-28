@@ -16,9 +16,13 @@ entirely version-controlled in `supabase/migrations/`; this file explains the *w
 | `business_settings` | Single-row (`id = true`) table: business name, contact details, currency, timezone (`Asia/Kolkata` by default). |
 | `audit_logs` | Append-only. Populated automatically by triggers on `profiles`, `workers`, `customers`, `customer_milk_rates` — never written directly by application code. |
 
-Added in later stages: `delivery_schedules`, `deliveries`, `delivery_events`,
-`delivery_sync_receipts` (Stage 3); `monthly_bills`, `bill_items`, `bill_adjustments`,
-`payments` (Stage 5); `device_sync_state` (Stage 3, if needed).
+| `deliveries` | Authoritative delivery record, one per `(customer_id, delivery_date)`. Written only through `submit_delivery_event` — never inserted/updated directly by any client role. Carries `price_paise_snapshot`, resolved at write time, so later pricing changes never alter history. |
+| `delivery_events` | Append-only, immutable log of every submitted event. The event id (device-generated) is the system's idempotency key. |
+| `delivery_sync_receipts` | One row per processed event id — the quick duplicate check and the canonical "yes, the server has this" record. |
+
+Full design, the sync engine, and conflict-handling rules: [`docs/offline-sync.md`](offline-sync.md).
+
+Added in later stages: `monthly_bills`, `bill_items`, `bill_adjustments`, `payments` (Stage 5).
 
 ## Conventions
 
@@ -61,6 +65,21 @@ Added in later stages: `delivery_schedules`, `deliveries`, `delivery_events`,
   - `audit_logs`: admin can read; nobody can write directly (only the audit triggers, which
     run as the table owner and bypass RLS).
   - `business_settings`: any authenticated user can read (not sensitive); admin-only update.
+  - `deliveries`, `delivery_events`, `delivery_sync_receipts` (Stage 3): a worker reads only
+    their own rows; an admin reads all. **No insert/update policy at all** for `authenticated`
+    on any of the three — the only write path is the `submit_delivery_event` RPC (below),
+    which performs its own authorization checks and is `SECURITY DEFINER`.
+
+## Offline delivery sync (Stage 3)
+
+`public.submit_delivery_event(...)` is the single write path for deliveries — see
+[`docs/offline-sync.md`](offline-sync.md) for the full client-side design. Per call, it:
+verifies the caller is an active worker; verifies the customer is currently assigned to them
+(never trusts a cached assignment); answers from `delivery_sync_receipts` without reprocessing
+if the event id was already seen (idempotent); resolves and snapshots the price at the
+delivery's date via `resolve_milk_price_paise`; and applies a `created` event as an insert or a
+`corrected` event as a version-checked update — a version mismatch or a same-day duplicate
+creation is stored and flagged `conflict`, never silently merged or overwritten.
 
 ## Verification (2026-10-28)
 
@@ -92,6 +111,27 @@ Run with the Supabase CLI against the live project (`supabase db advisors --link
   - All test data created for the above was deleted afterward; nothing synthetic remains in
     the production project.
 
+## Verification — Stage 3 (2026-10-28)
+
+- `supabase db push` — all 4 migrations applied cleanly.
+- `supabase db advisors --type all` — 0 issues besides the two documented, intentional
+  exceptions (`is_admin()` from Stage 2, and `submit_delivery_event()` itself — it's meant to
+  be callable by any signed-in worker; that's the whole point).
+- Live tests against the real project with a real worker JWT (`admin-create-worker` used to
+  provision a temporary test worker, deleted afterward):
+  - Valid `created` event → applied, correct `price_paise_snapshot` resolved from the milk
+    type default.
+  - The exact same event id retried → answered as a duplicate from the stored receipt, applied
+    `true`, **no second row created**.
+  - Event for a customer not assigned to the caller → rejected (`P0001`), not applied.
+  - Negative `delivered_quantity_ml` → rejected by the `deliveries` check constraint (`23514`).
+  - `corrected` event with a stale `expected_version` → stored, flagged `conflict: true`, the
+    original row **left untouched** (`has_conflict` set, but `version`/`status`/quantity
+    unchanged).
+  - `corrected` event with the correct `expected_version` → applied, `version` incremented.
+  - All test data (delivery, events, receipt, customer, worker) deleted afterward; project back
+    to its pre-test state.
+
 ## Known follow-ups
 
 - **Leaked password protection** (Supabase Auth → Password Security) is currently disabled
@@ -100,3 +140,7 @@ Run with the Supabase CLI against the live project (`supabase db advisors --link
 - Milk-type default pricing is seeded (`Cow Milk` ₹55/L, `Buffalo Milk` ₹65/L) as a
   reasonable starting point — not fixed data, editable by an admin once Stage 5 adds a
   milk-type management screen (or directly via SQL in the meantime).
+- A worker deactivated or reassigned while they have unsynced deliveries queued offline will
+  have those uploads rejected at sync time (by design — see `docs/offline-sync.md`, "Known
+  limitations"). The evidence stays on the device; admin-side review/reconciliation of such
+  cases isn't built yet (candidate for Stage 4).
