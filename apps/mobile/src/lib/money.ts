@@ -17,3 +17,12 @@ export function parseRupeesToPaise(input: string): number | null {
   }
   return Math.round(Number(trimmed) * 100);
 }
+
+/** Same as parseRupeesToPaise but allows a leading "-" — for bill adjustments (discounts). */
+export function parseSignedRupeesToPaise(input: string): number | null {
+  const trimmed = input.trim();
+  if (!/^-?\d+(\.\d{1,2})?$/.test(trimmed)) {
+    return null;
+  }
+  return Math.round(Number(trimmed) * 100);
+}

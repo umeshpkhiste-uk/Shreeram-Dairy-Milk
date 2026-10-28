@@ -15,14 +15,16 @@ entirely version-controlled in `supabase/migrations/`; this file explains the *w
 | `customer_milk_rates` | Effective-dated customer-specific pricing. The authoritative source for what a delivery should be billed at (resolve by `customer_id` + `milk_type_id` + the delivery's date falling inside `[effective_from, effective_to)`). |
 | `business_settings` | Single-row (`id = true`) table: business name, contact details, currency, timezone (`Asia/Kolkata` by default). |
 | `audit_logs` | Append-only. Populated automatically by triggers on `profiles`, `workers`, `customers`, `customer_milk_rates` — never written directly by application code. |
-
 | `deliveries` | Authoritative delivery record, one per `(customer_id, delivery_date)`. Written only through `submit_delivery_event` — never inserted/updated directly by any client role. Carries `price_paise_snapshot`, resolved at write time, so later pricing changes never alter history. |
 | `delivery_events` | Append-only, immutable log of every submitted event. The event id (device-generated) is the system's idempotency key. |
 | `delivery_sync_receipts` | One row per processed event id — the quick duplicate check and the canonical "yes, the server has this" record. |
+| `monthly_bills` | One row per customer per billing month (unique among non-voided bills). Status (`draft`/`finalized`/`partially_paid`/`paid`/`voided`), running totals, and `flagged_for_review` for late-arriving deliveries. Written only through the billing RPCs. |
+| `bill_items` | One row per billed delivery. `price_paise` is copied from the delivery's own immutable snapshot. A delivery can appear in at most one non-voided bill (`bill_items_delivery_once_idx`). |
+| `bill_adjustments` | Append-only, signed `amount_paise` (negative = discount/credit), written only by `add_bill_adjustment`. |
+| `payments` | `id` is client-generated and is the idempotency key for `record_payment`. A `(bill_id, transaction_reference)` can't repeat. |
 
 Full design, the sync engine, and conflict-handling rules: [`docs/offline-sync.md`](offline-sync.md).
-
-Added in later stages: `monthly_bills`, `bill_items`, `bill_adjustments`, `payments` (Stage 5).
+Full billing policy, RPC contracts, and the late-delivery flagging flow: [`docs/billing.md`](billing.md).
 
 ## Conventions
 
@@ -160,9 +162,11 @@ Run with the Supabase CLI against the live project (`supabase db advisors --link
   for this project — flagged by `supabase db advisors`. It's a dashboard-only toggle (not
   controllable from this CLI version's `config.toml`); worth enabling before go-live.
 - Milk-type default pricing is seeded (`Cow Milk` ₹55/L, `Buffalo Milk` ₹65/L) as a
-  reasonable starting point — not fixed data, editable by an admin once Stage 5 adds a
-  milk-type management screen (or directly via SQL in the meantime).
+  reasonable starting point — editable by an admin via the Milk Types screen (Stage 5).
 - A worker deactivated or reassigned while they have unsynced deliveries queued offline will
   have those uploads rejected at sync time (by design — see `docs/offline-sync.md`, "Known
   limitations"). The evidence stays on the device; admin-side review/reconciliation of such
-  cases isn't built yet (candidate for Stage 4).
+  cases isn't built yet.
+- Billing: bulk "generate bills for every customer" and dedicated email/WhatsApp API
+  integrations are deferred (the native share sheet covers sharing a PDF) — see
+  `docs/billing.md`, "Deferred."

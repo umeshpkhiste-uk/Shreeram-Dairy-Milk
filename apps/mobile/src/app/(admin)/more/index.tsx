@@ -10,6 +10,7 @@ import { Spacing } from '@/theme/tokens';
 
 const menuItems = [
   { href: '/(admin)/more/workers', label: 'Workers & Routes', icon: 'map-outline' as const },
+  { href: '/(admin)/more/milk-types', label: 'Milk Types', icon: 'water-outline' as const },
   { href: '/(admin)/more/payments', label: 'Payments', icon: 'cash-outline' as const },
   { href: '/(admin)/more/reports', label: 'Reports', icon: 'bar-chart-outline' as const },
   { href: '/(admin)/more/settings', label: 'Settings', icon: 'settings-outline' as const },

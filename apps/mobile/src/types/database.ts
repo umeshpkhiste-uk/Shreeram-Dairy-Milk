@@ -14,6 +14,8 @@ export type UserRole = 'admin' | 'worker';
 export type CustomerStatus = 'active' | 'inactive';
 export type DeliveryStatus = 'completed' | 'partial' | 'missed';
 export type DeliveryEventType = 'created' | 'corrected';
+export type BillStatus = 'draft' | 'finalized' | 'partially_paid' | 'paid' | 'voided';
+export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'other';
 
 export interface Database {
   public: {
@@ -282,6 +284,81 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      monthly_bills: {
+        Row: {
+          id: string;
+          customer_id: string;
+          billing_month: string;
+          bill_number: string;
+          status: BillStatus;
+          previous_outstanding_balance_paise: number;
+          subtotal_paise: number;
+          adjustments_total_paise: number;
+          total_payable_paise: number;
+          flagged_for_review: boolean;
+          flagged_reason: string | null;
+          sent_at: string | null;
+          finalized_at: string | null;
+          finalized_by: string | null;
+          voided_at: string | null;
+          void_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        // Written only by the billing RPCs — never inserted/updated directly.
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      bill_items: {
+        Row: {
+          id: string;
+          bill_id: string;
+          delivery_id: string;
+          delivery_date: string;
+          milk_type_id: string;
+          quantity_ml: number;
+          price_paise: number;
+          amount_paise: number;
+          voided: boolean;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      bill_adjustments: {
+        Row: {
+          id: string;
+          bill_id: string;
+          amount_paise: number;
+          reason: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Record<string, never>; // written only by add_bill_adjustment
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      payments: {
+        Row: {
+          id: string;
+          bill_id: string;
+          customer_id: string;
+          amount_paise: number;
+          method: PaymentMethod;
+          method_detail: string | null;
+          transaction_reference: string | null;
+          payment_date: string;
+          notes: string | null;
+          recorded_by: string | null;
+          voided_at: string | null;
+          void_reason: string | null;
+          created_at: string;
+        };
+        Insert: Record<string, never>; // written only by record_payment/void_payment
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -307,12 +384,62 @@ export interface Database {
           delivery: Database['public']['Tables']['deliveries']['Row'] | null;
         };
       };
+      create_draft_bill: {
+        Args: { p_customer_id: string; p_billing_month: string };
+        Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      recalculate_draft_bill: {
+        Args: { p_bill_id: string };
+        Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      add_bill_adjustment: {
+        Args: { p_bill_id: string; p_amount_paise: number; p_reason: string };
+        Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      finalize_bill: {
+        Args: { p_bill_id: string };
+        Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      void_bill: {
+        Args: { p_bill_id: string; p_reason: string };
+        Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      acknowledge_bill_flag: {
+        Args: { p_bill_id: string };
+        Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      mark_bill_sent: {
+        Args: { p_bill_id: string };
+        Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      record_payment: {
+        Args: {
+          p_payment_id: string;
+          p_bill_id: string;
+          p_amount_paise: number;
+          p_method: PaymentMethod;
+          p_method_detail: string | null;
+          p_transaction_reference: string | null;
+          p_payment_date: string;
+          p_notes: string | null;
+        };
+        Returns: {
+          duplicate: boolean;
+          bill: Database['public']['Tables']['monthly_bills']['Row'];
+        };
+      };
+      void_payment: {
+        Args: { p_payment_id: string; p_reason: string };
+        Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
     };
     Enums: {
       user_role: UserRole;
       customer_status: CustomerStatus;
       delivery_status: DeliveryStatus;
       delivery_event_type: DeliveryEventType;
+      bill_status: BillStatus;
+      payment_method: PaymentMethod;
     };
     CompositeTypes: Record<string, never>;
   };

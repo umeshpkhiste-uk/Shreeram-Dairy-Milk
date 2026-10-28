@@ -10,7 +10,7 @@ as each stage completes.
 | 2 | Supabase, Authentication, Customers and Workers | ✅ Complete |
 | 3 | Offline Delivery Recording and Synchronization | ✅ Complete |
 | 4 | Admin Delivery Monitoring | ✅ Complete |
-| 5 | Monthly Billing, Payments and PDF Reports | Not started |
+| 5 | Monthly Billing, Payments and PDF Reports | ✅ Complete |
 | 6 | Security, Testing and Android Release | Not started |
 | 7 | Future Website and Vercel Deployment | Not started |
 
@@ -174,11 +174,46 @@ Full design, metric definitions, and verification: [`docs/admin-monitoring.md`](
   Monthly Bills quick actions — no `bills`/`payments` tables exist yet.
 - No admin action to resolve a flagged delivery conflict (`has_conflict`) beyond direct SQL.
 
-## Stage 5 — Monthly Billing, Payments and PDF Reports
+## Stage 5 — Monthly Billing, Payments and PDF Reports ✅
 
-Historical pricing, monthly bill calculation from billable deliveries only, bill
-finalization as a transaction-safe server-side operation, payment tracking, and PDF
-generation/sharing.
+Full billing policy, RPC contracts, and verification: [`docs/billing.md`](billing.md).
+
+**Delivered:**
+- Server: `monthly_bills`/`bill_items`/`bill_adjustments`/`payments` tables, admin-only RLS
+  (no direct writes at all), and the billing/payment RPCs (`create_draft_bill`,
+  `recalculate_draft_bill`, `add_bill_adjustment`, `finalize_bill`, `void_bill`,
+  `acknowledge_bill_flag`, `mark_bill_sent`, `record_payment`, `void_payment`) — 7 migrations.
+  `submit_delivery_event` (Stage 3) extended so a late offline delivery flags an
+  already-finalized bill for review instead of silently changing it.
+- Mobile: Billing tab (pick a month, create/view each customer's bill), full bill detail
+  screen (breakdown, adjustments, payments, finalize/recalculate/void, PDF preview/share,
+  mark-as-sent, flagged-for-review banner), a customer's billing history on their detail
+  screen, a cross-customer payments ledger, a CSV billing-summary report, and — closing two
+  Stage 2 follow-ups — a Milk Types management screen and a Business Settings form.
+- PDF generation via `expo-print` + `expo-sharing` (native share sheet); the app never claims
+  a bill was "sent" just because the share sheet opened — that's a separate, explicit action.
+
+**Verified:**
+- `npx tsc --noEmit` — 0 errors. `npx eslint .` — 0 errors. `npx jest` — 73/73 passing.
+- `npx expo-doctor` — 20/20. `npx expo export --platform web` — all routes bundle.
+- `supabase db advisors --linked --type all` — 0 issues beyond the documented
+  "callable by `authenticated`" exceptions (every admin RPC, intentional) and the pre-existing
+  leaked-password toggle.
+- Live tests against the real project: a month of mixed completed/partial/missed deliveries
+  billed to the exact expected integer-paise amount (missed excluded); duplicate-bill and
+  duplicate-delivery-billing both rejected; an adjustment applied correctly; two partial
+  payments walked `finalized → partially_paid → paid` exactly at the boundary; a retried
+  payment was idempotent (no duplicate row); a duplicate transaction reference rejected; a
+  late delivery after finalization flagged the bill without changing its totals; voiding a
+  bill freed its deliveries for a correct rebill; a worker's session got zero rows from all
+  four tables. One bug found and fixed live before any client code shipped (a `CASE`
+  expression resolving to `text` instead of the `bill_status` enum). All test data deleted
+  afterward.
+
+**Explicitly not implemented yet** (documented, not silently dropped):
+- Bulk "generate bills for every customer for a month" — one at a time for now.
+- Dedicated email/WhatsApp API integrations — the native share sheet already covers this.
+- A broader reports suite beyond the one CSV export.
 
 ## Stage 6 — Security, Testing and Android Release
 

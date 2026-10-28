@@ -1,6 +1,6 @@
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Link, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
@@ -11,6 +11,7 @@ import { LoadingState } from '@/components/loading-state';
 import { Screen } from '@/components/screen';
 import { StatusBadge } from '@/components/status-badge';
 import { Text } from '@/components/text';
+import { listBillsForCustomer, type MonthlyBillRow } from '@/lib/api/bills';
 import {
   listRatesForCustomer,
   setCustomerRate,
@@ -22,6 +23,7 @@ import {
   updateCustomer,
   type CustomerRow,
 } from '@/lib/api/customers';
+import { BILL_STATUS_LABEL, BILL_STATUS_TONE } from '@/lib/billing/status';
 import { formatPaiseAsRupees, parseRupeesToPaise } from '@/lib/money';
 import { CustomerForm } from '@/screens/admin/customer-form';
 import type { CustomerFormValues } from '@/lib/validation/customer';
@@ -149,10 +151,7 @@ export default function CustomerDetailScreen() {
 
       <CustomerPricingSection customerId={customer.id} milkTypeId={customer.milk_type_id} />
 
-      <EmptyState
-        title="Delivery history not available yet"
-        description="Delivery records, monthly bills, and outstanding balance appear here starting Stage 3 and Stage 5."
-      />
+      <CustomerBillingSection customerId={customer.id} />
 
       <View style={styles.actions}>
         <Button label="Edit" onPress={() => setEditing(true)} />
@@ -253,6 +252,58 @@ function CustomerPricingSection({
   );
 }
 
+function CustomerBillingSection({ customerId }: { customerId: string }) {
+  const [bills, setBills] = useState<MonthlyBillRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    listBillsForCustomer(customerId)
+      .then(setBills)
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load bills'));
+  }, [customerId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
+  return (
+    <Card style={styles.card}>
+      <Text variant="subtitle">Billing history</Text>
+      {error ? (
+        <Text variant="body" color="danger">
+          {error}
+        </Text>
+      ) : bills === null ? (
+        <Text variant="body" color="secondary">
+          Loading…
+        </Text>
+      ) : bills.length === 0 ? (
+        <EmptyState
+          title="No bills yet"
+          description="Create a bill for this customer from the Billing tab."
+        />
+      ) : (
+        bills.map((bill) => (
+          <Link key={bill.id} href={`/(admin)/billing/${bill.id}`} asChild>
+            <Pressable style={styles.billRow}>
+              <Text variant="body">{bill.bill_number}</Text>
+              <StatusBadge
+                label={BILL_STATUS_LABEL[bill.status]}
+                tone={BILL_STATUS_TONE[bill.status]}
+              />
+              <Text variant="body" color="secondary">
+                {formatPaiseAsRupees(bill.total_payable_paise)}
+              </Text>
+            </Pressable>
+          </Link>
+        ))
+      )}
+    </Card>
+  );
+}
+
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.fieldRow}>
@@ -268,6 +319,12 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   card: { gap: Spacing.sm },
   fieldRow: { gap: 2 },
+  billRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
   actions: { gap: Spacing.sm },
   rateForm: { gap: Spacing.sm },
   rateFormActions: { flexDirection: 'row', gap: Spacing.sm },
