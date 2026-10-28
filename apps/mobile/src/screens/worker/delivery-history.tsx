@@ -1,55 +1,35 @@
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { Link, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { Screen } from '@/components/screen';
-import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Text } from '@/components/text';
-import {
-  getCachedMilkTypeName,
-  listCachedCustomers,
-  type CachedCustomer,
-} from '@/lib/sqlite/cache-repo';
+import { listCachedCustomers, type CachedCustomer } from '@/lib/sqlite/cache-repo';
 import { listLocalDeliveriesSince, type LocalDelivery } from '@/lib/sqlite/deliveries-repo';
 import { Spacing } from '@/theme/tokens';
 
-const STATUS_LABEL: Record<string, string> = {
-  completed: 'Delivered',
-  partial: 'Partial',
-  missed: 'Missed',
-  skipped: 'No delivery — customer informed',
-};
-const STATUS_TONE: Record<string, StatusTone> = {
-  completed: 'success',
-  partial: 'warning',
-  missed: 'danger',
-  skipped: 'warning',
-};
-const SYNC_LABEL: Record<string, string> = {
-  pending: 'Not synced yet',
-  syncing: 'Syncing…',
-  synced: 'Synced',
-  failed: 'Sync failed',
-  conflict: 'Conflict — flagged for review',
-};
-const SYNC_TONE: Record<string, StatusTone> = {
-  pending: 'neutral',
-  syncing: 'info',
-  synced: 'success',
-  failed: 'danger',
-  conflict: 'warning',
-};
-
 const HISTORY_DAYS = 14;
 
+type CustomerSummary = {
+  customer: CachedCustomer;
+  delivered: number;
+  missed: number;
+  skipped: number;
+};
+
+/**
+ * Customer-wise entry point for history — no per-day rows here. Tapping a
+ * card opens that customer's numbers-only summary
+ * (customer-delivery-summary.tsx), never a per-day breakdown.
+ */
 export function DeliveryHistoryScreen() {
-  const [customers, setCustomers] = useState<Record<string, CachedCustomer>>({});
-  const [deliveries, setDeliveries] = useState<LocalDelivery[] | null>(null);
+  const [customers, setCustomers] = useState<CachedCustomer[] | null>(null);
+  const [deliveries, setDeliveries] = useState<LocalDelivery[]>([]);
 
   const load = useCallback(() => {
-    setCustomers(Object.fromEntries(listCachedCustomers().map((c) => [c.id, c])));
+    setCustomers(listCachedCustomers());
     const since = new Date();
     since.setDate(since.getDate() - HISTORY_DAYS);
     setDeliveries(listLocalDeliveriesSince(since.toISOString().slice(0, 10)));
@@ -61,61 +41,66 @@ export function DeliveryHistoryScreen() {
     }, [load]),
   );
 
-  if (deliveries === null) return null;
+  const summaries = useMemo<CustomerSummary[]>(() => {
+    if (!customers) return [];
+    const byCustomer = new Map<string, LocalDelivery[]>();
+    for (const d of deliveries) {
+      const list = byCustomer.get(d.customer_id) ?? [];
+      list.push(d);
+      byCustomer.set(d.customer_id, list);
+    }
+    return customers
+      .map((customer) => {
+        const rows = byCustomer.get(customer.id) ?? [];
+        return {
+          customer,
+          delivered: rows.filter((r) => r.status === 'completed' || r.status === 'partial').length,
+          missed: rows.filter((r) => r.status === 'missed').length,
+          skipped: rows.filter((r) => r.status === 'skipped').length,
+        };
+      })
+      .filter((s) => s.delivered + s.missed + s.skipped > 0);
+  }, [customers, deliveries]);
+
+  if (customers === null) return null;
 
   return (
     <Screen>
       <Text variant="title">Delivery History</Text>
-      {deliveries.length === 0 ? (
+      {summaries.length === 0 ? (
         <EmptyState
           title="No deliveries recorded yet"
-          description="Deliveries you record on Today's Route appear here, synced or not."
+          description="Deliveries you record on Today's Route appear here, grouped by customer."
         />
       ) : (
         <FlatList
-          data={deliveries}
-          keyExtractor={(d) => d.delivery_id}
+          data={summaries}
+          keyExtractor={(s) => s.customer.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <HistoryRow delivery={item} customer={customers[item.customer_id]} />
-          )}
+          renderItem={({ item }) => <CustomerSummaryRow summary={item} />}
         />
       )}
     </Screen>
   );
 }
 
-function HistoryRow({
-  delivery,
-  customer,
-}: {
-  delivery: LocalDelivery;
-  customer?: CachedCustomer;
-}) {
-  const milkTypeName = getCachedMilkTypeName(delivery.milk_type_id) ?? 'Milk';
-
+function CustomerSummaryRow({ summary }: { summary: CustomerSummary }) {
   return (
-    <Card style={styles.row}>
-      <View style={styles.rowHeader}>
-        <Text variant="subtitle">{customer?.full_name ?? 'Unknown customer'}</Text>
-        <StatusBadge
-          label={STATUS_LABEL[delivery.status] ?? delivery.status}
-          tone={STATUS_TONE[delivery.status] ?? 'neutral'}
-        />
-      </View>
-      <Text variant="body" color="secondary">
-        {delivery.delivery_date} · {milkTypeName} · {delivery.delivered_quantity_ml} ml
-      </Text>
-      {delivery.reason ? (
-        <Text variant="caption" color="secondary">
-          {delivery.reason}
-        </Text>
-      ) : null}
-      <StatusBadge
-        label={SYNC_LABEL[delivery.sync_status] ?? delivery.sync_status}
-        tone={SYNC_TONE[delivery.sync_status] ?? 'neutral'}
-      />
-    </Card>
+    <Link href={`/(worker)/history/${summary.customer.id}`} asChild>
+      <Pressable accessibilityRole="button">
+        <Card style={styles.row}>
+          <View style={styles.rowHeader}>
+            <Text variant="subtitle">{summary.customer.full_name}</Text>
+          </View>
+          <Text variant="body" color="secondary">
+            {summary.customer.address}
+          </Text>
+          <Text variant="caption" color="secondary">
+            {summary.delivered} delivered · {summary.missed} missed · {summary.skipped} skipped
+          </Text>
+        </Card>
+      </Pressable>
+    </Link>
   );
 }
 
