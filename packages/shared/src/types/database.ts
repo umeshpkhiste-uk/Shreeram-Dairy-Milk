@@ -16,6 +16,8 @@ export type DeliveryStatus = 'completed' | 'partial' | 'missed' | 'skipped';
 export type DeliveryEventType = 'created' | 'corrected';
 export type BillStatus = 'draft' | 'finalized' | 'partially_paid' | 'paid' | 'voided';
 export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'other';
+export type ProductUnit = 'litre' | 'kg';
+export type OrderStatus = 'active' | 'cancelled';
 
 export interface Database {
   public: {
@@ -100,6 +102,61 @@ export interface Database {
           default_price_paise: number;
           is_active: boolean;
         }>;
+        Relationships: [];
+      };
+      products: {
+        Row: {
+          id: string;
+          name: string;
+          unit: ProductUnit;
+          price_paise: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          unit: ProductUnit;
+          price_paise: number;
+          is_active?: boolean;
+        };
+        Update: Partial<{
+          name: string;
+          unit: ProductUnit;
+          price_paise: number;
+          is_active: boolean;
+        }>;
+        Relationships: [];
+      };
+      orders: {
+        Row: {
+          id: string;
+          customer_id: string;
+          worker_id: string;
+          order_date: string;
+          status: OrderStatus;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Record<string, never>; // written only by create_order
+        Update: Partial<{ status: OrderStatus }>;
+        Relationships: [];
+      };
+      order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          product_id: string;
+          quantity: number;
+          price_paise: number;
+          amount_paise: number;
+          created_at: string;
+        };
+        Insert: Record<string, never>; // written only by create_order
+        Update: Record<string, never>;
         Relationships: [];
       };
       customers: {
@@ -436,6 +493,16 @@ export interface Database {
         Args: { p_payment_id: string; p_reason: string };
         Returns: Database['public']['Tables']['monthly_bills']['Row'];
       };
+      create_order: {
+        Args: {
+          p_customer_id: string;
+          p_worker_id: string;
+          p_order_date: string;
+          p_notes: string | null;
+          p_items: { productId: string; quantity: number }[];
+        };
+        Returns: Database['public']['Tables']['orders']['Row'];
+      };
     };
     Enums: {
       user_role: UserRole;
@@ -444,6 +511,8 @@ export interface Database {
       delivery_event_type: DeliveryEventType;
       bill_status: BillStatus;
       payment_method: PaymentMethod;
+      product_unit: ProductUnit;
+      order_status: OrderStatus;
     };
     CompositeTypes: Record<string, never>;
   };

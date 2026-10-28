@@ -70,6 +70,7 @@ All under `src/app/(admin)/*` except `/login` — the route group's `layout.tsx`
 | `/workers` | Worker accounts (create via the Edge Function), routes, route assignment, activate/deactivate — closes a gap neither app had before (no deactivate-worker UI existed anywhere). |
 | `/deliveries` | The daily delivery report — same left-join logic as the mobile app's admin screen, same "no record yet ≠ missed" rule. Each customer name links to `/deliveries/[customerId]`. |
 | `/deliveries/[customerId]` | Per-customer delivery calendar (added post-launch, admin-website-only, per owner feedback) — see "Per-customer delivery calendar" below. |
+| `/orders` | One-time product orders (paneer, ghee, dahi, etc.) — see "One-time product orders" below. |
 | `/billing`, `/billing/[id]`, `/billing/[id]/print` | Month picker, create/view bills, full breakdown, adjustments, payments, finalize/recalculate/void, the flagged-for-review banner, a back button, a delivery summary (days delivered / total quantity / average per delivery), and the website's PDF path (see below). |
 | `/payments` | Cross-customer payments ledger. |
 | `/reports` | Billing-summary table + CSV export (`/api/reports/billing-summary`, a Route Handler — see the Next.js data-patterns reference for why a file download needs one). |
@@ -110,6 +111,32 @@ that already has a `completed`/`partial` delivery. `skipped` is automatically ex
 billing (`create_draft_bill` already whitelists `completed`/`partial` only) and automatically
 satisfies the existing `deliveries` reason-required-unless-completed check constraint — no other
 schema or RPC changed.
+
+## One-time product orders
+
+`/orders` (Stage 8, `supabase/migrations/20261029090000_stage8_products_orders_schema.sql`,
+`...20261029090001_stage8_create_order_rpc.sql`) — a separate ad-hoc ordering flow for items
+outside the daily milk subscription: paneer, dahi, ghee, shrikhand, aamrakhand, basundi, khava,
+plus milk itself for one-off extra quantities. Deliberately **not** billing-integrated (owner
+decision): orders never touch `bill_items`/`monthly_bills`, so they're tracked for fulfilment
+only, same as the owner's price-list poster — not a payment record.
+
+- `products`: a flat catalog (`name`, `unit` — `litre` or `kg`, `price_paise` per unit), seeded
+  from the owner's poster prices, admin-editable (RLS: any authenticated select, admin-only
+  write) the same way `milk_types` is.
+- `orders` + `order_items`: one order per customer+date, one assigned worker (`orders.worker_id`,
+  `not null`), one or more items. `order_items.quantity` is an integer in the product's base unit
+  (millilitres for `litre`, grams for `kg`) — same convention as `deliveries.delivered_quantity_ml`,
+  never a float. `price_paise`/`amount_paise` are snapshotted per item at order time.
+- `create_order(customer_id, worker_id, order_date, notes, items)`: the only write path. Admin-only
+  (`is_admin()`), and — same principle as `resolve_milk_price_paise` — always resolves each item's
+  price from the current `products` row server-side, never from a client-supplied price.
+- Worker visibility is **read-only**: RLS lets a worker `select` only orders where
+  `worker_id = auth.uid()` (mirroring `customers`' assigned-worker policy), and the mobile app's
+  new Orders tab never shows pricing — it's a delivery reminder (customer, date, item, quantity),
+  not a financial record. No fulfilment/complete action exists anywhere (owner decision);
+  cancelling a wrongly-placed order is the only state change, done from the website
+  (`orders.status` → `cancelled`).
 
 **Worker-app sync (closed in a follow-up pass)**: an admin's `skipped` marking needed no new sync
 plumbing — `admin_mark_delivery_skipped` attributes the row to the customer's real assigned
