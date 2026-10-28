@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { BILL_STATUS_LABEL, BILL_STATUS_TONE, formatPaiseAsRupees } from '@shreeram/shared';
 
-import { Badge, Card, PageHeader, SecondaryButton } from '@/components/ui';
+import { Badge, Card, SecondaryButton } from '@/components/ui';
 import { getBillWithDetails } from '@/lib/data/bills';
 import { getCustomer } from '@/lib/data/customers';
 import { listAllMilkTypes } from '@/lib/data/milk-types';
@@ -42,6 +42,7 @@ export default async function BillDetailPage({ params }: PageProps) {
   const milkTypeNameById = new Map(milkTypes.map((m) => [m.id, m.name]));
 
   const totalPaid = payments.reduce((sum, p) => sum + p.amount_paise, 0);
+  const totalMl = items.reduce((sum, item) => sum + item.quantity_ml, 0);
   const isDraft = bill.status === 'draft';
   const isVoided = bill.status === 'voided';
 
@@ -51,24 +52,28 @@ export default async function BillDetailPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={`Bill ${bill.bill_number}`}
-        description={`${customer?.full_name ?? 'Customer'} · ${bill.billing_month}`}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <BackButton />
-            <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
-            {!isVoided ? (
-              <Link
-                href={`/billing/${id}/print`}
-                className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted"
-              >
-                Print / Save as PDF
-              </Link>
-            ) : null}
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <BackButton />
+          <div>
+            <h1 className="text-2xl font-semibold text-text">Bill {bill.bill_number}</h1>
+            <p className="mt-1 text-sm text-text-secondary">
+              {customer?.full_name ?? 'Customer'} · {bill.billing_month}
+            </p>
           </div>
-        }
-      />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
+          {!isVoided ? (
+            <Link
+              href={`/billing/${id}/print`}
+              className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted"
+            >
+              Print / Save as PDF
+            </Link>
+          ) : null}
+        </div>
+      </div>
 
       {bill.flagged_for_review ? (
         <Card className="border-warning bg-warning-bg">
@@ -100,6 +105,16 @@ export default async function BillDetailPage({ params }: PageProps) {
             </form>
           ) : null}
           {!isVoided ? <VoidBillForm action={boundVoid} /> : null}
+        </div>
+
+        <h2 className="mb-3 text-lg font-semibold text-text">Delivery summary</h2>
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Stat label="Days delivered" value={String(items.length)} />
+          <Stat label="Total quantity" value={`${(totalMl / 1000).toFixed(2)} L`} />
+          <Stat
+            label="Average per delivery"
+            value={`${items.length > 0 ? Math.round(totalMl / items.length) : 0} ml`}
+          />
         </div>
 
         <h2 className="mb-3 text-lg font-semibold text-text">Delivery breakdown</h2>
@@ -184,6 +199,15 @@ export default async function BillDetailPage({ params }: PageProps) {
           ) : null}
         </Card>
       ) : null}
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md bg-surface-muted px-3 py-2">
+      <p className="text-xl font-semibold text-text">{value}</p>
+      <p className="text-xs text-text-secondary">{label}</p>
     </div>
   );
 }
