@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Node (any package at the repo root, future web app, shared package)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files — never commit real secrets. Only *.env.example files are tracked.
+.env
+.env.local
+.env.*.local
+
+# Next.js (future apps/web)
+.next/
+out/
+
+# Supabase CLI local state
+supabase/.branches
+supabase/.temp
+
+# Build / coverage output
+dist/
+build/
+coverage/
+*.tsbuildinfo
