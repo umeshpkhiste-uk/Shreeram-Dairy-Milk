@@ -1,4 +1,6 @@
-import { todayInBusinessTimezone } from '@shreeram/shared';
+import Link from 'next/link';
+
+import { firstOfMonth, todayInBusinessTimezone } from '@shreeram/shared';
 
 import { Badge, Card, EmptyState, PageHeader, Table } from '@/components/ui';
 import { listDailyDeliveryReport } from '@/lib/data/deliveries';
@@ -19,6 +21,7 @@ const STATUS_LABEL: Record<string, string> = {
   completed: 'Completed',
   partial: 'Partial',
   missed: 'Missed',
+  skipped: 'Customer informed',
   no_record: 'No record yet',
 };
 
@@ -26,6 +29,7 @@ const STATUS_TONE: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> 
   completed: 'success',
   partial: 'warning',
   missed: 'danger',
+  skipped: 'warning',
   no_record: 'neutral',
 };
 
@@ -102,6 +106,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
               <option value="completed">Completed</option>
               <option value="partial">Partial</option>
               <option value="missed">Missed</option>
+              <option value="skipped">Customer informed</option>
               <option value="no_record">No record yet</option>
             </select>
           </label>
@@ -139,7 +144,14 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
               const statusKey = row.delivery?.status ?? 'no_record';
               return (
                 <tr key={row.customer.id} className="hover:bg-surface-muted">
-                  <td className="px-4 py-3 font-medium text-text">{row.customer.full_name}</td>
+                  <td className="px-4 py-3 font-medium text-text">
+                    <Link
+                      href={`/deliveries/${row.customer.id}?month=${firstOfMonth(date)}&day=${date}`}
+                      className="text-primary hover:underline"
+                    >
+                      {row.customer.full_name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-text-secondary">
                     {row.delivery
                       ? `${row.delivery.delivered_quantity_ml} ml`

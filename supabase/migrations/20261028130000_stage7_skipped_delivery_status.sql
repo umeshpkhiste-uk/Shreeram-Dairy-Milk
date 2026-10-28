@@ -1,0 +1,19 @@
+-- Adds a third non-delivered delivery status: 'skipped' — the customer told
+-- the business in advance not to deliver that day (as distinct from
+-- 'missed', which means the worker didn't deliver without such notice).
+--
+-- Deliberately the only change needed:
+--   * Billing (create_draft_bill, 20261028110002_stage5_billing_rpcs.sql)
+--     already whitelists `status in ('completed', 'partial')` as billable —
+--     'skipped' is excluded automatically, same as 'missed'.
+--   * The deliveries table's existing check constraint
+--     (status = 'completed' or reason is not null) already requires a
+--     reason for any non-completed status, 'skipped' included.
+--   * submit_delivery_event's p_status parameter is already typed
+--     public.delivery_status, so it accepts the new value with no RPC
+--     change.
+--
+-- ALTER TYPE ... ADD VALUE must be the only statement touching this enum in
+-- its migration/transaction (PostgreSQL cannot use a newly added enum value
+-- in the same transaction that added it).
+alter type public.delivery_status add value 'skipped';

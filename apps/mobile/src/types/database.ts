@@ -12,7 +12,7 @@
 
 export type UserRole = 'admin' | 'worker';
 export type CustomerStatus = 'active' | 'inactive';
-export type DeliveryStatus = 'completed' | 'partial' | 'missed';
+export type DeliveryStatus = 'completed' | 'partial' | 'missed' | 'skipped';
 export type DeliveryEventType = 'created' | 'corrected';
 export type BillStatus = 'draft' | 'finalized' | 'partially_paid' | 'paid' | 'voided';
 export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'other';
@@ -383,6 +383,10 @@ export interface Database {
           outcome: string;
           delivery: Database['public']['Tables']['deliveries']['Row'] | null;
         };
+      };
+      admin_mark_delivery_skipped: {
+        Args: { p_customer_id: string; p_delivery_date: string; p_reason: string };
+        Returns: Database['public']['Tables']['deliveries']['Row'];
       };
       create_draft_bill: {
         Args: { p_customer_id: string; p_billing_month: string };

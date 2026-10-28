@@ -68,7 +68,8 @@ All under `src/app/(admin)/*` except `/login` — the route group's `layout.tsx`
 | `/` | Dashboard — identical metrics to the mobile app (shared `computeDashboardMetrics`). |
 | `/customers`, `/customers/new`, `/customers/[id]` | List/filter/search, create, edit, deactivate/reactivate, customer-specific effective-dated pricing, billing history links. |
 | `/workers` | Worker accounts (create via the Edge Function), routes, route assignment, activate/deactivate — closes a gap neither app had before (no deactivate-worker UI existed anywhere). |
-| `/deliveries` | The daily delivery report — same left-join logic as the mobile app's admin screen, same "no record yet ≠ missed" rule. |
+| `/deliveries` | The daily delivery report — same left-join logic as the mobile app's admin screen, same "no record yet ≠ missed" rule. Each customer name links to `/deliveries/[customerId]`. |
+| `/deliveries/[customerId]` | Per-customer delivery calendar (added post-launch, admin-website-only, per owner feedback) — see "Per-customer delivery calendar" below. |
 | `/billing`, `/billing/[id]`, `/billing/[id]/print` | Month picker, create/view bills, full breakdown, adjustments, payments, finalize/recalculate/void, the flagged-for-review banner, and the website's PDF path (see below). |
 | `/payments` | Cross-customer payments ledger. |
 | `/reports` | Billing-summary table + CSV export (`/api/reports/billing-summary`, a Route Handler — see the Next.js data-patterns reference for why a file download needs one). |
@@ -83,6 +84,40 @@ shell, with the sidebar hidden via `@media print` (`globals.css`'s `.no-print`),
 Save as PDF" button that calls the browser's own `window.print()`. Same rule as the mobile app:
 nothing here ever infers "the bill was sent" from printing/saving it — that's still the separate
 `mark_bill_sent` action.
+
+## Per-customer delivery calendar
+
+`/deliveries/[customerId]` (admin website only — added post-launch per owner request, not built on
+the mobile admin app). A month calendar for one customer: each day colored green (completed/
+partial), red (missed), yellow ("customer informed — no delivery"), or neutral (no record yet);
+clicking a day shows its detail and, unless that day already has a completed/partial delivery, a
+form to mark it yellow with a reason. Below the calendar: a numeric summary (delivered/missed/
+customer-informed/no-record day counts, total litres) for days up to today in the displayed
+month, and the month's bill if one exists (status, total payable, a link into the existing
+`/billing/[id]` page — which already has the Print/Save-as-PDF button, Stage 5 — satisfying "share
+a report with the customer" without building a second PDF path).
+
+**The 'skipped' status** (`supabase/migrations/20261028130000_stage7_skipped_delivery_status.sql`,
+`...20261028130001_stage7_admin_mark_skipped_rpc.sql`) is new: a third non-delivered reason,
+distinct from `missed` (worker didn't deliver, no advance notice). It's admin-only — the worker
+app is unchanged, still only ever writes `completed`/`missed` via `submit_delivery_event`. Written
+through a dedicated `admin_mark_delivery_skipped(customer_id, delivery_date, reason)` RPC rather
+than `submit_delivery_event`, because that RPC hard-requires the caller to be the customer's own
+assigned worker (by design, for the offline sync path) — wrong for an admin acting on any
+customer. The new RPC: requires `is_admin()`, requires the customer to already have an assigned
+worker (`deliveries.worker_id` is `not null`), requires a reason, and refuses to overwrite a day
+that already has a `completed`/`partial` delivery. `skipped` is automatically excluded from
+billing (`create_draft_bill` already whitelists `completed`/`partial` only) and automatically
+satisfies the existing `deliveries` reason-required-unless-completed check constraint — no other
+schema or RPC changed.
+
+**Known gap, not addressed in this pass**: the worker's own app has no concept of a day an admin
+marked `skipped` in advance — a worker's Today's Route still lists that customer and still lets
+them mark Yes/No for that day, which could create a conflicting record (worker marking
+`completed`/`missed` the same day admin already marked `skipped`). Propagating this to the worker
+app (e.g., skipping it from their list, or showing it read-only) was out of scope for this change
+(admin-website-only, per the owner's explicit choice) and is left for a future pass if it proves
+to matter in practice.
 
 ## Cross-platform data consistency
 
