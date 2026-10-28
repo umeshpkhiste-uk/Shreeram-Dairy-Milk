@@ -20,6 +20,7 @@ export async function updateBusinessSettings(
     contactPhone: string | null;
     contactEmail: string | null;
     address: string | null;
+    upiId: string | null;
   },
 ): Promise<BusinessSettingsRow> {
   const { data, error } = await supabase
@@ -29,6 +30,7 @@ export async function updateBusinessSettings(
       contact_phone: input.contactPhone,
       contact_email: input.contactEmail,
       address: input.address,
+      upi_id: input.upiId,
     })
     .eq('id', true)
     .select('*')

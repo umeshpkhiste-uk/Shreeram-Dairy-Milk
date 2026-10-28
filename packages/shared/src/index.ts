@@ -14,3 +14,4 @@ export * from './lib/validation/bill';
 export * from './lib/validation/payment';
 export * from './lib/dashboard/metrics';
 export * from './lib/pdf/bill-template';
+export * from './lib/pdf/order-receipt-template';

@@ -39,6 +39,15 @@ export function BusinessSettingsForm({
           Address
           <input name="address" defaultValue={settings.address ?? ''} className={inputClass} />
         </label>
+        <label className={labelClass}>
+          UPI ID (for order payment QR codes)
+          <input
+            name="upiId"
+            placeholder="yourname@okaxis"
+            defaultValue={settings.upi_id ?? ''}
+            className={inputClass}
+          />
+        </label>
       </div>
       {state.error ? <ErrorText message={state.error} /> : null}
       <PrimaryButton type="submit" disabled={pending} className="self-start">

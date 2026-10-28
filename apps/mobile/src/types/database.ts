@@ -18,6 +18,7 @@ export type BillStatus = 'draft' | 'finalized' | 'partially_paid' | 'paid' | 'vo
 export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'other';
 export type ProductUnit = 'litre' | 'kg';
 export type OrderStatus = 'active' | 'cancelled';
+export type OrderPaymentStatus = 'unpaid' | 'paid';
 
 export interface Database {
   public: {
@@ -132,17 +133,28 @@ export interface Database {
       orders: {
         Row: {
           id: string;
-          customer_id: string;
+          customer_id: string | null;
+          walk_in_customer_name: string | null;
           worker_id: string;
           order_date: string;
           status: OrderStatus;
+          payment_status: OrderPaymentStatus;
+          payment_method: PaymentMethod | null;
+          paid_at: string | null;
           notes: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: Record<string, never>; // written only by create_order
-        Update: Partial<{ status: OrderStatus }>;
+        Update: Partial<{
+          status: OrderStatus;
+          worker_id: string;
+          order_date: string;
+          payment_status: OrderPaymentStatus;
+          payment_method: PaymentMethod | null;
+          paid_at: string | null;
+        }>;
         Relationships: [];
       };
       order_items: {
@@ -260,6 +272,7 @@ export interface Database {
           address: string | null;
           currency_code: string;
           timezone: string;
+          upi_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -271,6 +284,7 @@ export interface Database {
           address: string | null;
           currency_code: string;
           timezone: string;
+          upi_id: string | null;
         }>;
         Relationships: [];
       };
@@ -495,10 +509,18 @@ export interface Database {
       };
       create_order: {
         Args: {
-          p_customer_id: string;
+          p_customer_id: string | null;
           p_worker_id: string;
           p_order_date: string;
           p_notes: string | null;
+          p_items: { productId: string; quantity: number }[];
+          p_walk_in_customer_name?: string | null;
+        };
+        Returns: Database['public']['Tables']['orders']['Row'];
+      };
+      update_order_items: {
+        Args: {
+          p_order_id: string;
           p_items: { productId: string; quantity: number }[];
         };
         Returns: Database['public']['Tables']['orders']['Row'];
@@ -513,6 +535,7 @@ export interface Database {
       payment_method: PaymentMethod;
       product_unit: ProductUnit;
       order_status: OrderStatus;
+      order_payment_status: OrderPaymentStatus;
     };
     CompositeTypes: Record<string, never>;
   };

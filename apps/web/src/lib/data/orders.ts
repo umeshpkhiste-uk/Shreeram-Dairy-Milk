@@ -1,4 +1,4 @@
-import type { Database } from '@shreeram/shared';
+import type { Database, PaymentMethod } from '@shreeram/shared';
 
 import type { SupabaseServerClient } from './types';
 
@@ -10,35 +10,31 @@ export type OrderWithDetails = {
   customerName: string;
   workerName: string;
   items: {
+    productId: string;
     productName: string;
     unit: Database['public']['Tables']['products']['Row']['unit'];
     quantity: number;
+    pricePaise: number;
     amountPaise: number;
   }[];
   totalAmountPaise: number;
 };
 
-/** Joined client-side (orders + order_items + products + customers + profiles) — same approach as listWorkers. */
-export async function listRecentOrders(
+async function joinOrders(
   supabase: SupabaseServerClient,
-  limit = 50,
+  orders: OrderRow[],
 ): Promise<OrderWithDetails[]> {
-  const { data: orders, error: ordersError } = await supabase
-    .from('orders')
-    .select('*')
-    .order('order_date', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(limit);
-  if (ordersError) throw ordersError;
-  if (!orders || orders.length === 0) return [];
+  if (orders.length === 0) return [];
 
   const orderIds = orders.map((o) => o.id);
-  const customerIds = [...new Set(orders.map((o) => o.customer_id))];
+  const customerIds = [...new Set(orders.map((o) => o.customer_id).filter((id): id is string => !!id))];
   const workerIds = [...new Set(orders.map((o) => o.worker_id))];
 
   const [itemsRes, customersRes, profilesRes, productsRes] = await Promise.all([
     supabase.from('order_items').select('*').in('order_id', orderIds),
-    supabase.from('customers').select('id, full_name').in('id', customerIds),
+    customerIds.length > 0
+      ? supabase.from('customers').select('id, full_name').in('id', customerIds)
+      : Promise.resolve({ data: [], error: null }),
     supabase.from('profiles').select('id, full_name').in('id', workerIds),
     supabase.from('products').select('id, name, unit'),
   ]);
@@ -61,15 +57,19 @@ export async function listRecentOrders(
     const items = (itemsByOrderId.get(order.id) ?? []).map((item) => {
       const product = productById.get(item.product_id);
       return {
+        productId: item.product_id,
         productName: product?.name ?? 'Unknown item',
-        unit: product?.unit ?? 'kg',
+        unit: product?.unit ?? ('kg' as const),
         quantity: item.quantity,
+        pricePaise: item.price_paise,
         amountPaise: item.amount_paise,
       };
     });
     return {
       order,
-      customerName: customerNameById.get(order.customer_id) ?? 'Unknown customer',
+      customerName: order.customer_id
+        ? (customerNameById.get(order.customer_id) ?? 'Unknown customer')
+        : (order.walk_in_customer_name ?? 'Walk-in customer'),
       workerName: workerNameById.get(order.worker_id) ?? 'Unknown worker',
       items,
       totalAmountPaise: items.reduce((sum, i) => sum + i.amountPaise, 0),
@@ -77,10 +77,37 @@ export async function listRecentOrders(
   });
 }
 
+/** Joined client-side (orders + order_items + products + customers + profiles) — same approach as listWorkers. */
+export async function listRecentOrders(
+  supabase: SupabaseServerClient,
+  limit = 50,
+): Promise<OrderWithDetails[]> {
+  const { data: orders, error: ordersError } = await supabase
+    .from('orders')
+    .select('*')
+    .order('order_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (ordersError) throw ordersError;
+  return joinOrders(supabase, orders ?? []);
+}
+
+export async function getOrder(
+  supabase: SupabaseServerClient,
+  orderId: string,
+): Promise<OrderWithDetails | null> {
+  const { data: order, error } = await supabase.from('orders').select('*').eq('id', orderId).maybeSingle();
+  if (error) throw error;
+  if (!order) return null;
+  const [withDetails] = await joinOrders(supabase, [order]);
+  return withDetails ?? null;
+}
+
 export async function createOrder(
   supabase: SupabaseServerClient,
   input: {
-    customerId: string;
+    customerId: string | null;
+    walkInCustomerName: string | null;
     workerId: string;
     orderDate: string;
     notes: string | null;
@@ -93,6 +120,20 @@ export async function createOrder(
     p_order_date: input.orderDate,
     p_notes: input.notes,
     p_items: input.items,
+    p_walk_in_customer_name: input.walkInCustomerName,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function updateOrderItems(
+  supabase: SupabaseServerClient,
+  orderId: string,
+  items: { productId: string; quantity: number }[],
+): Promise<OrderRow> {
+  const { data, error } = await supabase.rpc('update_order_items', {
+    p_order_id: orderId,
+    p_items: items,
   });
   if (error) throw error;
   return data;
@@ -100,5 +141,44 @@ export async function createOrder(
 
 export async function cancelOrder(supabase: SupabaseServerClient, orderId: string): Promise<void> {
   const { error } = await supabase.from('orders').update({ status: 'cancelled' }).eq('id', orderId);
+  if (error) throw error;
+}
+
+export async function changeOrderWorker(
+  supabase: SupabaseServerClient,
+  orderId: string,
+  workerId: string,
+): Promise<void> {
+  const { error } = await supabase.from('orders').update({ worker_id: workerId }).eq('id', orderId);
+  if (error) throw error;
+}
+
+export async function rescheduleOrder(
+  supabase: SupabaseServerClient,
+  orderId: string,
+  orderDate: string,
+): Promise<void> {
+  const { error } = await supabase.from('orders').update({ order_date: orderDate }).eq('id', orderId);
+  if (error) throw error;
+}
+
+export async function markOrderPaid(
+  supabase: SupabaseServerClient,
+  orderId: string,
+  method: PaymentMethod,
+): Promise<void> {
+  const { error } = await supabase
+    .from('orders')
+    .update({ payment_status: 'paid', payment_method: method, paid_at: new Date().toISOString() })
+    .eq('id', orderId);
+  if (error) throw error;
+}
+
+export async function setOrderPaymentMethod(
+  supabase: SupabaseServerClient,
+  orderId: string,
+  method: PaymentMethod,
+): Promise<void> {
+  const { error } = await supabase.from('orders').update({ payment_method: method }).eq('id', orderId);
   if (error) throw error;
 }

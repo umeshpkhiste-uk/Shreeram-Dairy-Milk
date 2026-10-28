@@ -23,6 +23,7 @@ export async function updateBusinessSettingsAction(
       contactPhone: String(formData.get('contactPhone') ?? '').trim() || null,
       contactEmail: String(formData.get('contactEmail') ?? '').trim() || null,
       address: String(formData.get('address') ?? '').trim() || null,
+      upiId: String(formData.get('upiId') ?? '').trim() || null,
     });
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to save business settings.' };

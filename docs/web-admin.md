@@ -134,9 +134,31 @@ only, same as the owner's price-list poster — not a payment record.
 - Worker visibility is **read-only**: RLS lets a worker `select` only orders where
   `worker_id = auth.uid()` (mirroring `customers`' assigned-worker policy), and the mobile app's
   new Orders tab never shows pricing — it's a delivery reminder (customer, date, item, quantity),
-  not a financial record. No fulfilment/complete action exists anywhere (owner decision);
-  cancelling a wrongly-placed order is the only state change, done from the website
-  (`orders.status` → `cancelled`).
+  not a financial record.
+
+**Walk-in customers and per-order payment** (Stage 8b,
+`supabase/migrations/20261029110000_stage8b_order_payment_and_guest.sql`,
+`...20261029110001_stage8b_order_rpcs_update.sql`) — added after the owner placed a real order and
+asked for more control over it:
+
+- `orders.customer_id` is now nullable; `orders.walk_in_customer_name` holds a plain text name for
+  a one-off order with no real customer record (`orders_customer_xor_walk_in` requires exactly one
+  of the two). Nothing about a walk-in order is ever written to `customers`.
+- `orders.payment_status` (`unpaid`/`paid`), `payment_method` (reuses the billing `payment_method`
+  enum), and `paid_at` — a lightweight payment record **of the order itself**, still never touching
+  `monthly_bills`/`payments` (same owner decision as before, reaffirmed when this was built).
+- Each order on `/orders` has an action row: **Proceed for payment** (choose Cash on delivery or
+  UPI — UPI generates a QR code server-side from `business_settings.upi_id` + the order total via
+  the `upi://pay` deep-link scheme, admin taps "Mark as paid" once money is actually received —
+  there's no payment gateway, so nothing confirms automatically), **Generate bill** (opens
+  `/orders/[orderId]/print`, the same browser-print-to-PDF mechanism as the monthly bill, for
+  sharing via email/WhatsApp), **Change the worker**, **Reschedule the delivery**, **Update the
+  order** / **Reset the order** (both open the same item-quantity editor — Update prefills the
+  order's current quantities, Reset opens it blank for re-entry from scratch; both save through
+  `update_order_items`, which re-resolves prices from the current `products` row), and **Cancel
+  the order**.
+- `update_order_items(order_id, items)`: admin-only, replaces an order's `order_items` wholesale
+  (delete + reinsert) — mirrors `create_order`'s price-resolution logic exactly.
 
 **Worker-app sync (closed in a follow-up pass)**: an admin's `skipped` marking needed no new sync
 plumbing — `admin_mark_delivery_skipped` attributes the row to the customer's real assigned

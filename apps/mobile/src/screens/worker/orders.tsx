@@ -80,10 +80,11 @@ export function WorkerOrdersScreen() {
 }
 
 function OrderRow({ order }: { order: WorkerOrder }) {
-  const customer = getCachedCustomer(order.order.customer_id);
+  const customer = order.order.customer_id ? getCachedCustomer(order.order.customer_id) : null;
+  const customerLabel = customer?.full_name ?? order.order.walk_in_customer_name ?? 'Unknown customer';
   return (
     <Card style={styles.row}>
-      <Text variant="subtitle">{customer?.full_name ?? 'Unknown customer'}</Text>
+      <Text variant="subtitle">{customerLabel}</Text>
       <Text variant="body" color="secondary">
         {order.order.order_date}
       </Text>
