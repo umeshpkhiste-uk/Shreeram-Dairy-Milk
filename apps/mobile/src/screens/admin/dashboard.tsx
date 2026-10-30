@@ -85,16 +85,16 @@ export function AdminDashboardScreen() {
       <Text variant="subtitle">Quick actions</Text>
       <View style={styles.actions}>
         <Link href="/(admin)/customers/new" asChild>
-          <Button label="Add Customer" variant="secondary" />
+          <Button label="Add Customer" variant="secondary" fullWidth />
         </Link>
         <Link href="/(admin)/more/workers/new" asChild>
-          <Button label="Add Worker" variant="secondary" />
+          <Button label="Add Worker" variant="secondary" fullWidth />
         </Link>
         <Link href="/(admin)/more/workers/new-route" asChild>
-          <Button label="Assign Route" variant="secondary" />
+          <Button label="Assign Route" variant="secondary" fullWidth />
         </Link>
         <Link href="/(admin)/deliveries" asChild>
-          <Button label="View Today's Deliveries" variant="secondary" />
+          <Button label="View Today's Deliveries" variant="secondary" fullWidth />
         </Link>
       </View>
     </Screen>
