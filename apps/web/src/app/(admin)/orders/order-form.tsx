@@ -27,29 +27,24 @@ export function OrderForm({
     <form action={formAction} className="flex flex-col gap-5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm font-medium text-text">
-          Customer
-          <select
-            name="customerId"
-            defaultValue=""
-            className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
-          >
-            <option value="">— None (walk-in) —</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm font-medium text-text">
-          Or new/walk-in customer name
+          Customer name
           <input
             type="text"
-            name="walkInCustomerName"
-            placeholder="Not saved as a customer record"
+            name="customerName"
+            list="order-form-customers"
+            required
+            placeholder="Type to search, or enter a new walk-in name"
             className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
           />
+          <datalist id="order-form-customers">
+            {customers.map((c) => (
+              <option key={c.id} value={c.label} />
+            ))}
+          </datalist>
+          <span className="text-xs font-normal text-text-secondary">
+            Matches an existing customer by name automatically; otherwise it&rsquo;s placed as a
+            walk-in order (not saved as a customer record).
+          </span>
         </label>
       </div>
 

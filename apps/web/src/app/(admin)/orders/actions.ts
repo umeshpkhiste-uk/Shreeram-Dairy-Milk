@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import QRCode from 'qrcode';
 
 import { getBusinessSettings } from '@/lib/data/business-settings';
+import { listCustomers } from '@/lib/data/customers';
 import { listActiveProducts } from '@/lib/data/products';
 import {
   cancelOrder,
@@ -44,25 +45,31 @@ export async function createOrderAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const customerId = String(formData.get('customerId') ?? '').trim();
-  const walkInCustomerName = String(formData.get('walkInCustomerName') ?? '').trim();
+  const customerName = String(formData.get('customerName') ?? '').trim();
   const workerId = String(formData.get('workerId') ?? '');
   const orderDate = String(formData.get('orderDate') ?? '');
   const notes = String(formData.get('notes') ?? '').trim();
 
-  if (!customerId && !walkInCustomerName) {
-    return { error: 'Select a customer, or type a name for a walk-in order.' };
-  }
-  if (customerId && walkInCustomerName) {
-    return { error: 'Select a customer OR type a walk-in name, not both.' };
-  }
+  if (!customerName) return { error: 'Enter a customer name.' };
   if (!workerId) return { error: 'Select a worker to deliver this order.' };
   if (!orderDate) return { error: 'Select a date.' };
 
   const supabase = await createClient();
-  const products = await listActiveProducts(supabase);
+  const [products, activeCustomers] = await Promise.all([
+    listActiveProducts(supabase),
+    listCustomers(supabase, { status: 'active' }),
+  ]);
   const items = parseItemsFromFormData(formData, products);
   if ('error' in items) return items;
+
+  // Typing a name that matches an existing active customer links the order
+  // to that customer record; anything else is placed as a walk-in order —
+  // same single field covers both, per the owner's request to merge them.
+  const matchedCustomer = activeCustomers.find(
+    (c) => c.full_name.trim().toLowerCase() === customerName.toLowerCase(),
+  );
+  const customerId = matchedCustomer?.id ?? null;
+  const walkInCustomerName = matchedCustomer ? null : customerName;
 
   try {
     await createOrder(supabase, {
