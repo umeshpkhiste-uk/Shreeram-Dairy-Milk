@@ -40,7 +40,7 @@ export function AdminShell({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="no-print sticky top-0 z-20 flex flex-col border-b border-border bg-surface md:flex-row md:items-stretch">
+      <div className="no-print sticky top-0 z-20 flex flex-col border-b border-border bg-surface md:relative md:flex-row md:items-stretch">
         <div
           className={`flex shrink-0 items-center gap-2 px-4 py-3 md:border-r md:border-border ${railWidth}`}
         >
@@ -59,8 +59,15 @@ export function AdminShell({
           </button>
           {open ? <p className="whitespace-nowrap text-xs text-text-secondary">Admin console</p> : null}
         </div>
-        <div className="min-w-0 flex-1 px-4 py-3">
-          <AdminHeaderContent businessName={businessName} tagline={tagline} address={address} />
+        {/*
+          Centered independently of the rail's width via absolute
+          positioning on md+, so it stays put in the middle of the bar
+          instead of drifting as the sidebar opens/collapses.
+        */}
+        <div className="flex justify-center px-4 py-3 md:absolute md:inset-y-0 md:left-1/2 md:-translate-x-1/2 md:px-0 md:py-0">
+          <div className="flex items-center">
+            <AdminHeaderContent businessName={businessName} tagline={tagline} address={address} />
+          </div>
         </div>
       </div>
 
