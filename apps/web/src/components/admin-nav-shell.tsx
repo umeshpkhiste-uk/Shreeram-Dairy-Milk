@@ -1,21 +1,23 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
+
+import { AdminNav } from './admin-nav';
 
 /**
  * A hamburger toggle collapses/expands the sidebar — same mechanism on
  * every screen size (desktop and mobile), not just below a breakpoint.
- * Collapsed, the sidebar shrinks to an icon-only rail and the main content
- * (a flex sibling) naturally reflows into the freed width.
+ * Collapsed, it shrinks to an icon-only rail (every nav item still visible
+ * as its icon) rather than disappearing entirely; clicking any icon expands
+ * the full sidebar instead of navigating straight away, so the admin can
+ * see the labels before picking one.
  */
 export function AdminNavShell({
   fullName,
   signOutAction,
-  children,
 }: {
   fullName: string;
   signOutAction: () => void | Promise<void>;
-  children: ReactNode;
 }) {
   const [open, setOpen] = useState(true);
 
@@ -30,7 +32,7 @@ export function AdminNavShell({
         aria-label={open ? 'Close menu' : 'Open menu'}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="mb-4 self-start rounded-md p-2 text-text transition hover:bg-surface-muted"
+        className={`mb-4 rounded-md p-2 text-text transition hover:bg-surface-muted ${open ? 'self-start' : 'self-center'}`}
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="3" y1="6" x2="21" y2="6" strokeLinecap="round" />
@@ -40,24 +42,26 @@ export function AdminNavShell({
       </button>
 
       {open ? (
-        <>
-          <div className="mb-6 px-2">
-            <p className="text-sm font-semibold text-text">Shreeram Daily Milk</p>
-            <p className="text-xs text-text-secondary">Admin console</p>
-          </div>
-          <div onClick={() => setOpen(false)}>{children}</div>
-          <div className="mt-auto flex flex-col gap-2 px-2 pt-6">
-            <p className="truncate text-xs text-text-secondary">Signed in as {fullName}</p>
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="w-full rounded-md border border-border px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-muted"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </>
+        <div className="mb-6 px-2">
+          <p className="text-sm font-semibold text-text">Shreeram Daily Milk</p>
+          <p className="text-xs text-text-secondary">Admin console</p>
+        </div>
+      ) : null}
+
+      <AdminNav collapsed={!open} onExpand={() => setOpen(true)} />
+
+      {open ? (
+        <div className="mt-auto flex flex-col gap-2 px-2 pt-6">
+          <p className="truncate text-xs text-text-secondary">Signed in as {fullName}</p>
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              className="w-full rounded-md border border-border px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-muted"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
       ) : null}
     </aside>
   );
