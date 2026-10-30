@@ -6,6 +6,7 @@ import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
+import { shiftDate, todayInBusinessTimezone } from '@/lib/date';
 import { listCachedCustomers, type CachedCustomer } from '@/lib/sqlite/cache-repo';
 import { listLocalDeliveriesSince, type LocalDelivery } from '@/lib/sqlite/deliveries-repo';
 import { Spacing } from '@/theme/tokens';
@@ -30,9 +31,8 @@ export function DeliveryHistoryScreen() {
 
   const load = useCallback(() => {
     setCustomers(listCachedCustomers());
-    const since = new Date();
-    since.setDate(since.getDate() - HISTORY_DAYS);
-    setDeliveries(listLocalDeliveriesSince(since.toISOString().slice(0, 10)));
+    const since = shiftDate(todayInBusinessTimezone(), -HISTORY_DAYS);
+    setDeliveries(listLocalDeliveriesSince(since));
   }, []);
 
   useFocusEffect(

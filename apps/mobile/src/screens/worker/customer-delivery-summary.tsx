@@ -6,6 +6,7 @@ import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
+import { shiftDate, todayInBusinessTimezone } from '@/lib/date';
 import { getCachedCustomer, type CachedCustomer } from '@/lib/sqlite/cache-repo';
 import { listLocalDeliveriesForCustomerInRange, type LocalDelivery } from '@/lib/sqlite/deliveries-repo';
 import { Spacing } from '@/theme/tokens';
@@ -20,12 +21,9 @@ export function CustomerDeliverySummaryScreen() {
 
   const load = useCallback(() => {
     setCustomer(getCachedCustomer(customerId) ?? null);
-    const since = new Date();
-    since.setDate(since.getDate() - HISTORY_DAYS);
-    const today = new Date().toISOString().slice(0, 10);
-    setDeliveries(
-      listLocalDeliveriesForCustomerInRange(customerId, since.toISOString().slice(0, 10), today),
-    );
+    const today = todayInBusinessTimezone();
+    const since = shiftDate(today, -HISTORY_DAYS);
+    setDeliveries(listLocalDeliveriesForCustomerInRange(customerId, since, today));
   }, [customerId]);
 
   useFocusEffect(
