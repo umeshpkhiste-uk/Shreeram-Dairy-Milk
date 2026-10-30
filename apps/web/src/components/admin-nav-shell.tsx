@@ -14,9 +14,13 @@ import { AdminNav } from './admin-nav';
  */
 export function AdminNavShell({
   fullName,
+  businessName,
+  address,
   signOutAction,
 }: {
   fullName: string;
+  businessName: string;
+  address: string | null;
   signOutAction: () => void | Promise<void>;
 }) {
   const [open, setOpen] = useState(true);
@@ -42,9 +46,14 @@ export function AdminNavShell({
       </button>
 
       {open ? (
-        <div className="mb-6 px-2">
-          <p className="text-sm font-semibold text-text">Shreeram Daily Milk</p>
-          <p className="text-xs text-text-secondary">Admin console</p>
+        <div className="mb-6 flex items-start gap-2 px-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no optimization needed */}
+          <img src="/logo.png" alt={businessName} width={36} height={36} className="rounded-md" />
+          <div>
+            <p className="text-sm font-semibold text-text">{businessName}</p>
+            {address ? <p className="text-xs text-text-secondary">{address}</p> : null}
+            <p className="text-xs text-text-secondary">Admin console</p>
+          </div>
         </div>
       ) : null}
 

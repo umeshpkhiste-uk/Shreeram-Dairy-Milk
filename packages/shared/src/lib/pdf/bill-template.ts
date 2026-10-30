@@ -72,6 +72,8 @@ export const BILL_STYLE = `
     .bill-doc h1 { font-size: 20px; margin-bottom: 0; }
     .bill-doc .muted { color: #666; font-size: 12px; }
     .bill-doc .header { display: flex; justify-content: space-between; margin-bottom: 24px; }
+    .bill-doc .header .business { display: flex; gap: 10px; align-items: flex-start; }
+    .bill-doc .logo { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; }
     .bill-doc table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
     .bill-doc th, .bill-doc td { border-bottom: 1px solid #e0e0e0; padding: 6px 8px; text-align: left; }
     .bill-doc th { background: #f5f5f5; }
@@ -131,11 +133,14 @@ export function renderBillBodyHtml(data: BillPdfData): string {
 
   return `<div class="bill-doc">
   <div class="header">
-    <div>
-      <h1>${escapeHtml(business.businessName)}</h1>
-      <div class="muted">
-        ${business.address ? escapeHtml(business.address) + '<br/>' : ''}
-        ${business.contactPhone ? escapeHtml(business.contactPhone) + ' · ' : ''}${business.contactEmail ? escapeHtml(business.contactEmail) : ''}
+    <div class="business">
+      <img class="logo" src="/logo.png" alt="" />
+      <div>
+        <h1>${escapeHtml(business.businessName)}</h1>
+        <div class="muted">
+          ${business.address ? escapeHtml(business.address) + '<br/>' : ''}
+          ${business.contactPhone ? escapeHtml(business.contactPhone) + ' · ' : ''}${business.contactEmail ? escapeHtml(business.contactEmail) : ''}
+        </div>
       </div>
     </div>
     <div>

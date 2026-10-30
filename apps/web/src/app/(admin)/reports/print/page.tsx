@@ -47,17 +47,21 @@ export default async function ReportsPrintPage({ searchParams }: PageProps) {
       </div>
       <div className="bill-doc rounded-lg border border-border bg-white p-8">
         <div className="header">
-          <div>
-            <h1>{business.business_name}</h1>
-            <div className="muted">
-              {business.address ? (
-                <>
-                  {business.address}
-                  <br />
-                </>
-              ) : null}
-              {business.contact_phone ? `${business.contact_phone} · ` : ''}
-              {business.contact_email ?? ''}
+          <div className="business">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static public asset embedded in a print document */}
+            <img className="logo" src="/logo.png" alt="" />
+            <div>
+              <h1>{business.business_name}</h1>
+              <div className="muted">
+                {business.address ? (
+                  <>
+                    {business.address}
+                    <br />
+                  </>
+                ) : null}
+                {business.contact_phone ? `${business.contact_phone} · ` : ''}
+                {business.contact_email ?? ''}
+              </div>
             </div>
           </div>
           <div>

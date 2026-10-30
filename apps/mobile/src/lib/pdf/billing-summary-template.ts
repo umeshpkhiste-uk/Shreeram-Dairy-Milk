@@ -1,5 +1,7 @@
 import { formatPaiseAsRupees } from '@/lib/money';
 
+import { LOGO_DATA_URI } from './logo';
+
 export type BillingSummaryPdfData = {
   business: {
     businessName: string;
@@ -65,6 +67,8 @@ export function renderBillingSummaryHtml(data: BillingSummaryPdfData): string {
     h1 { font-size: 20px; margin-bottom: 0; }
     .muted { color: #666; font-size: 12px; }
     .header { display: flex; justify-content: space-between; margin-bottom: 24px; }
+    .business { display: flex; gap: 10px; align-items: flex-start; }
+    .logo { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
     th, td { border-bottom: 1px solid #e0e0e0; padding: 6px 8px; text-align: left; }
     th { background: #f5f5f5; }
@@ -77,11 +81,14 @@ export function renderBillingSummaryHtml(data: BillingSummaryPdfData): string {
 </head>
 <body>
   <div class="header">
-    <div>
-      <h1>${escapeHtml(business.businessName)}</h1>
-      <div class="muted">
-        ${business.address ? escapeHtml(business.address) + '<br/>' : ''}
-        ${business.contactPhone ? escapeHtml(business.contactPhone) + ' · ' : ''}${business.contactEmail ? escapeHtml(business.contactEmail) : ''}
+    <div class="business">
+      <img class="logo" src="${LOGO_DATA_URI}" alt="" />
+      <div>
+        <h1>${escapeHtml(business.businessName)}</h1>
+        <div class="muted">
+          ${business.address ? escapeHtml(business.address) + '<br/>' : ''}
+          ${business.contactPhone ? escapeHtml(business.contactPhone) + ' · ' : ''}${business.contactEmail ? escapeHtml(business.contactEmail) : ''}
+        </div>
       </div>
     </div>
     <div>

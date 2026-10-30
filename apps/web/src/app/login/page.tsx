@@ -52,7 +52,10 @@ export default async function LoginPage({ searchParams }: PageProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-muted px-4">
       <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-8 shadow-sm">
-        <h1 className="mb-1 text-xl font-semibold text-text">Shreeram Daily Milk</h1>
+        {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no optimization needed */}
+        <img src="/logo.png" alt="Shreeram Daily Milk" width={56} height={56} className="mb-3 rounded-md" />
+        <h1 className="text-xl font-semibold text-text">Shreeram Daily Milk</h1>
+        <p className="text-sm text-text-secondary">R9 Sector, Life Republic, Kolte Patil</p>
         <p className="mb-6 text-sm text-text-secondary">Admin sign in</p>
         {error === 'not-authorized' ? (
           <p className="mb-4 rounded-md bg-warning-bg px-3 py-2 text-sm text-warning">

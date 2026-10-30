@@ -86,6 +86,19 @@ Save as PDF" button that calls the browser's own `window.print()`. Same rule as 
 nothing here ever infers "the bill was sent" from printing/saving it — that's still the separate
 `mark_bill_sent` action.
 
+**Logo and address everywhere the business name appears**: `apps/web/public/logo.png` (and
+`apps/mobile/assets/images/logo.png` on mobile, both resized down from the owner's original
+4000×4000 source) shows next to the business name in the admin sidebar, the login page, the
+mobile sign-in screen, and every PDF (bill, order receipt, billing-summary report) — added via
+`BILL_STYLE`'s `.business`/`.logo` classes so every PDF picks it up from one place. The mobile PDF
+templates (`expo-print` renders a self-contained HTML string, no network/file access) embed the
+logo as a base64 data URI (`src/lib/pdf/logo.ts`) instead of a file path; the website's PDFs
+reference `/logo.png` directly since they're a live page being printed. `business_settings.address`
+is shown below the business name everywhere it's fetched dynamically (sidebar, PDFs); the
+pre-authentication screens (website login, mobile sign-in) hardcode the address text instead,
+consistent with how the business name itself was already hardcoded there (RLS only allows reading
+`business_settings` once authenticated).
+
 ## Report generation is PDF-only
 
 Per owner request, every report/export in the app uses the same browser-print-to-PDF mechanism —

@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -9,6 +10,8 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { Spacing } from '@/theme/tokens';
+
+const logo = require('../../assets/images/logo.png');
 
 export default function SignInScreen() {
   const auth = useAuth();
@@ -41,7 +44,11 @@ export default function SignInScreen() {
   return (
     <Screen>
       <View style={styles.header}>
+        <Image source={logo} style={styles.logo} contentFit="cover" />
         <Text variant="title">Shreeram Daily Milk</Text>
+        <Text variant="body" color="secondary">
+          R9 Sector, Life Republic, Kolte Patil
+        </Text>
         <Text variant="body" color="secondary">
           Sign in to continue.
         </Text>
@@ -89,6 +96,7 @@ export default function SignInScreen() {
 
 const styles = StyleSheet.create({
   header: { gap: Spacing.xs },
+  logo: { width: 56, height: 56, borderRadius: 8, marginBottom: Spacing.xs },
   form: { gap: Spacing.md },
   footnote: { textAlign: 'center', marginTop: 'auto' },
 });

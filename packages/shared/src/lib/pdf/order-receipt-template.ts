@@ -57,11 +57,14 @@ export function renderOrderReceiptBodyHtml(data: OrderReceiptPdfData): string {
 
   return `<div class="bill-doc">
   <div class="header">
-    <div>
-      <h1>${escapeHtml(business.businessName)}</h1>
-      <div class="muted">
-        ${business.address ? escapeHtml(business.address) + '<br/>' : ''}
-        ${business.contactPhone ? escapeHtml(business.contactPhone) + ' · ' : ''}${business.contactEmail ? escapeHtml(business.contactEmail) : ''}
+    <div class="business">
+      <img class="logo" src="/logo.png" alt="" />
+      <div>
+        <h1>${escapeHtml(business.businessName)}</h1>
+        <div class="muted">
+          ${business.address ? escapeHtml(business.address) + '<br/>' : ''}
+          ${business.contactPhone ? escapeHtml(business.contactPhone) + ' · ' : ''}${business.contactEmail ? escapeHtml(business.contactEmail) : ''}
+        </div>
       </div>
     </div>
     <div>
