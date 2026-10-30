@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth/auth-provider';
 import { Spacing } from '@/theme/tokens';
 
 const logo = require('../../assets/images/logo.png');
+const LOGO_SIZE = 160;
 
 export default function SignInScreen() {
   const auth = useAuth();
@@ -42,64 +43,88 @@ export default function SignInScreen() {
   }
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Image source={logo} style={styles.logo} contentFit="cover" />
-        <Text variant="title">Shreeram Doodh Diary &amp; Sweets</Text>
-        <Text variant="body" color="secondary">
-          Quality &amp; Purity are our first priority.
-        </Text>
-        <Text variant="body" color="secondary">
-          R9 Sector, Life Republic, Kolte Patil
-        </Text>
-        <Text variant="body" color="secondary">
-          Sign in to continue.
-        </Text>
-      </View>
+    <Screen style={styles.screen}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.brandHalf}>
+          <Image source={logo} style={styles.logo} contentFit="contain" />
+          <Text variant="title" style={styles.centerText}>
+            Shreeram Doodh Diary &amp; Sweets
+          </Text>
+          <Text variant="body" color="secondary" style={styles.centerText}>
+            Quality &amp; Purity are our first priority.
+          </Text>
+          <Text variant="caption" color="secondary" style={styles.centerText}>
+            R9 Sector, Life Republic, Kolte Patil
+          </Text>
+        </View>
 
-      <View style={styles.form}>
-        <Input
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          textContentType="emailAddress"
-          returnKeyType="next"
-        />
-        <Input
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-          autoComplete="current-password"
-          textContentType="password"
-          returnKeyType="go"
-          onSubmitEditing={handleSubmit}
-          error={error ?? undefined}
-        />
-        <Button
-          label="Sign in"
-          onPress={handleSubmit}
-          disabled={!canSubmit}
-          loading={submitting}
-          fullWidth
-        />
-      </View>
+        <View style={styles.formHalf}>
+          <View style={styles.form}>
+            <Text variant="body" color="secondary" style={styles.centerText}>
+              Sign in to continue.
+            </Text>
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              returnKeyType="next"
+            />
+            <Input
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="current-password"
+              textContentType="password"
+              returnKeyType="go"
+              onSubmitEditing={handleSubmit}
+              error={error ?? undefined}
+            />
+            <Button
+              label="Sign in"
+              onPress={handleSubmit}
+              disabled={!canSubmit}
+              loading={submitting}
+              fullWidth
+            />
+          </View>
 
-      <Text variant="caption" color="secondary" style={styles.footnote}>
-        Accounts are created by your administrator. There is no public sign-up — contact Shreeram
-        Doodh Diary &amp; Sweets if you need access.
-      </Text>
+          <Text variant="caption" color="secondary" style={styles.footnote}>
+            Accounts are created by your administrator. There is no public sign-up — contact
+            Shreeram Doodh Diary &amp; Sweets if you need access.
+          </Text>
+        </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { gap: Spacing.xs },
-  logo: { width: 56, height: 56, borderRadius: 8, marginBottom: Spacing.xs },
-  form: { gap: Spacing.md },
-  footnote: { textAlign: 'center', marginTop: 'auto' },
+  screen: { padding: 0, gap: 0 },
+  flex: { flex: 1 },
+  brandHalf: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.xl,
+  },
+  logo: { width: LOGO_SIZE, height: LOGO_SIZE, marginBottom: Spacing.sm },
+  centerText: { textAlign: 'center' },
+  formHalf: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+  },
+  form: { gap: Spacing.md, justifyContent: 'center' },
+  footnote: { textAlign: 'center' },
 });
