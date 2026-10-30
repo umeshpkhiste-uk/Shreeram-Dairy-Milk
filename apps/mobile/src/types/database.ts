@@ -267,6 +267,7 @@ export interface Database {
         Row: {
           id: true;
           business_name: string;
+          tagline: string | null;
           contact_phone: string | null;
           contact_email: string | null;
           address: string | null;
@@ -279,6 +280,7 @@ export interface Database {
         Insert: Record<string, never>;
         Update: Partial<{
           business_name: string;
+          tagline: string | null;
           contact_phone: string | null;
           contact_email: string | null;
           address: string | null;

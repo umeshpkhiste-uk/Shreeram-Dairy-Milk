@@ -45,7 +45,10 @@ export default function SignInScreen() {
     <Screen>
       <View style={styles.header}>
         <Image source={logo} style={styles.logo} contentFit="cover" />
-        <Text variant="title">Shreeram Daily Milk</Text>
+        <Text variant="title">Shreeram Doodh Diary &amp; Sweets</Text>
+        <Text variant="body" color="secondary">
+          Quality &amp; Purity are our first priority.
+        </Text>
         <Text variant="body" color="secondary">
           R9 Sector, Life Republic, Kolte Patil
         </Text>
@@ -88,7 +91,7 @@ export default function SignInScreen() {
 
       <Text variant="caption" color="secondary" style={styles.footnote}>
         Accounts are created by your administrator. There is no public sign-up — contact Shreeram
-        Daily Milk if you need access.
+        Doodh Diary &amp; Sweets if you need access.
       </Text>
     </Screen>
   );

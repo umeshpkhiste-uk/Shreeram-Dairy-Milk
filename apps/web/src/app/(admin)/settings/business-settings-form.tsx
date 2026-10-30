@@ -28,6 +28,15 @@ export function BusinessSettingsForm({
           <input name="businessName" required defaultValue={settings.business_name} className={inputClass} />
         </label>
         <label className={labelClass}>
+          Tagline
+          <input
+            name="tagline"
+            placeholder="Quality & Purity are our first priority."
+            defaultValue={settings.tagline ?? ''}
+            className={inputClass}
+          />
+        </label>
+        <label className={labelClass}>
           Contact phone
           <input name="contactPhone" defaultValue={settings.contact_phone ?? ''} className={inputClass} />
         </label>

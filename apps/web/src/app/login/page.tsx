@@ -33,8 +33,8 @@ export default async function LoginPage({ searchParams }: PageProps) {
           <h1 className="mb-2 text-xl font-semibold text-text">Not authorized</h1>
           <p className="mb-6 text-sm text-text-secondary">
             {profile?.full_name ? `${profile.full_name}, ` : ''}this account doesn&rsquo;t have
-            admin access to the Shreeram Daily Milk website. Sign out and sign in with an admin
-            account, or contact the business owner.
+            admin access to the Shreeram Doodh Diary &amp; Sweets website. Sign out and sign in
+            with an admin account, or contact the business owner.
           </p>
           <form action={signOut}>
             <button
@@ -53,8 +53,15 @@ export default async function LoginPage({ searchParams }: PageProps) {
     <div className="flex min-h-screen items-center justify-center bg-surface-muted px-4">
       <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-8 shadow-sm">
         {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no optimization needed */}
-        <img src="/logo.png" alt="Shreeram Daily Milk" width={56} height={56} className="mb-3 rounded-md" />
-        <h1 className="text-xl font-semibold text-text">Shreeram Daily Milk</h1>
+        <img
+          src="/logo.png"
+          alt="Shreeram Doodh Diary & Sweets"
+          width={56}
+          height={56}
+          className="mb-3 rounded-md"
+        />
+        <h1 className="text-xl font-semibold text-text">Shreeram Doodh Diary &amp; Sweets</h1>
+        <p className="text-sm text-text-secondary">Quality &amp; Purity are our first priority.</p>
         <p className="text-sm text-text-secondary">R9 Sector, Life Republic, Kolte Patil</p>
         <p className="mb-6 text-sm text-text-secondary">Admin sign in</p>
         {error === 'not-authorized' ? (

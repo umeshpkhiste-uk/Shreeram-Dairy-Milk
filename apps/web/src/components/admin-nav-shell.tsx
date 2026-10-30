@@ -14,13 +14,9 @@ import { AdminNav } from './admin-nav';
  */
 export function AdminNavShell({
   fullName,
-  businessName,
-  address,
   signOutAction,
 }: {
   fullName: string;
-  businessName: string;
-  address: string | null;
   signOutAction: () => void | Promise<void>;
 }) {
   const [open, setOpen] = useState(true);
@@ -31,7 +27,7 @@ export function AdminNavShell({
         open ? 'w-full md:w-64' : 'w-full md:w-14'
       }`}
     >
-      <div className={`mb-6 flex items-center gap-2 ${open ? '' : 'flex-col'}`}>
+      <div className="mb-6 flex flex-col items-center gap-1">
         <button
           type="button"
           aria-label={open ? 'Close menu' : 'Open menu'}
@@ -39,24 +35,13 @@ export function AdminNavShell({
           onClick={() => setOpen((o) => !o)}
           className="shrink-0 rounded-md p-2 text-text transition hover:bg-surface-muted"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="3" y1="6" x2="21" y2="6" strokeLinecap="round" />
             <line x1="3" y1="12" x2="21" y2="12" strokeLinecap="round" />
             <line x1="3" y1="18" x2="21" y2="18" strokeLinecap="round" />
           </svg>
         </button>
-
-        {open ? (
-          <div className="flex min-w-0 items-start gap-2 px-2">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no optimization needed */}
-            <img src="/logo.png" alt={businessName} width={36} height={36} className="shrink-0 rounded-md" />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-text">{businessName}</p>
-              {address ? <p className="text-xs text-text-secondary">{address}</p> : null}
-              <p className="text-xs text-text-secondary">Admin console</p>
-            </div>
-          </div>
-        ) : null}
+        <p className="text-xs text-text-secondary">Admin console</p>
       </div>
 
       <AdminNav collapsed={!open} onExpand={() => setOpen(true)} />

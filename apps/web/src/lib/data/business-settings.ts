@@ -17,6 +17,7 @@ export async function updateBusinessSettings(
   supabase: SupabaseServerClient,
   input: {
     businessName: string;
+    tagline: string | null;
     contactPhone: string | null;
     contactEmail: string | null;
     address: string | null;
@@ -27,6 +28,7 @@ export async function updateBusinessSettings(
     .from('business_settings')
     .update({
       business_name: input.businessName,
+      tagline: input.tagline,
       contact_phone: input.contactPhone,
       contact_email: input.contactEmail,
       address: input.address,

@@ -20,6 +20,7 @@ export async function updateBusinessSettingsAction(
   try {
     await updateBusinessSettings(supabase, {
       businessName,
+      tagline: String(formData.get('tagline') ?? '').trim() || null,
       contactPhone: String(formData.get('contactPhone') ?? '').trim() || null,
       contactEmail: String(formData.get('contactEmail') ?? '').trim() || null,
       address: String(formData.get('address') ?? '').trim() || null,
