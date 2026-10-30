@@ -7,9 +7,11 @@ import { getBusinessSettings } from '@/lib/data/business-settings';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const { profile } = await requireAdmin();
   const supabase = await createClient();
-  const business = await getBusinessSettings(supabase);
+  const [{ profile }, business] = await Promise.all([
+    requireAdmin(supabase),
+    getBusinessSettings(supabase),
+  ]);
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">

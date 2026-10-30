@@ -22,15 +22,14 @@ export default async function CustomerDetailPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const customer = await getCustomer(supabase, id);
-  if (!customer) notFound();
-
-  const [milkTypes, workers, bills, rates] = await Promise.all([
+  const [customer, milkTypes, workers, bills, rates] = await Promise.all([
+    getCustomer(supabase, id),
     listAllMilkTypes(supabase),
     listWorkers(supabase),
     listBillsForCustomer(supabase, id),
     listRatesForCustomer(supabase, id),
   ]);
+  if (!customer) notFound();
 
   const milkTypeById = new Map(milkTypes.map((m) => [m.id, m]));
   const boundUpdate = updateCustomerAction.bind(null, id);

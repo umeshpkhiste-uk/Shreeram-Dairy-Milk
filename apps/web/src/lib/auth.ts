@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 
 import type { Database } from '@shreeram/shared';
 
-import { createClient } from '@/lib/supabase/server';
+import type { SupabaseServerClient } from '@/lib/data/types';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -13,9 +13,12 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
  * itself subject to RLS, the same way `RouteGuard` + RLS work together in
  * the mobile app (apps/mobile/src/lib/auth/route-guard.tsx). Called from
  * `app/(admin)/layout.tsx` so every admin page is covered by one check.
+ *
+ * Takes an existing client (rather than creating its own) so the caller can
+ * run this alongside other per-request queries with `Promise.all` instead of
+ * stacking another sequential round trip in front of them.
  */
-export async function requireAdmin(): Promise<{ profile: Profile }> {
-  const supabase = await createClient();
+export async function requireAdmin(supabase: SupabaseServerClient): Promise<{ profile: Profile }> {
   const { data: userData } = await supabase.auth.getUser();
 
   if (!userData.user) {
