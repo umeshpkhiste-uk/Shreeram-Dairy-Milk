@@ -16,22 +16,20 @@ import { AdminNav } from './admin-nav';
  *
  * The hamburger + "Admin console" label sit in a fixed-width column at the
  * left of the top bar, matching the sidebar's own width below it; the
- * dealer name/tagline/address fill the rest of the top bar and resize as
- * that column opens/collapses, since both live in one component with one
- * `open` state instead of being laid out independently.
+ * dealer name/tagline fill the rest of the top bar and resize as that
+ * column opens/collapses, since both live in one component with one `open`
+ * state instead of being laid out independently.
  */
 export function AdminShell({
   fullName,
   businessName,
   tagline,
-  address,
   signOutAction,
   children,
 }: {
   fullName: string;
   businessName: string;
   tagline: string | null;
-  address: string | null;
   signOutAction: () => void | Promise<void>;
   children: ReactNode;
 }) {
@@ -66,7 +64,7 @@ export function AdminShell({
         */}
         <div className="flex justify-center px-4 py-3 md:absolute md:inset-y-0 md:left-1/2 md:-translate-x-1/2 md:px-0 md:py-0">
           <div className="flex items-center">
-            <AdminHeaderContent businessName={businessName} tagline={tagline} address={address} />
+            <AdminHeaderContent businessName={businessName} tagline={tagline} />
           </div>
         </div>
       </div>
