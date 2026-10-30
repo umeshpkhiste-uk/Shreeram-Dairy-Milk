@@ -1,4 +1,5 @@
 import * as Crypto from 'expo-crypto';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
@@ -71,6 +72,12 @@ export function BillDetailScreen({ billId }: { billId: string }) {
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load bill'));
   }, [billId]);
 
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
   if (error) {
     return (
       <Screen>
@@ -80,8 +87,6 @@ export function BillDetailScreen({ billId }: { billId: string }) {
   }
 
   if (loaded === null) {
-    // Kick off the initial load lazily (no effect dependency churn needed — billId is static per screen instance).
-    load();
     return (
       <Screen>
         <LoadingState label="Loading bill…" />
