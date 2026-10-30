@@ -1,10 +1,9 @@
 /**
- * The site-wide header: dealer name, tagline, and address, shown above the
- * sidebar on every admin page (sticky, so it stays visible while the page
- * content scrolls). The sidebar itself only shows navigation now — see
- * admin-nav-shell.tsx.
+ * The dealer name, tagline, and address — the content half of the fixed top
+ * bar (see admin-shell.tsx, which lays this out next to the hamburger
+ * column and resizes it as the sidebar opens/collapses).
  */
-export function AdminHeader({
+export function AdminHeaderContent({
   businessName,
   tagline,
   address,
@@ -14,7 +13,7 @@ export function AdminHeader({
   address: string | null;
 }) {
   return (
-    <header className="no-print sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-surface px-4 py-3 md:px-6">
+    <div className="flex min-w-0 items-center gap-3">
       {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no optimization needed */}
       <img src="/logo.png" alt={businessName} width={40} height={40} className="shrink-0 rounded-md" />
       <div className="min-w-0">
@@ -22,6 +21,6 @@ export function AdminHeader({
         {tagline ? <p className="truncate text-xs text-text-secondary">{tagline}</p> : null}
         {address ? <p className="truncate text-xs text-text-secondary">{address}</p> : null}
       </div>
-    </header>
+    </div>
   );
 }
