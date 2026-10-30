@@ -4,10 +4,11 @@ import { parseRupeesToPaise, type ProductUnit } from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
 
 import { updateBusinessSettings } from '@/lib/data/business-settings';
-import { createProduct, updateProduct } from '@/lib/data/products';
+import { createProduct, deleteProduct, updateProduct } from '@/lib/data/products';
 import { createClient } from '@/lib/supabase/server';
 
 export type SettingsActionState = { error: string | null };
+export type DeleteOrderItemState = { error: string | null; info: string | null };
 
 export async function updateBusinessSettingsAction(
   _prevState: SettingsActionState,
@@ -75,8 +76,18 @@ export async function updateOrderItemPriceAction(
   return { error: null };
 }
 
-export async function toggleOrderItemActiveAction(productId: string, isActive: boolean) {
+export async function deleteOrderItemAction(productId: string): Promise<DeleteOrderItemState> {
   const supabase = await createClient();
-  await updateProduct(supabase, productId, { isActive });
-  revalidatePath('/settings');
+  try {
+    const { hardDeleted } = await deleteProduct(supabase, productId);
+    revalidatePath('/settings');
+    return {
+      error: null,
+      info: hardDeleted
+        ? null
+        : 'This item has been used in past orders, so it was deactivated instead of deleted — deleting it would blank its name on those orders.',
+    };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to delete item.', info: null };
+  }
 }

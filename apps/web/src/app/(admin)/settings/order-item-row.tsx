@@ -1,18 +1,28 @@
 'use client';
 
-import { useActionState, useTransition } from 'react';
+import { useActionState, useState, useTransition } from 'react';
 
 import { formatPaiseAsRupees } from '@shreeram/shared';
 
 import { Badge, ErrorText, SecondaryButton } from '@/components/ui';
 import type { ProductRow } from '@/lib/data/products';
 
-import { toggleOrderItemActiveAction, updateOrderItemPriceAction } from './actions';
+import { deleteOrderItemAction, updateOrderItemPriceAction, type DeleteOrderItemState } from './actions';
 
 export function OrderItemRow({ product }: { product: ProductRow }) {
   const boundUpdatePrice = updateOrderItemPriceAction.bind(null, product.id);
   const [state, formAction, pending] = useActionState(boundUpdatePrice, { error: null });
-  const [togglePending, startTransition] = useTransition();
+  const [deletePending, startTransition] = useTransition();
+  const [deleteResult, setDeleteResult] = useState<DeleteOrderItemState | null>(null);
+
+  function handleDelete() {
+    if (!window.confirm(`Delete "${product.name}"? This permanently removes it from the database.`)) {
+      return;
+    }
+    startTransition(async () => {
+      setDeleteResult(await deleteOrderItemAction(product.id));
+    });
+  }
 
   const unitLabel = product.unit === 'litre' ? 'L' : 'Kg';
 
@@ -38,17 +48,13 @@ export function OrderItemRow({ product }: { product: ProductRow }) {
             {pending ? 'Saving…' : 'Update price'}
           </SecondaryButton>
         </form>
-        <SecondaryButton
-          type="button"
-          disabled={togglePending}
-          onClick={() =>
-            startTransition(() => void toggleOrderItemActiveAction(product.id, !product.is_active))
-          }
-        >
-          {product.is_active ? 'Deactivate' : 'Reactivate'}
+        <SecondaryButton type="button" disabled={deletePending} onClick={handleDelete}>
+          {deletePending ? 'Deleting…' : 'Delete'}
         </SecondaryButton>
       </div>
       {state.error ? <ErrorText message={state.error} /> : null}
+      {deleteResult?.error ? <ErrorText message={deleteResult.error} /> : null}
+      {deleteResult?.info ? <p className="w-full text-xs text-text-secondary">{deleteResult.info}</p> : null}
     </li>
   );
 }

@@ -34,6 +34,29 @@ export async function createProduct(
   return data;
 }
 
+/**
+ * Hard-deletes the product where possible. order_items.product_id has no
+ * cascade (deleting a product used in a past order would silently blank its
+ * name on that order's receipt/PDF), so a product already used in an order
+ * is deactivated instead — the foreign-key violation (23503) is how we find
+ * out it's in use, rather than checking order_items ourselves first.
+ */
+export async function deleteProduct(
+  supabase: SupabaseServerClient,
+  id: string,
+): Promise<{ hardDeleted: boolean }> {
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  if (!error) return { hardDeleted: true };
+  if (error.code !== '23503') throw error;
+
+  const { error: deactivateError } = await supabase
+    .from('products')
+    .update({ is_active: false })
+    .eq('id', id);
+  if (deactivateError) throw deactivateError;
+  return { hardDeleted: false };
+}
+
 export async function updateProduct(
   supabase: SupabaseServerClient,
   id: string,

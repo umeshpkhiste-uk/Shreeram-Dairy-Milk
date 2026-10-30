@@ -21,13 +21,11 @@ import { AdminNav } from './admin-nav';
  * state instead of being laid out independently.
  */
 export function AdminShell({
-  fullName,
   businessName,
   tagline,
   signOutAction,
   children,
 }: {
-  fullName: string;
   businessName: string;
   tagline: string | null;
   signOutAction: () => void | Promise<void>;
@@ -55,7 +53,9 @@ export function AdminShell({
               <line x1="3" y1="18" x2="21" y2="18" strokeLinecap="round" />
             </svg>
           </button>
-          {open ? <p className="whitespace-nowrap text-xs text-text-secondary">Admin console</p> : null}
+          {open ? (
+            <p className="whitespace-nowrap text-sm font-bold text-text-secondary">Admin console</p>
+          ) : null}
         </div>
         {/*
           Centered independently of the rail's width via absolute
@@ -77,19 +77,35 @@ export function AdminShell({
         >
           <AdminNav collapsed={!open} onExpand={() => setOpen(true)} />
 
-          {open ? (
-            <div className="mt-auto flex flex-col gap-2 px-2 pt-6">
-              <p className="truncate text-xs text-text-secondary">Signed in as {fullName}</p>
-              <form action={signOutAction}>
-                <button
-                  type="submit"
-                  className="w-full rounded-md border border-border px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-muted"
+          <div className="mt-auto pt-6">
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                title="Sign out"
+                aria-label="Sign out"
+                className={`flex w-full items-center gap-3 rounded-md border border-border py-2 text-sm font-medium text-text transition hover:bg-surface-muted ${
+                  open ? 'justify-start px-3' : 'justify-center px-2'
+                }`}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="shrink-0"
                 >
-                  Sign out
-                </button>
-              </form>
-            </div>
-          ) : null}
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                {open ? <span>Sign out</span> : null}
+              </button>
+            </form>
+          </div>
         </aside>
         <main className="flex-1 overflow-y-auto bg-surface-muted p-6 md:p-10">{children}</main>
       </div>
