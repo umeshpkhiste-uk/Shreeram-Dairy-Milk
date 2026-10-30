@@ -10,12 +10,13 @@ import { LoadingState } from '@/components/loading-state';
 import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { listBillsForMonth, type MonthlyBillRow } from '@/lib/api/bills';
+import { getBusinessSettings } from '@/lib/api/business-settings';
 import { listCustomers, type CustomerRow } from '@/lib/api/customers';
 import { listPaymentsForBillIds } from '@/lib/api/payments';
-import { toCsv } from '@/lib/csv';
 import { firstOfMonth, shiftMonth, todayInBusinessTimezone } from '@/lib/date';
-import { shareCsv } from '@/lib/export/share-csv';
 import { formatPaiseAsRupees } from '@/lib/money';
+import { shareHtmlAsPdf } from '@/lib/pdf/generate';
+import { renderBillingSummaryHtml } from '@/lib/pdf/billing-summary-template';
 import { Spacing } from '@/theme/tokens';
 
 type SummaryRow = {
@@ -81,17 +82,23 @@ export function BillingReportScreen() {
     if (!rows) return;
     setExporting(true);
     try {
-      const csv = toCsv(
-        ['Customer', 'Bill Number', 'Billed (₹)', 'Paid (₹)', 'Outstanding (₹)'],
-        rows.map((r) => [
-          r.customerName,
-          r.billNumber,
-          (r.billedPaise / 100).toFixed(2),
-          (r.paidPaise / 100).toFixed(2),
-          (r.outstandingPaise / 100).toFixed(2),
-        ]),
-      );
-      await shareCsv(`billing-summary-${month}.csv`, csv);
+      const business = await getBusinessSettings();
+      const monthLabel = new Date(`${month}T00:00:00Z`).toLocaleDateString('en-IN', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
+      const html = renderBillingSummaryHtml({
+        business: {
+          businessName: business.business_name,
+          contactPhone: business.contact_phone,
+          contactEmail: business.contact_email,
+          address: business.address,
+        },
+        monthLabel,
+        rows,
+      });
+      await shareHtmlAsPdf(html, `Billing summary – ${monthLabel}`);
     } catch (err) {
       Alert.alert('Export failed', err instanceof Error ? err.message : undefined);
     } finally {
@@ -123,7 +130,7 @@ export function BillingReportScreen() {
           </Card>
         ) : null}
         <Button
-          label="Export CSV"
+          label="Share PDF"
           variant="secondary"
           loading={exporting}
           disabled={!rows || rows.length === 0}

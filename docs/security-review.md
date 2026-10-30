@@ -76,7 +76,7 @@ statements run inside one transaction.
 | Input validation and server-side authorization | Every write path is a `SECURITY DEFINER` RPC or Edge Function that re-validates and re-authorizes internally (never trusts client-supplied `created_by`/ids); Zod schemas validate on the client as the first line of defense, not the only one. |
 | Local data retention and logout behaviour | Fixed — see Finding 2 above. |
 | Offline sync does not bypass revoked access | `submit_delivery_event` already checked `is_active` (Stage 3); the RLS reads now match it (Finding 1). A deactivated worker's queued outbox items fail permanently (classified by Postgres error code, not retried forever) and are visibly marked failed. |
-| Exports contain only authorized information | The one CSV export (billing summary report) is admin-only, built only from data the admin's own session can already query — no export path exists on any worker screen. |
+| Exports contain only authorized information | The one report export (billing summary — PDF, not CSV, as of a later pass; see docs/web-admin.md "Report generation is PDF-only") is admin-only, built only from data the admin's own session can already query — no export path exists on any worker screen. |
 
 ### Session and secure-storage review (code-reviewed, no device needed)
 

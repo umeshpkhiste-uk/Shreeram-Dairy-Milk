@@ -7,6 +7,8 @@ import { listCustomers } from '@/lib/data/customers';
 import { listPaymentsForBillIds } from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/server';
 
+import { buildBillingSummaryRows, sumBillingSummaryTotals } from './billing-summary';
+
 type PageProps = { searchParams: Promise<{ month?: string }> };
 
 export default async function ReportsPage({ searchParams }: PageProps) {
@@ -21,31 +23,8 @@ export default async function ReportsPage({ searchParams }: PageProps) {
     listCustomers(supabase, { status: 'all' }),
   ]);
   const payments = await listPaymentsForBillIds(supabase, bills.map((b) => b.id));
-  const customerNameById = new Map(customers.map((c) => [c.id, c.full_name]));
-  const paidByBillId = new Map<string, number>();
-  for (const p of payments) {
-    paidByBillId.set(p.bill_id, (paidByBillId.get(p.bill_id) ?? 0) + p.amount_paise);
-  }
-
-  const rows = bills.map((b) => {
-    const paid = paidByBillId.get(b.id) ?? 0;
-    return {
-      billId: b.id,
-      customerName: customerNameById.get(b.customer_id) ?? 'Unknown customer',
-      billNumber: b.bill_number,
-      billedPaise: b.total_payable_paise,
-      paidPaise: paid,
-      outstandingPaise: b.total_payable_paise - paid,
-    };
-  });
-  const totals = rows.reduce(
-    (acc, r) => ({
-      billed: acc.billed + r.billedPaise,
-      paid: acc.paid + r.paidPaise,
-      outstanding: acc.outstanding + r.outstandingPaise,
-    }),
-    { billed: 0, paid: 0, outstanding: 0 },
-  );
+  const rows = buildBillingSummaryRows(bills, customers, payments);
+  const totals = sumBillingSummaryTotals(rows);
 
   return (
     <div>
@@ -66,12 +45,13 @@ export default async function ReportsPage({ searchParams }: PageProps) {
             >
               ›
             </Link>
-            <a
-              href={`/api/reports/billing-summary?month=${month}`}
+            <Link
+              href={`/reports/print?month=${month}`}
+              target="_blank"
               className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-text-on-primary transition hover:bg-primary-hover"
             >
-              Export CSV
-            </a>
+              Print / Save as PDF
+            </Link>
           </div>
         }
       />

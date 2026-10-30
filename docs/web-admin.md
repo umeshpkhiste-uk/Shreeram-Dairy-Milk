@@ -44,7 +44,7 @@ only config needed).
 
 Contains (copied from `apps/mobile/src/lib/*` where the logic was already pure, with their
 existing unit tests carried over): the hand-written `Database` type, `money.ts`,
-`date.ts`, `csv.ts`, `lib/billing/status.ts`, the customer/bill/payment Zod validation
+`date.ts`, `lib/billing/status.ts`, the customer/bill/payment Zod validation
 schemas, `lib/dashboard/metrics.ts` (dashboard aggregation + the daily delivery report
 left-join), and `lib/pdf/bill-template.ts` (the bill HTML renderer, split into
 `renderBillHtml` — a full standalone document, still used only by the mobile app's own copy —
@@ -73,8 +73,8 @@ All under `src/app/(admin)/*` except `/login` — the route group's `layout.tsx`
 | `/orders` | One-time product orders (paneer, ghee, dahi, etc.) — see "One-time product orders" below. |
 | `/billing`, `/billing/[id]`, `/billing/[id]/print` | Month picker, create/view bills, full breakdown, adjustments, payments, finalize/recalculate/void, the flagged-for-review banner, a back button, a delivery summary (days delivered / total quantity / average per delivery), and the website's PDF path (see below). |
 | `/payments` | Cross-customer payments ledger. |
-| `/reports` | Billing-summary table + CSV export (`/api/reports/billing-summary`, a Route Handler — see the Next.js data-patterns reference for why a file download needs one). |
-| `/settings` | Business settings + milk type management. |
+| `/reports`, `/reports/print` | Billing-summary table + PDF export (`/reports/print`, the same browser-print-to-PDF mechanism as the bill/order PDFs — see "Report generation is PDF-only" below). |
+| `/settings` | Business settings + order items (New Order catalog) management. |
 
 ## PDF bill generation
 
@@ -85,6 +85,17 @@ shell, with the sidebar hidden via `@media print` (`globals.css`'s `.no-print`),
 Save as PDF" button that calls the browser's own `window.print()`. Same rule as the mobile app:
 nothing here ever infers "the bill was sent" from printing/saving it — that's still the separate
 `mark_bill_sent` action.
+
+## Report generation is PDF-only
+
+Per owner request, every report/export in the app uses the same browser-print-to-PDF mechanism —
+no CSV or any other format, anywhere. `/reports/print` (the billing-summary report) follows the
+exact pattern above, reusing `BILL_STYLE` from `packages/shared`. The old
+`/api/reports/billing-summary` CSV Route Handler, `packages/shared/src/lib/csv.ts`, and the
+mobile app's `src/lib/csv.ts`/`src/lib/export/share-csv.ts` were removed — the mobile Reports tab's
+"Export CSV" button is now "Share PDF", generating a PDF via `expo-print`
+(`src/lib/pdf/billing-summary-template.ts`) and opening the native share sheet, same mechanism as
+the mobile bill PDF.
 
 ## Per-customer delivery calendar
 

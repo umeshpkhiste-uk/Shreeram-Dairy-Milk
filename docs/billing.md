@@ -63,8 +63,10 @@ and copied into `bill_items.price_paise` so a bill stays fully self-contained hi
   `Print.printToFileAsync` + `Sharing.shareAsync` for the native share sheet. **Opening the
   share sheet is not the same as the bill reaching the customer** — the app never infers "sent"
   from it; `mark_bill_sent` is a separate, explicit button.
-- `src/lib/export/share-csv.ts` + `src/lib/csv.ts` — the one report export (Reports tab): a
-  billing-period summary (customer, billed, paid, outstanding) as a shared `.csv`.
+- `src/lib/pdf/billing-summary-template.ts` — the one report export (Reports tab): a
+  billing-period summary (customer, billed, paid, outstanding) as a shared PDF via
+  `shareHtmlAsPdf` (updated post-launch — report generation is PDF everywhere in this app, no
+  CSV; see docs/web-admin.md "Report generation is PDF-only").
 - Screens: `src/screens/admin/billing-list.tsx` (pick a month, see/create each customer's
   bill), `src/screens/admin/bill-detail.tsx` (full breakdown, adjustments, payments,
   finalize/recalculate/void, PDF preview/share, mark-sent, the flagged-for-review banner),
@@ -83,7 +85,7 @@ and copied into `bill_items.price_paise` so a bill stays fully self-contained hi
   configuring an unconfigured third-party integration — consistent with the Master Prompt's own
   instruction not to integrate an unconfigured service (it says this explicitly about payment
   gateways; the same judgment applies here).
-- **A broader reports suite.** Only the one CSV billing-summary export exists. Candidate for a
+- **A broader reports suite.** Only the one billing-summary PDF export exists. Candidate for a
   later stage if more report types are wanted.
 - **Admin-side resolution UI for a flagged conflict beyond acknowledging it** — acknowledging
   clears the flag; actually correcting the bill is done via `add_bill_adjustment`, a manual
