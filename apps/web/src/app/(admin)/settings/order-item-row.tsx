@@ -71,7 +71,6 @@ export function OrderItemRow({ product }: { product: ProductRow }) {
       </div>
       {state.error ? <ErrorText message={state.error} /> : null}
       {deleteResult?.error ? <ErrorText message={deleteResult.error} /> : null}
-      {deleteResult?.info ? <p className="w-full text-xs text-text-secondary">{deleteResult.info}</p> : null}
     </li>
   );
 }

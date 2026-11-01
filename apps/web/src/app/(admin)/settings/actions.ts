@@ -8,7 +8,7 @@ import { createProduct, deleteProduct, updateProduct } from '@/lib/data/products
 import { createClient } from '@/lib/supabase/server';
 
 export type SettingsActionState = { error: string | null };
-export type DeleteOrderItemState = { error: string | null; info: string | null };
+export type DeleteOrderItemState = { error: string | null };
 
 export async function updateBusinessSettingsAction(
   _prevState: SettingsActionState,
@@ -79,15 +79,10 @@ export async function updateOrderItemPriceAction(
 export async function deleteOrderItemAction(productId: string): Promise<DeleteOrderItemState> {
   const supabase = await createClient();
   try {
-    const { hardDeleted } = await deleteProduct(supabase, productId);
+    await deleteProduct(supabase, productId);
     revalidatePath('/settings');
-    return {
-      error: null,
-      info: hardDeleted
-        ? null
-        : 'This item has been used in past orders, so it was deactivated instead of deleted — deleting it would blank its name on those orders.',
-    };
+    return { error: null };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to delete item.', info: null };
+    return { error: err instanceof Error ? err.message : 'Failed to delete item.' };
   }
 }
