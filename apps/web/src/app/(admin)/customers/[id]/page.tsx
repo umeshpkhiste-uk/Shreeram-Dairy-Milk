@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { formatPaiseAsRupees } from '@shreeram/shared';
+import { formatBillingMonth, formatPaiseAsRupees } from '@shreeram/shared';
 
 import { Badge, Card, EmptyState, PageHeader, SecondaryButton } from '@/components/ui';
 import { listBillsForCustomer } from '@/lib/data/bills';
@@ -33,6 +33,9 @@ export default async function CustomerDetailPage({ params }: PageProps) {
   ]);
   if (!customer) notFound();
 
+  // One bill per month: a voided bill was replaced by (or is awaiting) that
+  // month's live bill, so it doesn't belong in the history list.
+  const monthlyBills = bills.filter((b) => b.status !== 'voided');
   const milkTypeById = new Map(milkTypes.map((m) => [m.id, m]));
   const boundUpdate = updateCustomerAction.bind(null, id);
   const boundSetRate = setCustomerRateAction.bind(null, id);
@@ -90,17 +93,17 @@ export default async function CustomerDetailPage({ params }: PageProps) {
 
       <Card>
         <h2 className="mb-3 text-lg font-semibold text-text">Billing history</h2>
-        {bills.length === 0 ? (
+        {monthlyBills.length === 0 ? (
           <EmptyState title="No bills yet" description="Bills appear here once created from the Billing tab." />
         ) : (
           <ul className="flex flex-col gap-2">
-            {bills.map((bill) => (
+            {monthlyBills.map((bill) => (
               <li key={bill.id}>
                 <Link href={`/billing/${bill.id}`} className="font-medium text-primary">
-                  {bill.bill_number}
+                  {formatBillingMonth(bill.billing_month)}
                 </Link>
                 <span className="ml-2 text-sm text-text-secondary">
-                  {bill.billing_month} · {formatPaiseAsRupees(bill.total_payable_paise)} · {bill.status}
+                  {bill.bill_number} · {formatPaiseAsRupees(bill.total_payable_paise)} · {bill.status}
                 </span>
               </li>
             ))}

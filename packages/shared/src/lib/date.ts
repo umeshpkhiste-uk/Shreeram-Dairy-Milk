@@ -14,6 +14,27 @@ export function firstOfMonth(date: string): string {
   return `${date.slice(0, 7)}-01`;
 }
 
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/** "November 2026" for a billing_month like 2026-11-01 — bills are monthly, so never show the day. */
+export function formatBillingMonth(date: string): string {
+  const [year, month] = date.split('-');
+  return `${MONTH_NAMES[Number(month) - 1]} ${year}`;
+}
+
 export function shiftMonth(firstOfMonthDate: string, deltaMonths: number): string {
   const d = new Date(`${firstOfMonthDate}T00:00:00Z`);
   d.setUTCMonth(d.getUTCMonth() + deltaMonths);

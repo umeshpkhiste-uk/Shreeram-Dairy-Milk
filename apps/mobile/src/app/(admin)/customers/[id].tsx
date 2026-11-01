@@ -26,6 +26,7 @@ import {
 import { BILL_STATUS_LABEL, BILL_STATUS_TONE } from '@/lib/billing/status';
 import { formatPaiseAsRupees, parseRupeesToPaise } from '@/lib/money';
 import { listOrdersForCustomer, type CustomerOrder } from '@/lib/api/orders';
+import { formatBillingMonth } from '@/lib/date';
 import { CustomerForm } from '@/screens/admin/customer-form';
 import type { CustomerFormValues } from '@/lib/validation/customer';
 import { Spacing } from '@/theme/tokens';
@@ -261,7 +262,9 @@ function CustomerBillingSection({ customerId }: { customerId: string }) {
 
   const load = useCallback(() => {
     listBillsForCustomer(customerId)
-      .then(setBills)
+      // One bill per month: a voided bill was replaced by (or is awaiting)
+      // that month's live bill, so it doesn't belong in the history list.
+      .then((all) => setBills(all.filter((b) => b.status !== 'voided')))
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load bills'));
   }, [customerId]);
 
@@ -291,7 +294,12 @@ function CustomerBillingSection({ customerId }: { customerId: string }) {
         bills.map((bill) => (
           <Link key={bill.id} href={`/(admin)/billing/${bill.id}`} asChild>
             <Pressable style={styles.billRow}>
-              <Text variant="body">{bill.bill_number}</Text>
+              <View style={styles.orderItemsText}>
+                <Text variant="body">{formatBillingMonth(bill.billing_month)}</Text>
+                <Text variant="caption" color="secondary">
+                  {bill.bill_number}
+                </Text>
+              </View>
               <StatusBadge
                 label={BILL_STATUS_LABEL[bill.status]}
                 tone={BILL_STATUS_TONE[bill.status]}

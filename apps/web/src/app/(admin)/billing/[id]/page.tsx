@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { BILL_STATUS_LABEL, BILL_STATUS_TONE, formatPaiseAsRupees } from '@shreeram/shared';
+import {
+  BILL_STATUS_LABEL,
+  BILL_STATUS_TONE,
+  formatBillingMonth,
+  formatPaiseAsRupees,
+} from '@shreeram/shared';
 
 import { Badge, Card, SecondaryButton } from '@/components/ui';
 import { getBillWithDetails } from '@/lib/data/bills';
@@ -58,7 +63,7 @@ export default async function BillDetailPage({ params }: PageProps) {
           <div>
             <h1 className="text-2xl font-semibold text-text">Bill {bill.bill_number}</h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {customer?.full_name ?? 'Customer'} · {bill.billing_month}
+              {customer?.full_name ?? 'Customer'} · {formatBillingMonth(bill.billing_month)}
             </p>
           </div>
         </div>
