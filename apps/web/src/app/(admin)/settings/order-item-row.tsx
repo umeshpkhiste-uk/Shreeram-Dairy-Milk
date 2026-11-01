@@ -4,7 +4,7 @@ import { useActionState, useState, useTransition } from 'react';
 
 import { formatPaiseAsRupees } from '@shreeram/shared';
 
-import { Badge, ErrorText, SecondaryButton } from '@/components/ui';
+import { Badge, DangerButton, ErrorText, SecondaryButton } from '@/components/ui';
 import type { ProductRow } from '@/lib/data/products';
 
 import { deleteOrderItemAction, updateOrderItemPriceAction, type DeleteOrderItemState } from './actions';
@@ -14,11 +14,14 @@ export function OrderItemRow({ product }: { product: ProductRow }) {
   const [state, formAction, pending] = useActionState(boundUpdatePrice, { error: null });
   const [deletePending, startTransition] = useTransition();
   const [deleteResult, setDeleteResult] = useState<DeleteOrderItemState | null>(null);
+  // An inline confirm instead of window.confirm — a native confirm() dialog
+  // blocks the main thread for however long the admin takes to respond,
+  // which shows up as a multi-second "blocked UI" / bad-INP warning even
+  // though the actual delete is instant.
+  const [confirming, setConfirming] = useState(false);
 
-  function handleDelete() {
-    if (!window.confirm(`Delete "${product.name}"? This permanently removes it from the database.`)) {
-      return;
-    }
+  function handleConfirmDelete() {
+    setConfirming(false);
     startTransition(async () => {
       setDeleteResult(await deleteOrderItemAction(product.id));
     });
@@ -48,9 +51,23 @@ export function OrderItemRow({ product }: { product: ProductRow }) {
             {pending ? 'Saving…' : 'Update price'}
           </SecondaryButton>
         </form>
-        <SecondaryButton type="button" disabled={deletePending} onClick={handleDelete}>
-          {deletePending ? 'Deleting…' : 'Delete'}
-        </SecondaryButton>
+        {confirming ? (
+          <>
+            <span className="text-sm text-text-secondary">
+              Delete &ldquo;{product.name}&rdquo;? This permanently removes it from the database.
+            </span>
+            <DangerButton type="button" disabled={deletePending} onClick={handleConfirmDelete}>
+              {deletePending ? 'Deleting…' : 'Yes, delete'}
+            </DangerButton>
+            <SecondaryButton type="button" disabled={deletePending} onClick={() => setConfirming(false)}>
+              Cancel
+            </SecondaryButton>
+          </>
+        ) : (
+          <SecondaryButton type="button" onClick={() => setConfirming(true)}>
+            Delete
+          </SecondaryButton>
+        )}
       </div>
       {state.error ? <ErrorText message={state.error} /> : null}
       {deleteResult?.error ? <ErrorText message={deleteResult.error} /> : null}
