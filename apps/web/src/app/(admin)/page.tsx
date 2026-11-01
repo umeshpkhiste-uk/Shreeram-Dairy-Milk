@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { computeDashboardMetrics, formatPaiseAsRupees, todayInBusinessTimezone } from '@shreeram/shared';
 
-import { Card, PageHeader } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { listCustomers } from '@/lib/data/customers';
 import { listDeliveriesForDate } from '@/lib/data/deliveries';
 import { listWorkers } from '@/lib/data/workers';
@@ -17,7 +17,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const today = todayInBusinessTimezone();
   const sp = await searchParams;
   const date = sp.date && sp.date <= today ? sp.date : today;
-  const isToday = date === today;
 
   const [activeCustomers, workers, deliveriesForDate] = await Promise.all([
     listCustomers(supabase, { status: 'active' }),
@@ -44,11 +43,12 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <PageHeader
-        title="Dashboard"
-        description={`${date}${isToday ? ' (today)' : ''} · Asia/Kolkata`}
-        actions={<DashboardDatePicker date={date} />}
-      />
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-text">Dashboard</h1>
+        <div className="mt-2">
+          <DashboardDatePicker date={date} />
+        </div>
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tiles.map((tile) => {
           const content = (
