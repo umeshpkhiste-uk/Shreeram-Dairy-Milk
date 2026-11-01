@@ -48,13 +48,25 @@ export class LargeSecureStore {
     const encryptionKey = await this.getOrCreateEncryptionKey(key);
     const [ivHex, cipherHex] = encrypted.split(':');
     if (!ivHex || !cipherHex) {
+      await this.removeItem(key);
       return null;
     }
 
-    const aesCbc = new aesjs.ModeOfOperation.cbc(encryptionKey, aesjs.utils.hex.toBytes(ivHex));
-    const decryptedBytes = aesCbc.decrypt(aesjs.utils.hex.toBytes(cipherHex));
-    const unpadded = aesjs.padding.pkcs7.strip(decryptedBytes);
-    return aesjs.utils.utf8.fromBytes(unpadded);
+    try {
+      const aesCbc = new aesjs.ModeOfOperation.cbc(encryptionKey, aesjs.utils.hex.toBytes(ivHex));
+      const decryptedBytes = aesCbc.decrypt(aesjs.utils.hex.toBytes(cipherHex));
+      const unpadded = aesjs.padding.pkcs7.strip(decryptedBytes);
+      return aesjs.utils.utf8.fromBytes(unpadded);
+    } catch {
+      // The AsyncStorage blob and the SecureStore key have gone out of
+      // sync (e.g. SecureStore's Keychain entry survived a reinstall that
+      // wiped AsyncStorage, or vice versa) — decrypting with the wrong key
+      // produces invalid PKCS#7 padding. Treat this exactly like "no
+      // session" instead of throwing, and wipe the orphaned entries so
+      // every future launch doesn't keep failing the same way.
+      await this.removeItem(key);
+      return null;
+    }
   }
 
   async setItem(key: string, value: string): Promise<void> {

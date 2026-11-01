@@ -50,7 +50,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setState({ status: 'signedIn', session, profile });
     }
 
-    supabase.auth.getSession().then(({ data }) => loadFromSession(data.session));
+    supabase.auth
+      .getSession()
+      .then(({ data }) => loadFromSession(data.session))
+      .catch(() => {
+        // Any failure restoring the session (corrupted local storage,
+        // etc.) must still resolve to a usable state — otherwise the app
+        // hangs on the loading screen forever instead of reaching sign-in.
+        if (isMounted) setState({ status: 'signedOut' });
+      });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       loadFromSession(session);
