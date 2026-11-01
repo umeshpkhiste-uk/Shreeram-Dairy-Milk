@@ -39,7 +39,15 @@
       "expo-secure-store",
       "expo-sqlite",
       "expo-sharing",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "17.0"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
