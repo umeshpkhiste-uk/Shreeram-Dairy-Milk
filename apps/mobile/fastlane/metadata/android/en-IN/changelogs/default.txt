@@ -1,0 +1,4 @@
+First release of the Shreeram Doodh Diary & Sweets staff app.
+- Workers: today's route, mark deliveries (works offline), sync status with today's totals.
+- Admins: dashboard, customers, workers and routes, daily delivery report, delivery calendar per customer.
+- Monthly milk bills with payments and PDF sharing; one-time orders shown separately.

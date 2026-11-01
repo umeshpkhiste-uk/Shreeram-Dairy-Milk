@@ -3,7 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { env } from '@/lib/env';
 
-const PUBLIC_PATHS = ['/login'];
+// /privacy and /delete-account are linked from the Google Play listing and
+// must load for anyone, signed in or not.
+const PUBLIC_PATHS = ['/login', '/privacy', '/delete-account'];
 
 /**
  * Refreshes the Supabase session cookie on every request (required by

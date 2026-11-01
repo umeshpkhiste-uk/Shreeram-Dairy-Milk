@@ -115,8 +115,10 @@ yourself via a different path).
 
 ## 7. Google Play release preparation
 
-Not yet started — no Play Console listing exists for this app. Checklist for when the user
-is ready:
+**The full submission kit now lives in [`docs/play-store/`](play-store/README.md)** — listing
+text and images (`apps/mobile/fastlane/metadata/android/en-IN/`), privacy policy and account
+deletion pages, Data safety / content rating / app content answers, and reviewer access. That
+README's checklist supersedes the summary below, which is kept for context.
 
 1. Create a Google Play Developer account (one-time $25 fee) if not already done.
 2. Create a new app in Play Console, package name `com.shreeramdairy.dailymilk` (must match

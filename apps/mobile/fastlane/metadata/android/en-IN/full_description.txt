@@ -1,0 +1,29 @@
+Shreeram Doodh Diary & Sweets is the staff app for our dairy in R9 Sector, Life Republic (Kolte Patil). It helps our delivery team and office manage daily milk delivery from the morning route to the monthly bill.
+
+This app is for Shreeram staff only. Accounts are created by the business administrator; there is no public sign-up.
+
+FOR DELIVERY STAFF
+• Today's Route: see every customer assigned to you, in route order, with address, milk type and daily quantity.
+• Mark deliveries in a tap: delivered, partial, missed, or "customer informed — no delivery".
+• Works offline: deliveries are saved on the phone and synced automatically when the network is back.
+• Sync Status: check today's totals before syncing — customers delivered, partial, missed and not yet recorded, litres scheduled vs delivered, and what is still waiting to sync.
+• Delivery history and a monthly calendar for each customer.
+• One-time orders (paneer, ghee, dahi and more) assigned to you, as a delivery reminder.
+
+FOR ADMINISTRATORS
+• Dashboard: today's scheduled, delivered, partial and missed deliveries, and estimated sales.
+• Customers: add and edit customers, set customer-specific milk rates.
+• Workers and routes: add delivery staff and assign customers to routes.
+• Daily deliveries report with date, worker, route and status filters.
+• Delivery calendar for each customer: review the month and mark days the customer asked to skip.
+• Monthly milk billing: one bill per customer per month, built only from recorded deliveries. Add adjustments, record cash/UPI/bank payments, and share the bill as a PDF.
+• Reports: monthly billing summary to share as a PDF.
+
+ACCURATE BY DESIGN
+• Money is calculated in exact paise, never rounded floating-point amounts.
+• A delivery is never billed twice, and milk that was only scheduled is never charged.
+• Each delivery keeps the price that applied on its day, so later rate changes never alter past bills.
+
+Your data is stored securely and is only visible to Shreeram staff according to their role. Read our privacy policy: https://shreeram-dairy-milk.vercel.app/privacy
+
+Quality & Purity are our first priority.
