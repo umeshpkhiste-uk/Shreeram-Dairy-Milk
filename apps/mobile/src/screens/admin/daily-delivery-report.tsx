@@ -4,12 +4,12 @@ import { FlatList, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
-import { ChipSelect } from '@/components/chip-select';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { Input } from '@/components/input';
 import { LoadingState } from '@/components/loading-state';
 import { Screen } from '@/components/screen';
+import { Select } from '@/components/select';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Text } from '@/components/text';
 import { listDailyDeliveryReport } from '@/lib/api/deliveries';
@@ -120,8 +120,9 @@ export function DailyDeliveryReportScreen() {
         />
 
         {workerOptions.length > 0 ? (
-          <ChipSelect
+          <Select
             label="Worker"
+            placeholder="All workers"
             options={workerOptions}
             value={workerId}
             onChange={setWorkerId}
@@ -129,21 +130,22 @@ export function DailyDeliveryReportScreen() {
           />
         ) : null}
         {routeOptions.length > 0 ? (
-          <ChipSelect
+          <Select
             label="Route"
+            placeholder="All routes"
             options={routeOptions}
             value={routeId}
             onChange={setRouteId}
             allowClear
           />
         ) : null}
-        <ChipSelect
+        <Select
           label="Status"
+          placeholder="All statuses"
           options={STATUS_OPTIONS}
           value={status}
           onChange={(value) => setStatus(value)}
           allowClear
-          scroll={false}
         />
       </View>
 
