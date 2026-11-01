@@ -3,6 +3,12 @@ export function todayInBusinessTimezone(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 }
 
+/** DD/MM/YYYY — same display format the web admin app uses for dates. */
+export function formatDateDDMMYYYY(date: string): string {
+  const [year, month, day] = date.split('-');
+  return `${day}/${month}/${year}`;
+}
+
 export function shiftDate(date: string, deltaDays: number): string {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + deltaDays);

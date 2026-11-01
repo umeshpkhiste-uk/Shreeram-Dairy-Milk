@@ -1,6 +1,7 @@
-import { useFocusEffect } from 'expo-router';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
@@ -12,13 +13,14 @@ import { Screen } from '@/components/screen';
 import { Select } from '@/components/select';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Text } from '@/components/text';
+import { useTheme } from '@/hooks/use-theme';
 import { listDailyDeliveryReport } from '@/lib/api/deliveries';
 import { listActiveMilkTypes } from '@/lib/api/milk-types';
 import { listRoutes, listWorkers, type WorkerSummary } from '@/lib/api/workers';
-import { shiftDate, todayInBusinessTimezone } from '@/lib/date';
+import { formatDateDDMMYYYY, shiftDate, todayInBusinessTimezone } from '@/lib/date';
 import type { DeliveryReportRow, DeliveryReportStatusFilter } from '@/lib/dashboard/metrics';
 import { subscribeToDeliveryChanges } from '@/lib/realtime/deliveries-channel';
-import { Spacing } from '@/theme/tokens';
+import { MinTouchTarget, Radius, Spacing } from '@/theme/tokens';
 import type { Database } from '@/types/database';
 
 type RouteRow = Database['public']['Tables']['routes']['Row'];
@@ -101,22 +103,18 @@ export function DailyDeliveryReportScreen() {
       <View style={styles.header}>
         <Text variant="title">Daily Deliveries</Text>
 
-        <View style={styles.dateRow}>
-          <Button label="‹ Prev" variant="ghost" onPress={() => setDate((d) => shiftDate(d, -1))} />
-          <Input
-            value={date}
-            onChangeText={setDate}
-            style={styles.dateInput}
-            autoCapitalize="none"
-          />
-          <Button label="Next ›" variant="ghost" onPress={() => setDate((d) => shiftDate(d, 1))} />
-        </View>
-
         <Input
           placeholder="Search customer by name or mobile number"
           value={search}
           onChangeText={setSearch}
           autoCapitalize="none"
+        />
+
+        <DateField
+          label="Date"
+          date={date}
+          onChange={setDate}
+          maxDate={todayInBusinessTimezone()}
         />
 
         {workerOptions.length > 0 ? (
@@ -158,6 +156,91 @@ export function DailyDeliveryReportScreen() {
         milkTypeNames={milkTypeNames}
       />
     </Screen>
+  );
+}
+
+/**
+ * Same bordered-field look as Select, so the date control reads as one more
+ * dropdown in the filter stack instead of a free-text box. Tapping it opens
+ * the native date picker (a dialog on Android, a sheet with Done on iOS)
+ * instead of letting an admin type an arbitrary/invalid date string.
+ */
+function DateField({
+  label,
+  date,
+  onChange,
+  maxDate,
+}: {
+  label: string;
+  date: string;
+  onChange: (date: string) => void;
+  maxDate: string;
+}) {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+
+  function handleChange(event: DateTimePickerEvent, selected?: Date) {
+    if (Platform.OS === 'android') {
+      setOpen(false);
+    }
+    if (event.type === 'set' && selected) {
+      onChange(selected.toLocaleDateString('en-CA'));
+    }
+  }
+
+  return (
+    <View style={styles.container}>
+      {label ? <Text variant="label">{label}</Text> : null}
+      <View style={styles.dateRow}>
+        <Button label="‹" variant="ghost" onPress={() => onChange(shiftDate(date, -1))} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={label}
+          onPress={() => setOpen(true)}
+          style={[styles.field, { borderColor: theme.border, backgroundColor: theme.surface }]}
+        >
+          <Text variant="body" style={styles.fieldText}>
+            {formatDateDDMMYYYY(date)}
+          </Text>
+          <Text variant="body" color="secondary">
+            ▾
+          </Text>
+        </Pressable>
+        <Button
+          label="›"
+          variant="ghost"
+          disabled={date >= maxDate}
+          onPress={() => onChange(shiftDate(date, 1))}
+        />
+      </View>
+
+      {open && Platform.OS === 'android' ? (
+        <DateTimePicker
+          value={new Date(`${date}T00:00:00`)}
+          mode="date"
+          display="default"
+          maximumDate={new Date(`${maxDate}T23:59:59`)}
+          onChange={handleChange}
+        />
+      ) : null}
+
+      {Platform.OS === 'ios' ? (
+        <Modal visible={open} animationType="fade" transparent onRequestClose={() => setOpen(false)}>
+          <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+            <Pressable style={[styles.sheet, { backgroundColor: theme.surface }]} onPress={() => {}}>
+              <DateTimePicker
+                value={new Date(`${date}T00:00:00`)}
+                mode="date"
+                display="inline"
+                maximumDate={new Date(`${maxDate}T23:59:59`)}
+                onChange={handleChange}
+              />
+              <Button label="Done" onPress={() => setOpen(false)} fullWidth />
+            </Pressable>
+          </Pressable>
+        </Modal>
+      ) : null}
+    </View>
   );
 }
 
@@ -232,49 +315,73 @@ function ReportRow({
   const expectedMl = delivery?.scheduled_quantity_ml ?? customer.default_daily_quantity_ml;
 
   return (
-    <Card style={styles.row}>
-      <View style={styles.rowHeader}>
-        <Text variant="subtitle">{customer.full_name}</Text>
-        {delivery ? (
-          <StatusBadge
-            label={STATUS_LABEL[delivery.status] ?? delivery.status}
-            tone={STATUS_TONE[delivery.status] ?? 'neutral'}
-          />
-        ) : (
-          <StatusBadge label="No record yet" tone="neutral" />
-        )}
-      </View>
-      <Text variant="body" color="secondary">
-        {workerName} · {routeName} · {milkTypeName}
-      </Text>
-      <Text variant="body" color="secondary">
-        Expected {expectedMl} ml
-        {delivery ? ` · Delivered ${delivery.delivered_quantity_ml} ml` : ''}
-      </Text>
-      {delivery ? (
-        <Text variant="caption" color="secondary">
-          Recorded {new Date(delivery.device_recorded_at).toLocaleString()} · Received by server
-        </Text>
-      ) : (
-        <Text variant="caption" color="secondary">
-          Not yet received by the server — may be genuinely pending or completed offline and not yet
-          synced.
-        </Text>
-      )}
-      {delivery?.reason ? (
-        <Text variant="caption" color="secondary">
-          Reason: {delivery.reason}
-        </Text>
-      ) : null}
-      {delivery?.has_conflict ? <StatusBadge label="Flagged for review" tone="warning" /> : null}
-    </Card>
+    <Link href={`/(admin)/customers/${customer.id}`} asChild>
+      <Pressable accessibilityRole="button">
+        <Card style={styles.row}>
+          <View style={styles.rowHeader}>
+            <Text variant="subtitle">{customer.full_name}</Text>
+            {delivery ? (
+              <StatusBadge
+                label={STATUS_LABEL[delivery.status] ?? delivery.status}
+                tone={STATUS_TONE[delivery.status] ?? 'neutral'}
+              />
+            ) : (
+              <StatusBadge label="No record yet" tone="neutral" />
+            )}
+          </View>
+          <Text variant="body" color="secondary">
+            {workerName} · {routeName} · {milkTypeName}
+          </Text>
+          <Text variant="body" color="secondary">
+            Expected {expectedMl} ml
+            {delivery ? ` · Delivered ${delivery.delivered_quantity_ml} ml` : ''}
+          </Text>
+          {delivery ? (
+            <Text variant="caption" color="secondary">
+              Recorded {new Date(delivery.device_recorded_at).toLocaleString()} · Received by
+              server
+            </Text>
+          ) : (
+            <Text variant="caption" color="secondary">
+              Not yet received by the server — may be genuinely pending or completed offline and
+              not yet synced.
+            </Text>
+          )}
+          {delivery?.reason ? (
+            <Text variant="caption" color="secondary">
+              Reason: {delivery.reason}
+            </Text>
+          ) : null}
+          {delivery?.has_conflict ? <StatusBadge label="Flagged for review" tone="warning" /> : null}
+        </Card>
+      </Pressable>
+    </Link>
   );
 }
 
 const styles = StyleSheet.create({
   header: { padding: Spacing.lg, gap: Spacing.md },
+  container: { gap: Spacing.xs },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  dateInput: { flex: 1 },
+  field: {
+    flex: 1,
+    minHeight: MinTouchTarget,
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  fieldText: { flex: 1 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  sheet: {
+    borderTopLeftRadius: Radius.lg,
+    borderTopRightRadius: Radius.lg,
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
   list: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl, gap: Spacing.sm },
   row: { gap: Spacing.xs },
   rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
