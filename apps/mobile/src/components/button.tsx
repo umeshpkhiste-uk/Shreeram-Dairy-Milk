@@ -19,8 +19,11 @@ export function Button({
   loading = false,
   fullWidth = false,
   disabled,
+  // <Link asChild> injects its own `style` into this component; drop it so
+  // it can never replace the button's own styling below.
+  style: _injectedStyle,
   ...rest
-}: ButtonProps) {
+}: ButtonProps & { style?: unknown }) {
   const theme = useTheme();
   const isDisabled = disabled || loading;
 
@@ -45,6 +48,7 @@ export function Button({
 
   return (
     <Pressable
+      {...rest}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled }}
       disabled={isDisabled}
@@ -55,7 +59,6 @@ export function Button({
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
       ]}
-      {...rest}
     >
       {loading ? (
         <ActivityIndicator color={textColor} />
