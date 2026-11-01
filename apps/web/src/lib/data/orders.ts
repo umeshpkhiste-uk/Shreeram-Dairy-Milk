@@ -92,6 +92,28 @@ export async function listRecentOrders(
   return joinOrders(supabase, orders ?? []);
 }
 
+/**
+ * A customer's one-time orders (Paneer, ghee, etc.) — shown as their own
+ * section in the customer's Billing history, never merged into a
+ * monthly_bills total: orders are deliberately outside the milk billing/
+ * payment flow (see migration 20261029090000 and docs/web-admin.md).
+ */
+export async function listOrdersForCustomer(
+  supabase: SupabaseServerClient,
+  customerId: string,
+  limit = 50,
+): Promise<OrderWithDetails[]> {
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('customer_id', customerId)
+    .order('order_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return joinOrders(supabase, orders ?? []);
+}
+
 export async function getOrder(
   supabase: SupabaseServerClient,
   orderId: string,

@@ -8,6 +8,7 @@ import { listBillsForCustomer } from '@/lib/data/bills';
 import { listRatesForCustomer } from '@/lib/data/customer-rates';
 import { getCustomer } from '@/lib/data/customers';
 import { listAllMilkTypes } from '@/lib/data/milk-types';
+import { listOrdersForCustomer } from '@/lib/data/orders';
 import { listWorkers } from '@/lib/data/workers';
 import { createClient } from '@/lib/supabase/server';
 
@@ -22,12 +23,13 @@ export default async function CustomerDetailPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [customer, milkTypes, workers, bills, rates] = await Promise.all([
+  const [customer, milkTypes, workers, bills, rates, orders] = await Promise.all([
     getCustomer(supabase, id),
     listAllMilkTypes(supabase),
     listWorkers(supabase),
     listBillsForCustomer(supabase, id),
     listRatesForCustomer(supabase, id),
+    listOrdersForCustomer(supabase, id),
   ]);
   if (!customer) notFound();
 
@@ -99,6 +101,31 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                 </Link>
                 <span className="ml-2 text-sm text-text-secondary">
                   {bill.billing_month} · {formatPaiseAsRupees(bill.total_payable_paise)} · {bill.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      <Card>
+        <h2 className="mb-3 text-lg font-semibold text-text">One-time orders</h2>
+        <p className="mb-4 text-sm text-text-secondary">
+          Paneer, ghee, and other one-time items this customer ordered — kept separate from the
+          monthly milk bills above, never added to their total.
+        </p>
+        {orders.length === 0 ? (
+          <EmptyState title="No one-time orders yet" description="Orders placed from the Orders tab appear here." />
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {orders.map(({ order, items, totalAmountPaise }) => (
+              <li key={order.id}>
+                <Link href={`/orders/${order.id}/print`} className="font-medium text-primary">
+                  {items.map((i) => i.productName).join(', ') || 'Order'}
+                </Link>
+                <span className="ml-2 text-sm text-text-secondary">
+                  {order.order_date} · {formatPaiseAsRupees(totalAmountPaise)} ·{' '}
+                  {order.status === 'cancelled' ? 'cancelled' : order.payment_status}
                 </span>
               </li>
             ))}

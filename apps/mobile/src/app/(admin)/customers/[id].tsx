@@ -25,6 +25,7 @@ import {
 } from '@/lib/api/customers';
 import { BILL_STATUS_LABEL, BILL_STATUS_TONE } from '@/lib/billing/status';
 import { formatPaiseAsRupees, parseRupeesToPaise } from '@/lib/money';
+import { listOrdersForCustomer, type CustomerOrder } from '@/lib/api/orders';
 import { CustomerForm } from '@/screens/admin/customer-form';
 import type { CustomerFormValues } from '@/lib/validation/customer';
 import { Spacing } from '@/theme/tokens';
@@ -152,6 +153,8 @@ export default function CustomerDetailScreen() {
       <CustomerPricingSection customerId={customer.id} milkTypeId={customer.milk_type_id} />
 
       <CustomerBillingSection customerId={customer.id} />
+
+      <CustomerOrdersSection customerId={customer.id} />
 
       <View style={styles.actions}>
         <Button label="Edit" onPress={() => setEditing(true)} />
@@ -304,6 +307,69 @@ function CustomerBillingSection({ customerId }: { customerId: string }) {
   );
 }
 
+/**
+ * One-time orders (Paneer, ghee, etc.) — their own section, kept separate
+ * from CustomerBillingSection's monthly bills and never summed into them
+ * (see apps/web's equivalent on the customer detail page).
+ */
+function CustomerOrdersSection({ customerId }: { customerId: string }) {
+  const [orders, setOrders] = useState<CustomerOrder[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    listOrdersForCustomer(customerId)
+      .then(setOrders)
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load orders'));
+  }, [customerId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
+  return (
+    <Card style={styles.card}>
+      <Text variant="subtitle">One-time orders</Text>
+      <Text variant="caption" color="secondary">
+        Kept separate from the monthly milk bills above — never added to their total.
+      </Text>
+      {error ? (
+        <Text variant="body" color="danger">
+          {error}
+        </Text>
+      ) : orders === null ? (
+        <Text variant="body" color="secondary">
+          Loading…
+        </Text>
+      ) : orders.length === 0 ? (
+        <EmptyState title="No one-time orders yet" description="Orders placed from the Orders tab appear here." />
+      ) : (
+        orders.map(({ order, items, totalAmountPaise }) => (
+          <View key={order.id} style={styles.billRow}>
+            <Text variant="body" style={styles.orderItemsText}>
+              {items.map((i) => i.productName).join(', ') || 'Order'}
+            </Text>
+            <StatusBadge
+              label={order.status === 'cancelled' ? 'Cancelled' : order.payment_status}
+              tone={
+                order.status === 'cancelled'
+                  ? 'neutral'
+                  : order.payment_status === 'paid'
+                    ? 'success'
+                    : 'warning'
+              }
+            />
+            <Text variant="body" color="secondary">
+              {formatPaiseAsRupees(totalAmountPaise)}
+            </Text>
+          </View>
+        ))
+      )}
+    </Card>
+  );
+}
+
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.fieldRow}>
@@ -325,6 +391,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.xs,
   },
+  orderItemsText: { flex: 1 },
   actions: { gap: Spacing.sm },
   rateForm: { gap: Spacing.sm },
   rateFormActions: { flexDirection: 'row', gap: Spacing.sm },
