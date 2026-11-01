@@ -2,7 +2,7 @@ import { ActivityIndicator, Pressable, StyleSheet, type PressableProps } from 'r
 
 import { Text } from '@/components/text';
 import { useTheme } from '@/hooks/use-theme';
-import { MinTouchTarget, Radius, Spacing } from '@/theme/tokens';
+import { MinTouchTarget, Radius, Spacing, palette } from '@/theme/tokens';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
@@ -25,17 +25,23 @@ export function Button({
   const isDisabled = disabled || loading;
 
   const variantStyle = {
-    primary: { backgroundColor: theme.primary, borderColor: theme.primary },
+    // Fixed brand colors, not theme.primary/theme.danger — the web app has
+    // no dark mode, so its buttons are always #174A30/#B3261E. Pinning these
+    // two here (instead of letting them shift to dark-mode tints) keeps the
+    // brand CTA color identical between web and mobile regardless of the
+    // phone's theme, same as any brand keeping its primary button color
+    // fixed across light/dark.
+    primary: { backgroundColor: palette.green700, borderColor: palette.green700 },
     // surfaceMuted, not surface — surface sits almost on top of the screen
     // background in dark mode (#111A15 vs #0B1210), so a secondary button's
     // fill was nearly invisible; surfaceMuted gives it real contrast.
     secondary: { backgroundColor: theme.surfaceMuted, borderColor: theme.border },
-    danger: { backgroundColor: theme.danger, borderColor: theme.danger },
+    danger: { backgroundColor: palette.red500, borderColor: palette.red500 },
     ghost: { backgroundColor: 'transparent', borderColor: 'transparent' },
   }[variant];
 
   const textColor =
-    variant === 'secondary' || variant === 'ghost' ? theme.text : theme.textOnPrimary;
+    variant === 'secondary' || variant === 'ghost' ? theme.text : palette.white;
 
   return (
     <Pressable
