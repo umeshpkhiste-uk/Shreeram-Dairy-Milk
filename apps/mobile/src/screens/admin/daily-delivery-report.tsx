@@ -225,9 +225,17 @@ function DateField({
       ) : null}
 
       {Platform.OS === 'ios' ? (
-        <Modal visible={open} animationType="fade" transparent onRequestClose={() => setOpen(false)}>
+        <Modal
+          visible={open}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setOpen(false)}
+        >
           <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-            <Pressable style={[styles.sheet, { backgroundColor: theme.surface }]} onPress={() => {}}>
+            <Pressable
+              style={[styles.sheet, { backgroundColor: theme.surface }]}
+              onPress={() => {}}
+            >
               <DateTimePicker
                 value={new Date(`${date}T00:00:00`)}
                 mode="date"
@@ -315,7 +323,7 @@ function ReportRow({
   const expectedMl = delivery?.scheduled_quantity_ml ?? customer.default_daily_quantity_ml;
 
   return (
-    <Link href={`/(admin)/customers/${customer.id}`} asChild>
+    <Link href={`/(admin)/deliveries/${customer.id}`} asChild>
       <Pressable accessibilityRole="button">
         <Card style={styles.row}>
           <View style={styles.rowHeader}>
@@ -338,13 +346,12 @@ function ReportRow({
           </Text>
           {delivery ? (
             <Text variant="caption" color="secondary">
-              Recorded {new Date(delivery.device_recorded_at).toLocaleString()} · Received by
-              server
+              Recorded {new Date(delivery.device_recorded_at).toLocaleString()} · Received by server
             </Text>
           ) : (
             <Text variant="caption" color="secondary">
-              Not yet received by the server — may be genuinely pending or completed offline and
-              not yet synced.
+              Not yet received by the server — may be genuinely pending or completed offline and not
+              yet synced.
             </Text>
           )}
           {delivery?.reason ? (
@@ -352,7 +359,9 @@ function ReportRow({
               Reason: {delivery.reason}
             </Text>
           ) : null}
-          {delivery?.has_conflict ? <StatusBadge label="Flagged for review" tone="warning" /> : null}
+          {delivery?.has_conflict ? (
+            <StatusBadge label="Flagged for review" tone="warning" />
+          ) : null}
         </Card>
       </Pressable>
     </Link>

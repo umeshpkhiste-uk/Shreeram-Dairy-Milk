@@ -104,6 +104,26 @@ export async function listDeliveriesForCustomerInRange(
   return data ?? [];
 }
 
+/**
+ * Admin-only: mark a day as "customer informed — no delivery" for a
+ * customer, regardless of date (past or future) — the web admin's
+ * equivalent action (apps/web/src/lib/data/deliveries.ts). Separate RPC
+ * from submit_delivery_event, which is the worker's own write path.
+ */
+export async function markDeliverySkipped(
+  customerId: string,
+  deliveryDate: string,
+  reason: string,
+): Promise<DeliveryRow> {
+  const { data, error } = await supabase.rpc('admin_mark_delivery_skipped', {
+    p_customer_id: customerId,
+    p_delivery_date: deliveryDate,
+    p_reason: reason,
+  });
+  if (error) throw error;
+  return data;
+}
+
 export type DeliveryReportFilters = {
   date: string; // YYYY-MM-DD
   workerId?: string;
