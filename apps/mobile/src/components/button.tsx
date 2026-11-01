@@ -26,7 +26,10 @@ export function Button({
 
   const variantStyle = {
     primary: { backgroundColor: theme.primary, borderColor: theme.primary },
-    secondary: { backgroundColor: theme.surface, borderColor: theme.border },
+    // surfaceMuted, not surface — surface sits almost on top of the screen
+    // background in dark mode (#111A15 vs #0B1210), so a secondary button's
+    // fill was nearly invisible; surfaceMuted gives it real contrast.
+    secondary: { backgroundColor: theme.surfaceMuted, borderColor: theme.border },
     danger: { backgroundColor: theme.danger, borderColor: theme.danger },
     ghost: { backgroundColor: 'transparent', borderColor: 'transparent' },
   }[variant];
