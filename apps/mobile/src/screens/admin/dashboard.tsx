@@ -17,6 +17,13 @@ import { formatPaiseAsRupees } from '@/lib/money';
 import { subscribeToDeliveryChanges } from '@/lib/realtime/deliveries-channel';
 import { Spacing } from '@/theme/tokens';
 
+const QUICK_ACTIONS = [
+  { href: '/(admin)/customers/new', label: 'Add Customer' },
+  { href: '/(admin)/more/workers/new', label: 'Add Worker' },
+  { href: '/(admin)/more/workers/new-route', label: 'Assign Route' },
+  { href: '/(admin)/deliveries', label: "View Today's Deliveries" },
+] as const;
+
 export function AdminDashboardScreen() {
   const today = useMemo(() => todayInBusinessTimezone(), []);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -84,18 +91,13 @@ export function AdminDashboardScreen() {
 
       <Text variant="subtitle">Quick actions</Text>
       <View style={styles.actions}>
-        <Link href="/(admin)/customers/new" asChild>
-          <Button label="Add Customer" variant="secondary" fullWidth />
-        </Link>
-        <Link href="/(admin)/more/workers/new" asChild>
-          <Button label="Add Worker" variant="secondary" fullWidth />
-        </Link>
-        <Link href="/(admin)/more/workers/new-route" asChild>
-          <Button label="Assign Route" variant="secondary" fullWidth />
-        </Link>
-        <Link href="/(admin)/deliveries" asChild>
-          <Button label="View Today's Deliveries" variant="secondary" fullWidth />
-        </Link>
+        {QUICK_ACTIONS.map((action) => (
+          <View key={action.href} style={styles.actionCell}>
+            <Link href={action.href} asChild>
+              <Button label={action.label} variant="secondary" fullWidth fill />
+            </Link>
+          </View>
+        ))}
       </View>
     </Screen>
   );
@@ -133,5 +135,6 @@ function Tile({
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   tile: { flexBasis: '47%', gap: Spacing.xs },
-  actions: { gap: Spacing.sm },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  actionCell: { flexBasis: '47%', flexGrow: 1 },
 });

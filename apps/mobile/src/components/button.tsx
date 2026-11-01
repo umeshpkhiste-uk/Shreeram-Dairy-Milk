@@ -11,6 +11,8 @@ export type ButtonProps = Omit<PressableProps, 'style'> & {
   variant?: ButtonVariant;
   loading?: boolean;
   fullWidth?: boolean;
+  /** Grow to fill the parent's height, e.g. equal-height buttons in a grid row. */
+  fill?: boolean;
 };
 
 export function Button({
@@ -18,6 +20,7 @@ export function Button({
   variant = 'primary',
   loading = false,
   fullWidth = false,
+  fill = false,
   disabled,
   // <Link asChild> injects its own `style` into this component; drop it so
   // it can never replace the button's own styling below.
@@ -56,6 +59,7 @@ export function Button({
         styles.base,
         variantStyle,
         fullWidth && styles.fullWidth,
+        fill && styles.fill,
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
       ]}
@@ -63,7 +67,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={textColor} />
       ) : (
-        <Text variant="subtitle" style={{ color: textColor }}>
+        <Text variant="subtitle" style={{ color: textColor, textAlign: 'center' }}>
           {label}
         </Text>
       )}
@@ -77,10 +81,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     borderWidth: 1,
     paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   fullWidth: { alignSelf: 'stretch' },
+  fill: { flex: 1 },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
 });
