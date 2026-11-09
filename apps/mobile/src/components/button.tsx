@@ -1,7 +1,8 @@
-import { ActivityIndicator, Pressable, StyleSheet, type PressableProps } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, type GestureResponderEvent, type PressableProps } from 'react-native';
 
 import { Text } from '@/components/text';
 import { useTheme } from '@/hooks/use-theme';
+import { usePressGuard } from '@/lib/use-press-guard';
 import { MinTouchTarget, Radius, Spacing, palette } from '@/theme/tokens';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -22,6 +23,7 @@ export function Button({
   fullWidth = false,
   fill = false,
   disabled,
+  onPress,
   // <Link asChild> injects its own `style` into this component; drop it so
   // it can never replace the button's own styling below.
   style: _injectedStyle,
@@ -29,6 +31,10 @@ export function Button({
 }: ButtonProps & { style?: unknown }) {
   const theme = useTheme();
   const isDisabled = disabled || loading;
+  // Every button in the app funnels through here, so this one guard is what
+  // makes "only single taps do anything" true app-wide, not just wherever a
+  // screen happens to remember to pass `loading`/`disabled` itself.
+  const guardedOnPress = usePressGuard<[GestureResponderEvent]>(onPress ?? undefined);
 
   const variantStyle = {
     // Fixed brand colors, not theme.primary/theme.danger — the web app has
@@ -52,6 +58,7 @@ export function Button({
   return (
     <Pressable
       {...rest}
+      onPress={guardedOnPress}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled }}
       disabled={isDisabled}

@@ -8,6 +8,7 @@ import { listCustomers } from '@/lib/data/customers';
 import { createClient } from '@/lib/supabase/server';
 
 import { createDraftBillAction } from './actions';
+import { CreateBillButton } from './create-bill-button';
 
 type PageProps = { searchParams: Promise<{ month?: string }> };
 
@@ -89,9 +90,7 @@ export default async function BillingListPage({ searchParams }: PageProps) {
                     </Link>
                   ) : (
                     <form action={createDraftBillAction.bind(null, customer.id, month)}>
-                      <button type="submit" className="font-medium text-primary hover:underline">
-                        Create bill
-                      </button>
+                      <CreateBillButton />
                     </form>
                   )}
                 </td>

@@ -3,11 +3,15 @@
 import { useTransition } from 'react';
 
 import type { RouteRow, WorkerSummary } from '@/lib/data/workers';
+import { useClickGuard } from '@/lib/use-click-guard';
 
 import { assignWorkerRouteAction, setWorkerActiveAction } from './actions';
 
 export function WorkerRowActions({ worker, routes }: { worker: WorkerSummary; routes: RouteRow[] }) {
   const [pending, startTransition] = useTransition();
+  const guardedToggleActive = useClickGuard(() =>
+    startTransition(() => void setWorkerActiveAction(worker.id, !worker.isActive)),
+  );
 
   return (
     <div className="flex items-center gap-2">
@@ -31,7 +35,7 @@ export function WorkerRowActions({ worker, routes }: { worker: WorkerSummary; ro
       <button
         type="button"
         disabled={pending}
-        onClick={() => startTransition(() => void setWorkerActiveAction(worker.id, !worker.isActive))}
+        onClick={guardedToggleActive}
         className="rounded-md border border-border px-3 py-1 text-sm font-medium text-text transition hover:bg-surface-muted disabled:opacity-60"
       >
         {worker.isActive ? 'Deactivate' : 'Reactivate'}

@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react';
 
+import { useClickGuard } from '@/lib/use-click-guard';
+
 type Props = {
   billId: string;
   paymentId: string;
@@ -18,6 +20,9 @@ export function VoidPaymentButton({ billId, paymentId, action }: Props) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [pending, startTransition] = useTransition();
+  const guardedConfirm = useClickGuard(() =>
+    startTransition(() => void action(billId, paymentId, reason.trim())),
+  );
 
   if (!open) {
     return (
@@ -42,7 +47,7 @@ export function VoidPaymentButton({ billId, paymentId, action }: Props) {
       <button
         type="button"
         disabled={pending || reason.trim().length === 0}
-        onClick={() => startTransition(() => void action(billId, paymentId, reason.trim()))}
+        onClick={guardedConfirm}
         className="text-sm font-medium text-danger hover:underline disabled:opacity-50"
       >
         {pending ? 'Voiding…' : 'Confirm'}
