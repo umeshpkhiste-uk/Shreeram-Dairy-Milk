@@ -68,7 +68,7 @@ export function PaymentForm({
         </label>
       </div>
       {state.error ? <ErrorText message={state.error} /> : null}
-      <PrimaryButton type="submit" disabled={pending} className="self-start">
+      <PrimaryButton type="submit" disabled={pending}>
         {pending ? 'Recording…' : 'Record payment'}
       </PrimaryButton>
     </form>

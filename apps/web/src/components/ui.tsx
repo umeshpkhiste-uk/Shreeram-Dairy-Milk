@@ -79,7 +79,7 @@ export function PrimaryButton({
     <button
       {...props}
       onClick={guardedOnClick}
-      className={`rounded-md bg-primary px-4 py-2 text-sm font-semibold text-text-on-primary transition hover:bg-primary-hover disabled:opacity-60 ${props.className ?? ''}`}
+      className={`w-fit shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-text-on-primary transition hover:bg-primary-hover disabled:opacity-60 ${props.className ?? ''}`}
     >
       {children}
     </button>
@@ -96,7 +96,7 @@ export function SecondaryButton({
     <button
       {...props}
       onClick={guardedOnClick}
-      className={`rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted disabled:opacity-60 ${props.className ?? ''}`}
+      className={`w-fit shrink-0 rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted disabled:opacity-60 ${props.className ?? ''}`}
     >
       {children}
     </button>
@@ -113,7 +113,7 @@ export function DangerButton({
     <button
       {...props}
       onClick={guardedOnClick}
-      className={`rounded-md bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60 ${props.className ?? ''}`}
+      className={`w-fit shrink-0 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60 ${props.className ?? ''}`}
     >
       {children}
     </button>

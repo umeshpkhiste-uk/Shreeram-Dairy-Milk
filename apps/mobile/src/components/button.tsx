@@ -65,6 +65,12 @@ export function Button({
       style={({ pressed }) => [
         styles.base,
         variantStyle,
+        // Hug the label by default — a View's default alignItems is
+        // 'stretch', so a button with no explicit sizing silently fills
+        // whatever container it's placed in (most commonly Card, which
+        // doesn't override alignItems either). fullWidth/fill opt back into
+        // stretching when that's actually wanted.
+        !fullWidth && !fill && styles.hug,
         fullWidth && styles.fullWidth,
         fill && styles.fill,
         isDisabled && styles.disabled,
@@ -92,6 +98,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  hug: { alignSelf: 'flex-start' },
   fullWidth: { alignSelf: 'stretch' },
   fill: { flex: 1 },
   disabled: { opacity: 0.5 },
