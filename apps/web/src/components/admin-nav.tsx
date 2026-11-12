@@ -159,7 +159,7 @@ export function AdminNav({
         {links.map((link) => {
           const active = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
           const className = `relative flex items-center gap-3 rounded-md py-2 text-sm font-medium transition ${
-            collapsed ? 'justify-center px-2' : 'border-l-4 px-3' + (active ? ' border-primary' : ' border-transparent')
+            collapsed ? 'group justify-center px-2' : 'border-l-4 px-3' + (active ? ' border-primary' : ' border-transparent')
           } ${active ? 'bg-primary-muted text-primary' : 'text-text-secondary hover:bg-surface-muted'}`;
 
           if (collapsed) {
@@ -167,12 +167,18 @@ export function AdminNav({
               <button
                 key={link.href}
                 type="button"
-                title={link.label}
                 aria-label={link.label}
                 onClick={onExpand}
                 className={className}
               >
                 {ICONS[link.label]}
+                {/* Instant custom tooltip — a native `title` attribute has a
+                    noticeable OS delay and plain styling, which read as
+                    "hover doesn't work" against the reference's floating
+                    label. */}
+                <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-text px-2 py-1 text-xs font-medium text-surface opacity-0 transition-opacity group-hover:opacity-100">
+                  {link.label}
+                </span>
               </button>
             );
           }
