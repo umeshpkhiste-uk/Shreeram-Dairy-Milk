@@ -1,12 +1,12 @@
-'use client';
-
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import type { StatusTone } from '@shreeram/shared';
 
-import { useClickGuard } from '@/lib/use-click-guard';
-
 /** Small, shared presentational primitives — kept deliberately minimal (see docs/web-admin.md). */
+
+// Re-exported here (not defined here) because they need client-side state
+// (the click guard) — see buttons.tsx for why that can't live in this file.
+export { PrimaryButton, SecondaryButton, DangerButton } from './buttons';
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
@@ -66,57 +66,6 @@ export function ErrorText({ message }: { message: string }) {
     <p role="alert" className="rounded-md bg-danger-bg px-3 py-2 text-sm text-danger">
       {message}
     </p>
-  );
-}
-
-export function PrimaryButton({
-  children,
-  onClick,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
-  const guardedOnClick = useClickGuard(onClick);
-  return (
-    <button
-      {...props}
-      onClick={guardedOnClick}
-      className={`w-fit shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-text-on-primary transition hover:bg-primary-hover disabled:opacity-60 ${props.className ?? ''}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-export function SecondaryButton({
-  children,
-  onClick,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
-  const guardedOnClick = useClickGuard(onClick);
-  return (
-    <button
-      {...props}
-      onClick={guardedOnClick}
-      className={`w-fit shrink-0 rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted disabled:opacity-60 ${props.className ?? ''}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-export function DangerButton({
-  children,
-  onClick,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
-  const guardedOnClick = useClickGuard(onClick);
-  return (
-    <button
-      {...props}
-      onClick={guardedOnClick}
-      className={`w-fit shrink-0 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60 ${props.className ?? ''}`}
-    >
-      {children}
-    </button>
   );
 }
 
