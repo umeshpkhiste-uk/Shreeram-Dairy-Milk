@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -117,43 +117,80 @@ export function AdminNav({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const [search, setSearch] = useState('');
+  const links = search.trim()
+    ? LINKS.filter((link) => link.label.toLowerCase().includes(search.trim().toLowerCase()))
+    : LINKS;
 
   return (
-    <nav className="flex flex-col gap-1">
-      {LINKS.map((link) => {
-        const active = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
-        const className = `flex items-center gap-3 rounded-md py-2 text-sm font-medium transition ${
-          collapsed ? 'justify-center px-2' : 'px-3'
-        } ${active ? 'bg-primary-muted text-primary' : 'text-text-secondary hover:bg-surface-muted'}`;
+    <div className="flex flex-col gap-3">
+      {!collapsed ? (
+        <div className="relative">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search..."
+            aria-label="Search menu"
+            className="w-full rounded-md bg-surface-muted py-2 pl-9 pr-3 text-sm text-text outline-none placeholder:text-text-secondary"
+          />
+        </div>
+      ) : null}
 
-        if (collapsed) {
+      {!collapsed ? (
+        <p className="px-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Menu</p>
+      ) : null}
+
+      <nav className="flex flex-col gap-1">
+        {links.map((link) => {
+          const active = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+          const className = `relative flex items-center gap-3 rounded-md py-2 text-sm font-medium transition ${
+            collapsed ? 'justify-center px-2' : 'border-l-4 px-3' + (active ? ' border-primary' : ' border-transparent')
+          } ${active ? 'bg-primary-muted text-primary' : 'text-text-secondary hover:bg-surface-muted'}`;
+
+          if (collapsed) {
+            return (
+              <button
+                key={link.href}
+                type="button"
+                title={link.label}
+                aria-label={link.label}
+                onClick={onExpand}
+                className={className}
+              >
+                {ICONS[link.label]}
+              </button>
+            );
+          }
+
           return (
-            <button
+            <Link
               key={link.href}
-              type="button"
-              title={link.label}
-              aria-label={link.label}
-              onClick={onExpand}
+              href={link.href}
+              aria-current={active ? 'page' : undefined}
+              onClick={onNavigate}
               className={className}
             >
               {ICONS[link.label]}
-            </button>
+              <span>{link.label}</span>
+            </Link>
           );
-        }
-
-        return (
-          <Link
-            key={link.href}
-            href={link.href}
-            aria-current={active ? 'page' : undefined}
-            onClick={onNavigate}
-            className={className}
-          >
-            {ICONS[link.label]}
-            <span>{link.label}</span>
-          </Link>
-        );
-      })}
-    </nav>
+        })}
+      </nav>
+    </div>
   );
 }

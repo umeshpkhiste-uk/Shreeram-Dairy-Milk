@@ -18,7 +18,9 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
  * run this alongside other per-request queries with `Promise.all` instead of
  * stacking another sequential round trip in front of them.
  */
-export async function requireAdmin(supabase: SupabaseServerClient): Promise<{ profile: Profile }> {
+export async function requireAdmin(
+  supabase: SupabaseServerClient,
+): Promise<{ profile: Profile; email: string | null }> {
   const { data: userData } = await supabase.auth.getUser();
 
   if (!userData.user) {
@@ -35,5 +37,5 @@ export async function requireAdmin(supabase: SupabaseServerClient): Promise<{ pr
     redirect('/login?error=not-authorized');
   }
 
-  return { profile };
+  return { profile, email: userData.user.email ?? null };
 }

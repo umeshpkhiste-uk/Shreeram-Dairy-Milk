@@ -8,10 +8,19 @@ import { createClient } from '@/lib/supabase/server';
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
-  const [, business] = await Promise.all([requireAdmin(supabase), getBusinessSettings(supabase)]);
+  const [{ profile, email }, business] = await Promise.all([
+    requireAdmin(supabase),
+    getBusinessSettings(supabase),
+  ]);
 
   return (
-    <AdminShell businessName={business.business_name} tagline={business.tagline} signOutAction={signOut}>
+    <AdminShell
+      businessName={business.business_name}
+      tagline={business.tagline}
+      adminName={profile.full_name}
+      adminEmail={email}
+      signOutAction={signOut}
+    >
       {children}
     </AdminShell>
   );

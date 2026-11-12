@@ -23,16 +23,28 @@ import { AdminNav } from './admin-nav';
 export function AdminShell({
   businessName,
   tagline,
+  adminName,
+  adminEmail,
   signOutAction,
   children,
 }: {
   businessName: string;
   tagline: string | null;
+  adminName: string;
+  adminEmail: string | null;
   signOutAction: () => void | Promise<void>;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(true);
   const railWidth = open ? 'md:w-64' : 'md:w-14';
+  const initials =
+    adminName
+      .trim()
+      .split(/\s+/)
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || '?';
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -45,12 +57,10 @@ export function AdminShell({
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             onClick={() => setOpen((o) => !o)}
-            className="shrink-0 rounded-md p-2 text-text transition hover:bg-surface-muted"
+            className="shrink-0 rounded-full border border-border p-1.5 text-text transition hover:bg-surface-muted"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="3" y1="6" x2="21" y2="6" strokeLinecap="round" />
-              <line x1="3" y1="12" x2="21" y2="12" strokeLinecap="round" />
-              <line x1="3" y1="18" x2="21" y2="18" strokeLinecap="round" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {open ? <polyline points="15 18 9 12 15 6" /> : <polyline points="9 18 15 12 9 6" />}
             </svg>
           </button>
           {open ? (
@@ -77,15 +87,25 @@ export function AdminShell({
         >
           <AdminNav collapsed={!open} onExpand={() => setOpen(true)} />
 
-          <div className="mt-auto pt-6">
+          <div className={`mt-auto flex items-center gap-2 border-t border-border pt-4 ${open ? '' : 'flex-col'}`}>
+            <div
+              title={open ? undefined : `${adminName}${adminEmail ? ` · ${adminEmail}` : ''}`}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-muted text-sm font-semibold text-primary"
+            >
+              {initials}
+            </div>
+            {open ? (
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-text">{adminName}</p>
+                {adminEmail ? <p className="truncate text-xs text-text-secondary">{adminEmail}</p> : null}
+              </div>
+            ) : null}
             <form action={signOutAction}>
               <button
                 type="submit"
                 title="Sign out"
                 aria-label="Sign out"
-                className={`flex w-full items-center gap-3 rounded-md border border-border py-2 text-sm font-medium text-text transition hover:bg-surface-muted ${
-                  open ? 'justify-start px-3' : 'justify-center px-2'
-                }`}
+                className="shrink-0 rounded-md p-2 text-text-secondary transition hover:bg-surface-muted hover:text-text"
               >
                 <svg
                   width="18"
@@ -102,7 +122,6 @@ export function AdminShell({
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
-                {open ? <span>Sign out</span> : null}
               </button>
             </form>
           </div>
