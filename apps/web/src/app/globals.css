@@ -26,6 +26,31 @@
   --color-info-bg: #e7f0fa;
 }
 
+/* Screen only: printed bills and reports always use the light palette above. */
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-background: #111614;
+    --color-surface: #1a211e;
+    --color-surface-muted: #121816;
+    --color-border: #2f3a35;
+    --color-text: #eef2ef;
+    --color-text-secondary: #a3aea7;
+    --color-text-on-primary: #08130d;
+    --color-primary: #5fbf8a;
+    --color-primary-hover: #78cf9e;
+    --color-primary-muted: #1d3428;
+    --color-success: #6fcf97;
+    --color-success-bg: #1b3327;
+    --color-warning: #e5b95c;
+    --color-warning-bg: #38301a;
+    --color-danger: #f28b82;
+    --color-danger-bg: #3d1f1d;
+    --color-info: #8ab8ec;
+    --color-info-bg: #1c2c3f;
+  }
+}
+
 @theme inline {
   --color-background: var(--color-background);
   --color-surface: var(--color-surface);

@@ -5,16 +5,18 @@ import { useState } from 'react';
 
 import { AdminHeaderContent } from './admin-header';
 import { AdminNav } from './admin-nav';
+import { Icon } from './icon';
+import { ThemeToggle } from './theme-toggle';
 
 /**
- * A hamburger toggle collapses/expands the sidebar — same mechanism on
+ * A round toggle collapses/expands the sidebar — same mechanism on
  * every screen size (desktop and mobile), not just below a breakpoint.
  * Collapsed, it shrinks to an icon-only rail (every nav item still visible
  * as its icon) rather than disappearing entirely; clicking any icon expands
  * the full sidebar instead of navigating straight away, so the admin can
  * see the labels before picking one.
  *
- * The hamburger + "Admin console" label sit in a fixed-width column at the
+ * The toggle + "Admin console" label sit in a fixed-width column at the
  * left of the top bar, matching the sidebar's own width below it; the
  * dealer name/tagline fill the rest of the top bar and resize as that
  * column opens/collapses, since both live in one component with one `open`
@@ -52,22 +54,30 @@ export function AdminShell({
     <div className="flex min-h-screen flex-col">
       <div className="no-print sticky top-0 z-20 flex flex-col border-b border-border bg-surface md:h-[65px] md:flex-row md:items-stretch">
         <div
-          className={`flex shrink-0 items-center gap-2 px-4 py-3 md:border-r md:border-border ${railWidth}`}
+          className={`relative flex shrink-0 items-center gap-3 px-4 py-3 transition-[width] md:border-r md:border-border ${railWidth} ${open ? '' : 'md:px-2'}`}
         >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-text-on-primary">
+            <Icon>
+              <path d="M3 10.5 12 3l9 7.5" />
+              <path d="M5 9v11h14V9" />
+              <path d="M10 20v-6h4v6" />
+            </Icon>
+          </span>
+          {open ? (
+            <p className="whitespace-nowrap text-base font-semibold text-text">Admin console</p>
+          ) : null}
+          {/* Sits on the menu's right edge, half over the page. */}
           <button
             type="button"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             onClick={() => setOpen((o) => !o)}
-            className="shrink-0 rounded-full border border-border p-1.5 text-text transition hover:bg-surface-muted"
+            className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-text-on-primary shadow-md transition hover:bg-primary-hover md:absolute md:-right-3.5 md:top-1/2 md:-translate-y-1/2"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               {open ? <polyline points="15 18 9 12 15 6" /> : <polyline points="9 18 15 12 9 6" />}
             </svg>
           </button>
-          {open ? (
-            <p className="whitespace-nowrap text-sm font-bold text-text-secondary">Admin console</p>
-          ) : null}
         </div>
         {/*
           Centered independently of the rail's width via absolute
@@ -82,17 +92,19 @@ export function AdminShell({
       </div>
 
       <div className="flex flex-1 flex-col md:flex-row">
-        {/* Pinned below the 65px top bar (64px logo + border) while the page scrolls. Scrolls itself
-            on a short screen, but only when open: overflow would clip the
-            collapsed rail's tooltips. */}
+        {/* Pinned below the 65px top bar (64px logo + border) while the page
+            scrolls, and scrolls itself on a short screen. */}
         <aside
-          className={`no-print flex shrink-0 flex-col border-b border-border bg-surface px-4 py-6 transition-[width] md:sticky md:top-[65px] md:z-10 md:h-[calc(100dvh-65px)] md:border-b-0 md:border-r ${
-            open ? 'w-full md:w-64 md:overflow-y-auto' : 'w-full md:w-14'
+          className={`no-print flex w-full shrink-0 flex-col overflow-x-hidden border-b border-border bg-surface py-4 transition-[width] [scrollbar-width:none] md:sticky md:top-[65px] md:z-10 md:h-[calc(100dvh-65px)] md:overflow-y-auto md:border-b-0 md:border-r ${railWidth} ${
+            open ? 'px-4' : 'px-2'
           }`}
         >
           <AdminNav collapsed={!open} onExpand={() => setOpen(true)} />
 
-          <div className={`mt-auto flex items-center gap-2 border-t border-border pt-4 ${open ? '' : 'flex-col'}`}>
+          <div className="mt-auto flex flex-col pb-4 pt-4">
+            <ThemeToggle collapsed={!open} />
+          </div>
+          <div className={`flex items-center gap-2 border-t border-border pt-4 ${open ? '' : 'flex-col'}`}>
             <div
               title={open ? undefined : `${adminName}${adminEmail ? ` · ${adminEmail}` : ''}`}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-muted text-sm font-semibold text-primary"

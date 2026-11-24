@@ -2,27 +2,30 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
-function Icon({ children }: { children: ReactNode }) {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="shrink-0"
-    >
-      {children}
-    </svg>
-  );
-}
+import { Icon } from './icon';
+
+const SearchIcon = (
+  <Icon>
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </Icon>
+);
 
 const ICONS: Record<string, ReactNode> = {
+  Inbox: (
+    <Icon>
+      <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+      <path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z" />
+    </Icon>
+  ),
+  Notifications: (
+    <Icon>
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+    </Icon>
+  ),
   Dashboard: (
     <Icon>
       <rect x="3" y="3" width="8" height="8" rx="1" />
@@ -90,113 +93,194 @@ const ICONS: Record<string, ReactNode> = {
   ),
 };
 
-const LINKS = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/orders', label: 'New Order' },
-  { href: '/customers', label: 'Customers' },
-  { href: '/workers', label: 'Workers & Routes' },
-  { href: '/deliveries', label: 'Deliveries' },
-  { href: '/billing', label: 'Billing' },
-  { href: '/payments', label: 'Payments' },
-  { href: '/reports', label: 'Reports' },
-  { href: '/settings', label: 'Settings' },
-] as const;
+type Counts = { inbox: number; notifications: number };
+type NavLink = { href: string; label: string; count?: keyof Counts };
+
+const SECTIONS: { heading?: string; links: NavLink[] }[] = [
+  {
+    links: [
+      { href: '/inbox', label: 'Inbox', count: 'inbox' },
+      { href: '/notifications', label: 'Notifications', count: 'notifications' },
+    ],
+  },
+  {
+    heading: 'Menu',
+    links: [
+      { href: '/', label: 'Dashboard' },
+      { href: '/orders', label: 'New Order' },
+      { href: '/customers', label: 'Customers' },
+      { href: '/workers', label: 'Workers & Routes' },
+      { href: '/deliveries', label: 'Deliveries' },
+      { href: '/billing', label: 'Billing' },
+      { href: '/payments', label: 'Payments' },
+      { href: '/reports', label: 'Reports' },
+    ],
+  },
+  { links: [{ href: '/settings', label: 'Settings' }] },
+];
+
+const ROW_CLASSES =
+  'group relative flex items-center rounded-lg text-sm font-medium transition-colors duration-150';
+
+/** Re-read on every navigation, so finishing something drops its badge. */
+function useCounts(pathname: string): Counts | null {
+  const [counts, setCounts] = useState<Counts | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/attention')
+      .then((response) => response.json())
+      .then(
+        (result: Counts) => {
+          if (!cancelled) setCounts(result);
+        },
+        () => {
+          // Signed out or offline: show no badge rather than a wrong one.
+          if (!cancelled) setCounts(null);
+        },
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+  return counts;
+}
 
 /**
  * Collapsed (icon rail): each item is a button, not a link — clicking it
  * just expands the sidebar (per owner request, so the admin can see labels
  * before navigating), it never navigates straight from the collapsed state.
  */
-export function AdminNav({
-  collapsed = false,
-  onExpand,
-  onNavigate,
-}: {
-  collapsed?: boolean;
-  onExpand?: () => void;
-  onNavigate?: () => void;
-}) {
+export function AdminNav({ collapsed, onExpand }: { collapsed: boolean; onExpand: () => void }) {
   const pathname = usePathname();
+  const counts = useCounts(pathname);
   const [search, setSearch] = useState('');
-  const links = search.trim()
-    ? LINKS.filter((link) => link.label.toLowerCase().includes(search.trim().toLowerCase()))
-    : LINKS;
+  const [tooltip, setTooltip] = useState<{ label: string; top: number; left: number } | null>(null);
+
+  const term = search.trim().toLowerCase();
+  const sections = SECTIONS.map((section) => ({
+    ...section,
+    links: section.links.filter((link) => link.label.toLowerCase().includes(term)),
+  })).filter((section) => section.links.length > 0);
+
+  // Positioned against the window, so the rail's own scrolling can't clip it.
+  function showTooltip(label: string, element: HTMLElement) {
+    const box = element.getBoundingClientRect();
+    setTooltip({ label, top: box.top + box.height / 2, left: box.right + 12 });
+  }
+
+  function expand() {
+    setTooltip(null);
+    onExpand();
+  }
+
+  function railButton(label: string, icon: ReactNode, className: string, extra?: ReactNode) {
+    return (
+      <button
+        key={label}
+        type="button"
+        aria-label={label}
+        onClick={expand}
+        onMouseEnter={(e) => showTooltip(label, e.currentTarget)}
+        onMouseLeave={() => setTooltip(null)}
+        onFocus={(e) => showTooltip(label, e.currentTarget)}
+        onBlur={() => setTooltip(null)}
+        className={`${ROW_CLASSES} justify-center py-2 ${className}`}
+      >
+        {extra}
+        {icon}
+      </button>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">
-      {!collapsed ? (
+      {collapsed ? (
+        railButton('Search', SearchIcon, 'bg-surface-muted text-text-secondary hover:text-text')
+      ) : (
         <div className="relative">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">
+            {SearchIcon}
+          </span>
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search..."
             aria-label="Search menu"
-            className="w-full rounded-md bg-surface-muted py-2 pl-9 pr-3 text-sm text-text outline-none placeholder:text-text-secondary"
+            className="w-full rounded-lg bg-surface-muted py-2 pl-10 pr-3 text-sm text-text outline-none placeholder:text-text-secondary focus-visible:ring-2 focus-visible:ring-primary"
           />
         </div>
-      ) : null}
+      )}
 
-      {!collapsed ? (
-        <p className="px-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Menu</p>
-      ) : null}
+      <nav aria-label="Admin" className="flex flex-col gap-3">
+        {sections.map((section) => (
+          <div
+            key={section.links[0].href}
+            className="flex flex-col gap-1 border-t border-border pt-3"
+          >
+            {section.heading && !collapsed ? (
+              <p className="px-3 pb-1 text-xs font-medium text-text-secondary">{section.heading}</p>
+            ) : null}
+            {section.links.map((link) => {
+              const active = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+              const count = (link.count && counts?.[link.count]) || 0;
+              const tone = active
+                ? 'bg-primary-muted text-primary'
+                : 'text-text-secondary hover:bg-border/60 hover:text-text';
+              const marker = (
+                <span
+                  aria-hidden="true"
+                  className={`absolute top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-danger transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 ${
+                    collapsed ? '-left-2' : '-left-4'
+                  } ${active ? 'opacity-100' : 'opacity-0'}`}
+                />
+              );
 
-      <nav className="flex flex-col gap-1">
-        {links.map((link) => {
-          const active = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
-          const className = `relative flex items-center gap-3 rounded-md py-2 text-sm font-medium transition ${
-            collapsed ? 'group justify-center px-2' : 'border-l-4 px-3' + (active ? ' border-primary' : ' border-transparent')
-          } ${active ? 'bg-primary-muted text-primary' : 'text-text-secondary hover:bg-surface-muted'}`;
+              if (collapsed) {
+                return railButton(
+                  count > 0 ? `${link.label} (${count})` : link.label,
+                  ICONS[link.label],
+                  tone,
+                  <>
+                    {marker}
+                    {count > 0 ? (
+                      <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-danger" />
+                    ) : null}
+                  </>,
+                );
+              }
 
-          if (collapsed) {
-            return (
-              <button
-                key={link.href}
-                type="button"
-                aria-label={link.label}
-                onClick={onExpand}
-                className={className}
-              >
-                {ICONS[link.label]}
-                {/* Instant custom tooltip — a native `title` attribute has a
-                    noticeable OS delay and plain styling, which read as
-                    "hover doesn't work" against the reference's floating
-                    label. */}
-                <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-text px-2 py-1 text-xs font-medium text-surface opacity-0 transition-opacity group-hover:opacity-100">
-                  {link.label}
-                </span>
-              </button>
-            );
-          }
-
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              aria-current={active ? 'page' : undefined}
-              onClick={onNavigate}
-              className={className}
-            >
-              {ICONS[link.label]}
-              <span>{link.label}</span>
-            </Link>
-          );
-        })}
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`${ROW_CLASSES} gap-3 px-3 py-2 ${tone}`}
+                >
+                  {marker}
+                  {ICONS[link.label]}
+                  <span className="flex-1 whitespace-nowrap">{link.label}</span>
+                  {count > 0 ? (
+                    <span className="rounded-md bg-danger px-1.5 py-0.5 text-xs font-medium tabular-nums text-text-on-primary">
+                      {count > 99 ? '99+' : count}
+                    </span>
+                  ) : null}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
+
+      {collapsed && tooltip ? (
+        <span
+          role="tooltip"
+          style={{ top: tooltip.top, left: tooltip.left }}
+          className="pointer-events-none fixed z-30 -translate-y-1/2 whitespace-nowrap rounded-md bg-text px-2.5 py-1.5 text-xs font-medium text-surface shadow-md"
+        >
+          {tooltip.label}
+        </span>
+      ) : null}
     </div>
   );
 }

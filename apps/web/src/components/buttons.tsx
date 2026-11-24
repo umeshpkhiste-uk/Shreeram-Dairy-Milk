@@ -57,7 +57,7 @@ export function DangerButton({
     <button
       {...props}
       onClick={guardedOnClick}
-      className={`w-fit shrink-0 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60 ${props.className ?? ''}`}
+      className={`w-fit shrink-0 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-on-primary transition hover:opacity-90 disabled:opacity-60 ${props.className ?? ''}`}
     >
       {children}
     </button>
