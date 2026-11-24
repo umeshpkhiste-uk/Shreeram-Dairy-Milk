@@ -17,6 +17,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     <AdminShell
       businessName={business.business_name}
       tagline={business.tagline}
+      address={business.address}
       adminName={profile.full_name}
       adminEmail={email}
       signOutAction={signOut}
