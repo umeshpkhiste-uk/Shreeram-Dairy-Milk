@@ -93,18 +93,19 @@ export function AdminShell({
 
       <div className="flex flex-1 flex-col md:flex-row">
         {/* Pinned below the 65px top bar (64px logo + border) while the page
-            scrolls, and scrolls itself on a short screen. */}
+            scrolls. On a short screen only the links scroll (admin-nav.tsx):
+            the theme switch and sign-out always stay in view. */}
         <aside
-          className={`no-print flex w-full shrink-0 flex-col overflow-x-hidden border-b border-border bg-surface py-4 transition-[width] [scrollbar-width:none] md:sticky md:top-[65px] md:z-10 md:h-[calc(100dvh-65px)] md:overflow-y-auto md:border-b-0 md:border-r ${railWidth} ${
+          className={`no-print flex w-full shrink-0 flex-col overflow-x-hidden border-b border-border bg-surface py-4 transition-[width] short:py-3 md:sticky md:top-[65px] md:z-10 md:h-[calc(100dvh-65px)] md:overflow-hidden md:border-b-0 md:border-r ${railWidth} ${
             open ? 'px-4' : 'px-2'
           }`}
         >
           <AdminNav collapsed={!open} onExpand={() => setOpen(true)} />
 
-          <div className="mt-auto flex flex-col pb-4 pt-4">
+          <div className="flex shrink-0 flex-col pb-4 pt-4 short:py-2">
             <ThemeToggle collapsed={!open} />
           </div>
-          <div className={`flex items-center gap-2 border-t border-border pt-4 ${open ? '' : 'flex-col'}`}>
+          <div className={`flex shrink-0 items-center gap-2 border-t border-border pt-4 short:pt-2 ${open ? '' : 'flex-col'}`}>
             <div
               title={open ? undefined : `${adminName}${adminEmail ? ` · ${adminEmail}` : ''}`}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-muted text-sm font-semibold text-primary"

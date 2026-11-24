@@ -461,6 +461,10 @@ export interface Database {
         Args: { p_customer_id: string; p_delivery_date: string; p_reason: string };
         Returns: Database['public']['Tables']['deliveries']['Row'];
       };
+      admin_resolve_delivery_conflict: {
+        Args: { p_delivery_id: string; p_event_id: string | null };
+        Returns: Database['public']['Tables']['deliveries']['Row'];
+      };
       create_draft_bill: {
         Args: { p_customer_id: string; p_billing_month: string };
         Returns: Database['public']['Tables']['monthly_bills']['Row'];

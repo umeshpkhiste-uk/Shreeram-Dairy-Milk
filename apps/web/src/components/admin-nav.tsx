@@ -184,7 +184,7 @@ export function AdminNav({ collapsed, onExpand }: { collapsed: boolean; onExpand
         onMouseLeave={() => setTooltip(null)}
         onFocus={(e) => showTooltip(label, e.currentTarget)}
         onBlur={() => setTooltip(null)}
-        className={`${ROW_CLASSES} justify-center py-2 ${className}`}
+        className={`${ROW_CLASSES} justify-center py-2 short:py-1.5 shorter:py-1 ${className}`}
       >
         {extra}
         {icon}
@@ -193,7 +193,7 @@ export function AdminNav({ collapsed, onExpand }: { collapsed: boolean; onExpand
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 short:gap-2">
       {collapsed ? (
         railButton('Search', SearchIcon, 'bg-surface-muted text-text-secondary hover:text-text')
       ) : (
@@ -212,11 +212,16 @@ export function AdminNav({ collapsed, onExpand }: { collapsed: boolean; onExpand
         </div>
       )}
 
-      <nav aria-label="Admin" className="flex flex-col gap-3">
+      <nav
+        aria-label="Admin"
+        className={`flex min-h-0 flex-col gap-3 overflow-x-hidden short:gap-2 md:overflow-y-auto ${
+          collapsed ? '-mx-2 px-2 [scrollbar-width:none]' : '-mx-4 px-4 [scrollbar-width:thin]'
+        }`}
+      >
         {sections.map((section) => (
           <div
             key={section.links[0].href}
-            className="flex flex-col gap-1 border-t border-border pt-3"
+            className="flex flex-col gap-1 border-t border-border pt-3 short:gap-0 short:pt-2"
           >
             {section.heading && !collapsed ? (
               <p className="px-3 pb-1 text-xs font-medium text-text-secondary">{section.heading}</p>
@@ -255,7 +260,7 @@ export function AdminNav({ collapsed, onExpand }: { collapsed: boolean; onExpand
                   key={link.href}
                   href={link.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`${ROW_CLASSES} gap-3 px-3 py-2 ${tone}`}
+                  className={`${ROW_CLASSES} gap-3 px-3 py-2 short:py-1.5 shorter:py-1 ${tone}`}
                 >
                   {marker}
                   {ICONS[link.label]}

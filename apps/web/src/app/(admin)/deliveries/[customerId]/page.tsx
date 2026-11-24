@@ -15,11 +15,15 @@ import {
 
 import { Badge, Card, EmptyState, PageHeader, PrimaryButton, SecondaryButton } from '@/components/ui';
 import { listBillsForCustomer } from '@/lib/data/bills';
-import { listDeliveriesForCustomerInRange, type DeliveryRow } from '@/lib/data/deliveries';
+import {
+  listConflictingEvents,
+  listDeliveriesForCustomerInRange,
+  type DeliveryRow,
+} from '@/lib/data/deliveries';
 import { getCustomer } from '@/lib/data/customers';
 import { createClient } from '@/lib/supabase/server';
 
-import { createBillForMonthAction, markSkippedAction } from './actions';
+import { createBillForMonthAction, markSkippedAction, resolveConflictAction } from './actions';
 
 type PageProps = {
   params: Promise<{ customerId: string }>;
@@ -111,6 +115,8 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
     null;
 
   const selectedEntry = day ? entriesByDate.get(day) : undefined;
+  const conflictingEvents =
+    day && selectedEntry?.has_conflict ? await listConflictingEvents(supabase, customerId, day) : [];
   const canMarkSkipped = !!day && selectedEntry?.status !== 'completed' && selectedEntry?.status !== 'partial';
 
   return (
@@ -211,6 +217,38 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
             <p className="mb-3 text-sm text-text-secondary">Note: {selectedEntry.reason}</p>
           ) : null}
 
+          {selectedEntry?.has_conflict ? (
+            <div className="mb-4 rounded-md border border-warning bg-warning-bg p-4">
+              <p className="font-medium text-warning">Conflict: two different records for this day</p>
+              <p className="mt-1 text-sm text-text">
+                Choose which one is right. Using the other record can change this month&rsquo;s bill.
+              </p>
+              <ul className="mt-3 flex flex-col gap-3">
+                <ConflictRecord
+                  heading="Current record"
+                  status={selectedEntry.status}
+                  quantityMl={selectedEntry.delivered_quantity_ml}
+                  reason={selectedEntry.reason}
+                  recordedAt={selectedEntry.device_recorded_at}
+                  action={resolveConflictAction.bind(null, customerId, day, month, selectedEntry.id, null)}
+                  button="Keep this record"
+                />
+                {conflictingEvents.map((event) => (
+                  <ConflictRecord
+                    key={event.id}
+                    heading="Other record from the worker&rsquo;s phone"
+                    status={event.payload.status as DeliveryStatus}
+                    quantityMl={Number(event.payload.delivered_quantity_ml)}
+                    reason={event.payload.reason as string | null}
+                    recordedAt={event.device_recorded_at}
+                    action={resolveConflictAction.bind(null, customerId, day, month, selectedEntry.id, event.id)}
+                    button="Use this record"
+                  />
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           {canMarkSkipped ? (
             <form action={markSkippedAction.bind(null, customerId, day, month)} className="flex flex-col gap-2">
               <label className="flex flex-col gap-1 text-sm font-medium text-text">
@@ -283,6 +321,47 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
         ) : null}
       </Card>
     </div>
+  );
+}
+
+function ConflictRecord({
+  heading,
+  status,
+  quantityMl,
+  reason,
+  recordedAt,
+  action,
+  button,
+}: {
+  heading: string;
+  status: DeliveryStatus;
+  quantityMl: number;
+  reason: string | null;
+  recordedAt: string;
+  action: () => Promise<void>;
+  button: string;
+}) {
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface p-3">
+      <div>
+        <p className="text-sm font-medium text-text">{heading}</p>
+        <p className="mt-1 flex items-center gap-2 text-sm text-text-secondary">
+          <Badge label={STATUS_LABEL[status]} tone={STATUS_TONE[status]} /> {quantityMl} ml
+        </p>
+        <p className="mt-1 text-xs text-text-secondary">
+          Recorded{' '}
+          {new Date(recordedAt).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          })}
+          {reason ? ` · ${reason}` : ''}
+        </p>
+      </div>
+      <form action={action}>
+        <SecondaryButton type="submit">{button}</SecondaryButton>
+      </form>
+    </li>
   );
 }
 

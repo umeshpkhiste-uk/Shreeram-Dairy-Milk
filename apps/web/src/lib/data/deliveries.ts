@@ -63,6 +63,37 @@ export async function markDeliverySkipped(
   return data;
 }
 
+export type DeliveryEventRow = Database['public']['Tables']['delivery_events']['Row'];
+
+/** The rejected submissions behind a day's conflict flag, newest first. */
+export async function listConflictingEvents(
+  supabase: SupabaseServerClient,
+  customerId: string,
+  date: string,
+): Promise<DeliveryEventRow[]> {
+  const { data, error } = await supabase
+    .from('delivery_events')
+    .select('*')
+    .eq('customer_id', customerId)
+    .eq('conflict', true)
+    .order('server_received_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).filter((event) => event.payload.delivery_date === date);
+}
+
+/** Admin-only: keep the current record (`eventId` null), or replace it with a rejected submission. */
+export async function resolveDeliveryConflict(
+  supabase: SupabaseServerClient,
+  deliveryId: string,
+  eventId: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc('admin_resolve_delivery_conflict', {
+    p_delivery_id: deliveryId,
+    p_event_id: eventId,
+  });
+  if (error) throw error;
+}
+
 export type DeliveryReportFilters = {
   date: string; // YYYY-MM-DD
   workerId?: string;

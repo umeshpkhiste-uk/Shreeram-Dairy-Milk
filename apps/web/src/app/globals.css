@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* A laptop window too short for the admin menu at its normal spacing. */
+@custom-variant short (@media (min-width: 48rem) and (max-height: 800px));
+@custom-variant shorter (@media (min-width: 48rem) and (max-height: 680px));
+
 /*
  * Same visual identity as the mobile app (apps/mobile/src/theme/tokens.ts):
  * white/light-neutral background, dark-green primary, restrained status
