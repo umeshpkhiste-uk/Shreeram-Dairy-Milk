@@ -331,7 +331,7 @@ Delivery validation copied into `packages/shared`.
 desktop Chrome against a local stub of Supabase.
 
 **Not verified — this stage is not done until these are:**
-- Live tests against the real Supabase project (paused on 2026-11-24).
+- The app signed in to the real Supabase project (database rules were tested live on 2026-11-24).
 - The manual airplane-mode pass on a real Android phone.
 - A Vercel deployment.
 

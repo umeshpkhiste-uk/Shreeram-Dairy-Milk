@@ -86,11 +86,23 @@ Workers need the production domain: the admin project's preview URLs sit behind 
 - Lighthouse on `/today` (snapshot, mobile): accessibility 100, best practices 100. This version has no PWA
   category; manifest, icons and an active service worker were checked by hand.
 
+- Live project, 2026-11-24, one SQL block that always rolls back (temporary workers, customers and
+  orders, worker role and JWT claims set; nothing persisted): a missed delivery without a reason is
+  rejected (23514) and with one is applied; a repeated event is a duplicate; a correction becomes
+  version 2; another worker's customer, and a correction before its creation, are rejected; a worker
+  sees only their own customer, delivery, order and profile, and no bills; a deactivated worker sees
+  no customers or deliveries and can't write.
+
+## Known security gap
+
+A deactivated worker can still read orders assigned to them until their token expires: the `orders`
+and `order_items` policies don't check `is_active_worker()`, unlike the tables Stage 6 fixed. Needs a
+migration; not yet made.
+
 ## Not verified — required before Stage 8 is done
 
-1. **Live Supabase tests.** The project (`bdrtsrbmsoanrqjhesop`) was paused on 2026-11-24. With
-   it running: a mark syncs through the real RPC, and a worker sees zero rows outside their own
-   customers and deliveries.
+1. **A signed-in session against the live project.** The app itself has only run against the stub;
+   the database rules below were tested live with SQL.
 2. **The Android pass**, on a real phone in Chrome, over HTTPS:
    1. Sign in, "Add to Home screen", open from the icon, wait for the route to load.
    2. Airplane mode on. Mark two customers delivered and one not delivered.
