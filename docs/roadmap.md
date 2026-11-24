@@ -333,6 +333,7 @@ desktop Chrome against a local stub of Supabase.
 **Not verified — this stage is not done until these are:**
 - The app signed in to the real Supabase project (database rules were tested live on 2026-11-24).
 - The manual airplane-mode pass on a real Android phone.
-- A Vercel deployment.
+
+Deployed at <https://shreeram-worker.vercel.app>.
 
 Also fixed in `apps/mobile`: missed deliveries were sent without the reason the server requires.

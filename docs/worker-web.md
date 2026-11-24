@@ -69,10 +69,13 @@ npm run dev -w worker-web                          # http://localhost:3001, serv
 npm run build -w worker-web && npm run start -w worker-web   # service worker on
 ```
 
-Deploy as its own Vercel project with root directory `apps/worker-web` and the two
-`NEXT_PUBLIC_*` variables. Not yet done; check that `/sw.js` is served after the first deploy,
-since it is generated after `next build`.
-Workers need the production domain: the admin project's preview URLs sit behind Vercel sign-in.
+Live at <https://shreeram-worker.vercel.app>: its own Vercel project (`shreeram-worker`, root
+directory `apps/worker-web`, the two `NEXT_PUBLIC_*` variables), deployed from `main`. Give workers
+that address; other deployment URLs sit behind Vercel sign-in.
+
+After deploying, check that `/sw.js` lists the screens (`/today`, …), not just `/_next/` files. On
+the first deploy it did not, though the build was green: Vercel moves the HTML before
+`serwist build` runs, so `serwist.config.mjs` now lists the screens from source.
 
 ## Verified
 
