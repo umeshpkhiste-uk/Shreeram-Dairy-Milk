@@ -24,35 +24,63 @@ import { createClient } from '@/lib/supabase/server';
 
 export type ActionState = { error: string | null };
 
-export async function createDraftBillAction(customerId: string, billingMonth: string) {
+export async function createDraftBillAction(
+  customerId: string,
+  billingMonth: string,
+): Promise<ActionState> {
   const supabase = await createClient();
-  const bill = await createDraftBill(supabase, customerId, billingMonth);
+  let billId: string;
+  try {
+    billId = (await createDraftBill(supabase, customerId, billingMonth)).id;
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to create the bill.') };
+  }
   revalidatePath('/billing');
-  redirect(`/billing/${bill.id}`);
+  redirect(`/billing/${billId}`);
 }
 
-export async function recalculateBillAction(billId: string) {
+export async function recalculateBillAction(billId: string): Promise<ActionState> {
   const supabase = await createClient();
-  await recalculateDraftBill(supabase, billId);
+  try {
+    await recalculateDraftBill(supabase, billId);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to recalculate the bill.') };
+  }
   revalidatePath(`/billing/${billId}`);
+  return { error: null };
 }
 
-export async function finalizeBillAction(billId: string) {
+export async function finalizeBillAction(billId: string): Promise<ActionState> {
   const supabase = await createClient();
-  await finalizeBill(supabase, billId);
+  try {
+    await finalizeBill(supabase, billId);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to finalize the bill.') };
+  }
   revalidatePath(`/billing/${billId}`);
+  return { error: null };
 }
 
-export async function acknowledgeBillFlagAction(billId: string) {
+export async function acknowledgeBillFlagAction(billId: string): Promise<ActionState> {
   const supabase = await createClient();
-  await acknowledgeBillFlag(supabase, billId);
+  try {
+    await acknowledgeBillFlag(supabase, billId);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to clear the flag.') };
+  }
   revalidatePath(`/billing/${billId}`);
+  return { error: null };
 }
 
-export async function markBillSentAction(billId: string) {
+export async function markBillSentAction(billId: string): Promise<ActionState> {
   const supabase = await createClient();
-  await markBillSent(supabase, billId);
+  try {
+    await markBillSent(supabase, billId);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to mark the bill as sent.') };
+  }
   revalidatePath(`/billing/${billId}`);
+  return { error: null };
 }
 
 export async function voidBillAction(
@@ -151,9 +179,18 @@ export async function recordPaymentAction(
   return { error: null };
 }
 
-export async function voidPaymentAction(billId: string, paymentId: string, reason: string) {
+export async function voidPaymentAction(
+  billId: string,
+  paymentId: string,
+  reason: string,
+): Promise<ActionState> {
   const supabase = await createClient();
-  await voidPayment(supabase, paymentId, reason);
+  try {
+    await voidPayment(supabase, paymentId, reason);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to void the payment.') };
+  }
   revalidatePath(`/billing/${billId}`);
   revalidatePath('/payments');
+  return { error: null };
 }

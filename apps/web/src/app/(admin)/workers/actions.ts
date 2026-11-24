@@ -43,16 +43,32 @@ export async function createWorkerAction(
   return { error: null };
 }
 
-export async function assignWorkerRouteAction(workerId: string, routeId: string | null) {
+export async function assignWorkerRouteAction(
+  workerId: string,
+  routeId: string | null,
+): Promise<WorkerActionState> {
   const supabase = await createClient();
-  await assignWorkerRoute(supabase, workerId, routeId);
+  try {
+    await assignWorkerRoute(supabase, workerId, routeId);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to change the route.') };
+  }
   revalidatePath('/workers');
+  return { error: null };
 }
 
-export async function setWorkerActiveAction(workerId: string, isActive: boolean) {
+export async function setWorkerActiveAction(
+  workerId: string,
+  isActive: boolean,
+): Promise<WorkerActionState> {
   const supabase = await createClient();
-  await setWorkerActive(supabase, workerId, isActive);
+  try {
+    await setWorkerActive(supabase, workerId, isActive);
+  } catch (err) {
+    return { error: errorMessage(err, "Failed to change the worker's status.") };
+  }
   revalidatePath('/workers');
+  return { error: null };
 }
 
 export type RouteActionState = { error: string | null };

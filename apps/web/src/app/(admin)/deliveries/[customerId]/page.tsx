@@ -13,6 +13,7 @@ import {
   type DeliveryStatus,
 } from '@shreeram/shared';
 
+import { ActionForm } from '@/components/action-form';
 import {
   Badge,
   Card,
@@ -206,7 +207,8 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
       </Card>
 
       {day ? (
-        <Card>
+        // Keyed so an error from one day doesn't stay on screen for the next.
+        <Card key={day}>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-text">
               {new Date(`${day}T00:00:00Z`).toLocaleDateString('en-US', {
@@ -259,7 +261,10 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
           ) : null}
 
           {canMarkSkipped ? (
-            <form action={markSkippedAction.bind(null, customerId, day, month)} className="flex flex-col gap-2">
+            <ActionForm
+              action={markSkippedAction.bind(null, customerId, day, month)}
+              className="flex flex-col gap-2"
+            >
               <label className="flex flex-col gap-1 text-sm font-medium text-text">
                 Reason (shown to the business, e.g. &ldquo;Customer on vacation till 5th&rdquo;)
                 <input
@@ -272,7 +277,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
               <div>
                 <WarningButton type="submit">Mark &ldquo;customer informed — no delivery&rdquo;</WarningButton>
               </div>
-            </form>
+            </ActionForm>
           ) : (
             <p className="text-sm text-text-secondary">
               This day already has a recorded delivery — it can&rsquo;t be marked skipped here.
@@ -324,9 +329,13 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
           />
         )}
         {!bill ? (
-          <form action={createBillForMonthAction.bind(null, customerId, month)} className="mt-3">
+          <ActionForm
+            key={month}
+            action={createBillForMonthAction.bind(null, customerId, month)}
+            className="mt-3"
+          >
             <PrimaryButton type="submit">Create draft bill for {monthLabel}</PrimaryButton>
-          </form>
+          </ActionForm>
         ) : null}
       </Card>
     </div>
@@ -347,7 +356,7 @@ function ConflictRecord({
   quantityMl: number;
   reason: string | null;
   recordedAt: string;
-  action: () => Promise<void>;
+  action: () => Promise<{ error: string | null }>;
   button: string;
 }) {
   return (
@@ -367,9 +376,9 @@ function ConflictRecord({
           {reason ? ` · ${reason}` : ''}
         </p>
       </div>
-      <form action={action}>
+      <ActionForm action={action}>
         <PrimaryButton type="submit">{button}</PrimaryButton>
-      </form>
+      </ActionForm>
     </li>
   );
 }

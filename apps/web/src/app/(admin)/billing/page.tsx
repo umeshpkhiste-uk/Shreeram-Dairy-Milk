@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { firstOfMonth, formatPaiseAsRupees, shiftMonth, todayInBusinessTimezone } from '@shreeram/shared';
 
+import { ActionForm } from '@/components/action-form';
 import { Badge, PageHeader, Table } from '@/components/ui';
 import { listBillsForMonth } from '@/lib/data/bills';
 import { listCustomers } from '@/lib/data/customers';
@@ -89,9 +90,12 @@ export default async function BillingListPage({ searchParams }: PageProps) {
                       View
                     </Link>
                   ) : (
-                    <form action={createDraftBillAction.bind(null, customer.id, month)}>
+                    <ActionForm
+                      key={month}
+                      action={createDraftBillAction.bind(null, customer.id, month)}
+                    >
                       <CreateBillButton />
-                    </form>
+                    </ActionForm>
                   )}
                 </td>
               </tr>

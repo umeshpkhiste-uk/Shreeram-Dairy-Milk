@@ -130,15 +130,18 @@ function PaymentPanel({
 }) {
   const [method, setMethod] = useState<PaymentMethod | null>(paymentMethod);
   const [qr, setQr] = useState<{ dataUrl: string } | { error: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const chooseMethod = (m: PaymentMethod) => {
     setMethod(m);
     setQr(null);
-    startTransition(() => void setOrderPaymentMethodAction(orderId, m));
-    if (m === 'upi') {
-      startTransition(async () => setQr(await generateOrderPaymentQrAction(orderId)));
-    }
+    startTransition(async () => {
+      const result = await setOrderPaymentMethodAction(orderId, m);
+      setError(result.error);
+      if (result.error) setMethod(paymentMethod);
+      else if (m === 'upi') setQr(await generateOrderPaymentQrAction(orderId));
+    });
   };
 
   return (
@@ -184,7 +187,11 @@ function PaymentPanel({
           <PrimaryButton
             type="button"
             disabled={pending || paymentStatus === 'paid'}
-            onClick={() => startTransition(() => void markOrderPaidAction(orderId, method))}
+            onClick={() =>
+              startTransition(async () => {
+                setError((await markOrderPaidAction(orderId, method)).error);
+              })
+            }
           >
             Mark as paid
           </PrimaryButton>
@@ -196,6 +203,7 @@ function PaymentPanel({
           Close
         </SecondaryButton>
       </div>
+      {error ? <ErrorText message={error} /> : null}
     </div>
   );
 }
@@ -270,20 +278,28 @@ function ReschedulePanel({ orderId, onDone }: { orderId: string; onDone: () => v
 }
 
 function CancelPanel({ orderId, onDone }: { orderId: string; onDone: () => void }) {
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   return (
-    <div className="mt-3 flex items-center gap-2 rounded-md border border-danger bg-danger-bg p-3">
+    <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-danger bg-danger-bg p-3">
       <p className="text-sm text-danger">Cancel this order? This can&rsquo;t be undone.</p>
       <DangerButton
         type="button"
         disabled={pending}
-        onClick={() => startTransition(async () => { await cancelOrderAction(orderId); onDone(); })}
+        onClick={() =>
+          startTransition(async () => {
+            const result = await cancelOrderAction(orderId);
+            setError(result.error);
+            if (!result.error) onDone();
+          })
+        }
       >
         {pending ? 'Cancelling…' : 'Confirm cancel'}
       </DangerButton>
       <SecondaryButton type="button" onClick={onDone}>
         Close
       </SecondaryButton>
+      {error ? <ErrorText message={error} /> : null}
     </div>
   );
 }

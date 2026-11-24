@@ -107,10 +107,15 @@ export async function updateOrderItemsAction(
   return { error: null };
 }
 
-export async function cancelOrderAction(orderId: string) {
+export async function cancelOrderAction(orderId: string): Promise<ActionState> {
   const supabase = await createClient();
-  await cancelOrder(supabase, orderId);
+  try {
+    await cancelOrder(supabase, orderId);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to cancel the order.') };
+  }
   revalidatePath('/orders');
+  return { error: null };
 }
 
 export async function changeWorkerAction(
@@ -147,16 +152,32 @@ export async function rescheduleOrderAction(
   return { error: null };
 }
 
-export async function setOrderPaymentMethodAction(orderId: string, method: PaymentMethod) {
+export async function setOrderPaymentMethodAction(
+  orderId: string,
+  method: PaymentMethod,
+): Promise<ActionState> {
   const supabase = await createClient();
-  await setOrderPaymentMethod(supabase, orderId, method);
+  try {
+    await setOrderPaymentMethod(supabase, orderId, method);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to save the payment method.') };
+  }
   revalidatePath('/orders');
+  return { error: null };
 }
 
-export async function markOrderPaidAction(orderId: string, method: PaymentMethod) {
+export async function markOrderPaidAction(
+  orderId: string,
+  method: PaymentMethod,
+): Promise<ActionState> {
   const supabase = await createClient();
-  await markOrderPaid(supabase, orderId, method);
+  try {
+    await markOrderPaid(supabase, orderId, method);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to mark the order as paid.') };
+  }
   revalidatePath('/orders');
+  return { error: null };
 }
 
 /**
@@ -168,7 +189,12 @@ export async function generateOrderPaymentQrAction(
   orderId: string,
 ): Promise<{ dataUrl: string } | { error: string }> {
   const supabase = await createClient();
-  const [order, business] = await Promise.all([getOrder(supabase, orderId), getBusinessSettings(supabase)]);
+  let order, business;
+  try {
+    [order, business] = await Promise.all([getOrder(supabase, orderId), getBusinessSettings(supabase)]);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to generate the QR code.') };
+  }
   if (!order) return { error: 'Order not found.' };
   if (!business.upi_id) return { error: 'No UPI ID configured — add one in Settings first.' };
 

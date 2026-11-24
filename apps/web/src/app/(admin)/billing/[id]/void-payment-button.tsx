@@ -2,12 +2,15 @@
 
 import { useState, useTransition } from 'react';
 
+import { ErrorText } from '@/components/ui';
 import { useClickGuard } from '@/lib/use-click-guard';
+
+import type { ActionState } from '../actions';
 
 type Props = {
   billId: string;
   paymentId: string;
-  action: (billId: string, paymentId: string, reason: string) => Promise<void>;
+  action: (billId: string, paymentId: string, reason: string) => Promise<ActionState>;
 };
 
 /**
@@ -19,9 +22,12 @@ type Props = {
 export function VoidPaymentButton({ billId, paymentId, action }: Props) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const guardedConfirm = useClickGuard(() =>
-    startTransition(() => void action(billId, paymentId, reason.trim())),
+    startTransition(async () => {
+      setError((await action(billId, paymentId, reason.trim())).error);
+    }),
   );
 
   if (!open) {
@@ -37,7 +43,7 @@ export function VoidPaymentButton({ billId, paymentId, action }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <input
         value={reason}
         onChange={(e) => setReason(e.target.value)}
@@ -59,6 +65,7 @@ export function VoidPaymentButton({ billId, paymentId, action }: Props) {
       >
         Cancel
       </button>
+      {error ? <ErrorText message={error} /> : null}
     </div>
   );
 }

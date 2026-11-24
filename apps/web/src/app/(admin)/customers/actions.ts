@@ -82,9 +82,17 @@ export async function updateCustomerAction(
   return { error: null };
 }
 
-export async function setCustomerStatusAction(customerId: string, status: 'active' | 'inactive') {
+export async function setCustomerStatusAction(
+  customerId: string,
+  status: 'active' | 'inactive',
+): Promise<CustomerActionState> {
   const supabase = await createClient();
-  await setCustomerStatus(supabase, customerId, status);
+  try {
+    await setCustomerStatus(supabase, customerId, status);
+  } catch (err) {
+    return { error: errorMessage(err, "Failed to change the customer's status.") };
+  }
   revalidatePath('/customers');
   revalidatePath(`/customers/${customerId}`);
+  return { error: null };
 }

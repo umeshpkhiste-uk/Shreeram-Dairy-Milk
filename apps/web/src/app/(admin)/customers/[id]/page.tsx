@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { formatBillingMonth, formatPaiseAsRupees } from '@shreeram/shared';
 
+import { ActionForm } from '@/components/action-form';
 import { Badge, Card, EmptyState, PageHeader, PrimaryButton, WarningButton } from '@/components/ui';
 import { listBillsForCustomer } from '@/lib/data/bills';
 import { listRatesForCustomer } from '@/lib/data/customer-rates';
@@ -47,13 +48,13 @@ export default async function CustomerDetailPage({ params }: PageProps) {
         title={customer.full_name}
         description={customer.mobile_number}
         actions={
-          <form action={setCustomerStatusAction.bind(null, id, nextStatus)}>
+          <ActionForm action={setCustomerStatusAction.bind(null, id, nextStatus)}>
             {customer.status === 'active' ? (
               <WarningButton type="submit">Deactivate</WarningButton>
             ) : (
               <PrimaryButton type="submit">Reactivate</PrimaryButton>
             )}
-          </form>
+          </ActionForm>
         }
       />
 

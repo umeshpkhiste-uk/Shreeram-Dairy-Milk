@@ -8,6 +8,7 @@ import {
   formatPaiseAsRupees,
 } from '@shreeram/shared';
 
+import { ActionForm } from '@/components/action-form';
 import { Badge, Card, InfoButton, PrimaryButton, buttonClass } from '@/components/ui';
 import { getBillWithDetails } from '@/lib/data/bills';
 import { getCustomer } from '@/lib/data/customers';
@@ -86,30 +87,30 @@ export default async function BillDetailPage({ params }: PageProps) {
         <Card className="border-warning bg-warning-bg">
           <p className="font-medium text-warning">Flagged for review</p>
           <p className="mt-1 text-sm text-warning">{bill.flagged_reason}</p>
-          <form action={acknowledgeBillFlagAction.bind(null, id)} className="mt-3">
+          <ActionForm action={acknowledgeBillFlagAction.bind(null, id)} className="mt-3">
             <PrimaryButton type="submit">Acknowledge</PrimaryButton>
-          </form>
+          </ActionForm>
         </Card>
       ) : null}
 
       <Card>
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-4 flex flex-wrap items-start gap-2">
           {isDraft ? (
-            <form action={recalculateBillAction.bind(null, id)}>
+            <ActionForm action={recalculateBillAction.bind(null, id)}>
               <InfoButton type="submit">Recalculate</InfoButton>
-            </form>
+            </ActionForm>
           ) : null}
           {isDraft ? (
-            <form action={finalizeBillAction.bind(null, id)}>
+            <ActionForm action={finalizeBillAction.bind(null, id)}>
               <PrimaryButton type="submit">Finalize</PrimaryButton>
-            </form>
+            </ActionForm>
           ) : null}
           {!isVoided ? (
-            <form action={markBillSentAction.bind(null, id)}>
+            <ActionForm action={markBillSentAction.bind(null, id)}>
               <PrimaryButton type="submit" disabled={isDraft || !!bill.sent_at}>
                 {bill.sent_at ? `Sent ${bill.sent_at.slice(0, 10)}` : 'Mark as sent'}
               </PrimaryButton>
-            </form>
+            </ActionForm>
           ) : null}
           {!isVoided ? <VoidBillForm action={boundVoid} /> : null}
         </div>
