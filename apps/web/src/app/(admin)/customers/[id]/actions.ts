@@ -1,6 +1,6 @@
 'use server';
 
-import { parseRupeesToPaise } from '@shreeram/shared';
+import { errorMessage, parseRupeesToPaise } from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
 
 import { setCustomerRate } from '@/lib/data/customer-rates';
@@ -26,7 +26,7 @@ export async function setCustomerRateAction(
   try {
     await setCustomerRate(supabase, { customerId, milkTypeId, pricePaise, effectiveFrom });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to set the rate.' };
+    return { error: errorMessage(err, 'Failed to set the rate.') };
   }
   revalidatePath(`/customers/${customerId}`);
   return { error: null };

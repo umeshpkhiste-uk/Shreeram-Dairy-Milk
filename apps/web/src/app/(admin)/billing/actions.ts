@@ -1,6 +1,11 @@
 'use server';
 
-import { parseRupeesToPaise, parseSignedRupeesToPaise, type PaymentMethod } from '@shreeram/shared';
+import {
+  errorMessage,
+  parseRupeesToPaise,
+  parseSignedRupeesToPaise,
+  type PaymentMethod,
+} from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
 import { redirect, RedirectType } from 'next/navigation';
 
@@ -62,7 +67,7 @@ export async function voidBillAction(
   try {
     await voidBill(supabase, billId, reason);
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to void the bill.' };
+    return { error: errorMessage(err, 'Failed to void the bill.') };
   }
   revalidatePath(`/billing/${billId}`);
   return { error: null };
@@ -73,7 +78,7 @@ export async function cancelBillAction(billId: string, billingMonth: string): Pr
   try {
     await cancelDraftBill(supabase, billId);
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to cancel the bill.' };
+    return { error: errorMessage(err, 'Failed to cancel the bill.') };
   }
   revalidatePath('/billing');
   // Replace, so Back doesn't return to the removed bill's page.
@@ -96,7 +101,7 @@ export async function addAdjustmentAction(
   try {
     await addBillAdjustment(supabase, billId, amountPaise, reason);
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to add the adjustment.' };
+    return { error: errorMessage(err, 'Failed to add the adjustment.') };
   }
   revalidatePath(`/billing/${billId}`);
   return { error: null };
@@ -139,7 +144,7 @@ export async function recordPaymentAction(
       notes: notes || null,
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to record the payment.' };
+    return { error: errorMessage(err, 'Failed to record the payment.') };
   }
   revalidatePath(`/billing/${billId}`);
   revalidatePath('/payments');

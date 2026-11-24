@@ -1,5 +1,6 @@
 'use server';
 
+import { errorMessage } from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
 
 import { createWorkerAccount } from '@/lib/data/admin-create-worker';
@@ -35,7 +36,7 @@ export async function createWorkerAction(
       routeId,
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to create worker account.' };
+    return { error: errorMessage(err, 'Failed to create worker account.') };
   }
 
   revalidatePath('/workers');
@@ -68,7 +69,7 @@ export async function createRouteAction(
   try {
     await createRoute(supabase, { name, description: description || undefined });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to create route.' };
+    return { error: errorMessage(err, 'Failed to create route.') };
   }
   revalidatePath('/workers');
   return { error: null };

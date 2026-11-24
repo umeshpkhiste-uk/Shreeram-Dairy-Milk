@@ -1,3 +1,5 @@
+import { FunctionsHttpError } from '@supabase/supabase-js';
+
 import type { SupabaseServerClient } from './types';
 
 export type CreateWorkerInput = {
@@ -31,7 +33,10 @@ export async function createWorkerAccount(
   );
 
   if (error) {
-    throw new Error(error.message);
+    // A refusal's reason (e.g. email already in use) is in the response body.
+    const refusal =
+      error instanceof FunctionsHttpError ? await error.context.json().catch(() => null) : null;
+    throw new Error(refusal?.error ?? error.message);
   }
   if (data && 'error' in data) {
     throw new Error(data.error);

@@ -1,6 +1,6 @@
 'use server';
 
-import { customerFormSchema, type CustomerFormValues } from '@shreeram/shared';
+import { customerFormSchema, errorMessage, type CustomerFormValues } from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -52,7 +52,7 @@ export async function createCustomerAction(
     const customer = await createCustomer(supabase, parsed.data as CustomerFormValues);
     newCustomerId = customer.id;
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to create customer.' };
+    return { error: errorMessage(err, 'Failed to create customer.') };
   }
 
   // Outside the try/catch: redirect() throws internally, which must not be
@@ -77,7 +77,7 @@ export async function updateCustomerAction(
     revalidatePath('/customers');
     revalidatePath(`/customers/${customerId}`);
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to update customer.' };
+    return { error: errorMessage(err, 'Failed to update customer.') };
   }
   return { error: null };
 }

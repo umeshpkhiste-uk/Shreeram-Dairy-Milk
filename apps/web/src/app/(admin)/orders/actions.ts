@@ -1,6 +1,6 @@
 'use server';
 
-import { parseQuantityToBaseUnit, type PaymentMethod } from '@shreeram/shared';
+import { errorMessage, parseQuantityToBaseUnit, type PaymentMethod } from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -81,7 +81,7 @@ export async function createOrderAction(
       items,
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to place the order.' };
+    return { error: errorMessage(err, 'Failed to place the order.') };
   }
 
   revalidatePath('/orders');
@@ -101,7 +101,7 @@ export async function updateOrderItemsAction(
   try {
     await updateOrderItems(supabase, orderId, items);
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to update the order.' };
+    return { error: errorMessage(err, 'Failed to update the order.') };
   }
   revalidatePath('/orders');
   return { error: null };
@@ -124,7 +124,7 @@ export async function changeWorkerAction(
   try {
     await changeOrderWorker(supabase, orderId, workerId);
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to change the worker.' };
+    return { error: errorMessage(err, 'Failed to change the worker.') };
   }
   revalidatePath('/orders');
   return { error: null };
@@ -141,7 +141,7 @@ export async function rescheduleOrderAction(
   try {
     await rescheduleOrder(supabase, orderId, orderDate);
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to reschedule the order.' };
+    return { error: errorMessage(err, 'Failed to reschedule the order.') };
   }
   revalidatePath('/orders');
   return { error: null };

@@ -7,6 +7,7 @@ export * from './types/database';
 export * from './lib/money';
 export * from './lib/quantity';
 export * from './lib/date';
+export * from './lib/errors';
 export * from './lib/billing/status';
 export * from './lib/validation/customer';
 export * from './lib/validation/bill';

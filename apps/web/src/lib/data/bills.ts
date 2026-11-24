@@ -126,8 +126,7 @@ export async function cancelDraftBill(
   billId: string,
 ): Promise<void> {
   const { error } = await supabase.rpc('cancel_draft_bill', { p_bill_id: billId });
-  // Supabase errors aren't Error instances; wrapped so the admin sees the reason.
-  if (error) throw new Error(error.message);
+  if (error) throw error;
 }
 
 export async function acknowledgeBillFlag(

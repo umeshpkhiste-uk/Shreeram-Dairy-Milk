@@ -1,6 +1,6 @@
 'use server';
 
-import { parseRupeesToPaise, type ProductUnit } from '@shreeram/shared';
+import { errorMessage, parseRupeesToPaise, type ProductUnit } from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
 
 import { updateBusinessSettings } from '@/lib/data/business-settings';
@@ -28,7 +28,7 @@ export async function updateBusinessSettingsAction(
       upiId: String(formData.get('upiId') ?? '').trim() || null,
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to save business settings.' };
+    return { error: errorMessage(err, 'Failed to save business settings.') };
   }
   revalidatePath('/settings');
   return { error: null };
@@ -51,7 +51,7 @@ export async function createOrderItemAction(
   try {
     await createProduct(supabase, { name, unit, pricePaise });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to add item.' };
+    return { error: errorMessage(err, 'Failed to add item.') };
   }
   revalidatePath('/settings');
   return { error: null };
@@ -70,7 +70,7 @@ export async function updateOrderItemPriceAction(
   try {
     await updateProduct(supabase, productId, { pricePaise });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to update price.' };
+    return { error: errorMessage(err, 'Failed to update price.') };
   }
   revalidatePath('/settings');
   return { error: null };
@@ -83,6 +83,6 @@ export async function deleteOrderItemAction(productId: string): Promise<DeleteOr
     revalidatePath('/settings');
     return { error: null };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to delete item.' };
+    return { error: errorMessage(err, 'Failed to delete item.') };
   }
 }
