@@ -96,11 +96,12 @@ the first deploy it did not, though the build was green: Vercel moves the HTML b
   sees only their own customer, delivery, order and profile, and no bills; a deactivated worker sees
   no customers or deliveries and can't write.
 
-## Known security gap
+## Orders and deactivated workers
 
-A deactivated worker can still read orders assigned to them until their token expires: the `orders`
-and `order_items` policies don't check `is_active_worker()`, unlike the tables Stage 6 fixed. Needs a
-migration; not yet made.
+A deactivated worker could still read their assigned orders until their token expired: the `orders`
+and `order_items` policies lacked the `is_active_worker()` check Stage 6 added elsewhere. Fixed in
+`20261124100000_stage8_orders_active_worker.sql`, applied and retested live on 2026-11-24 (also
+rolled back): deactivated worker 0 orders and 0 items; active worker and admin unaffected.
 
 ## Not verified — required before Stage 8 is done
 
