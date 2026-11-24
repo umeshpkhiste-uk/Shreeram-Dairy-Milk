@@ -11,9 +11,10 @@ import { useIsOnline } from '@/lib/sync/connectivity';
 import { initSyncEngine, useSyncStatus } from '@/lib/sync/sync-engine';
 
 const TABS = [
-  { href: '/today', label: 'Today’s Route' },
+  { href: '/today', label: 'Today' },
+  { href: '/orders', label: 'Orders' },
   { href: '/history', label: 'History' },
-  { href: '/sync', label: 'Sync Status' },
+  { href: '/sync', label: 'Sync' },
   { href: '/profile', label: 'Profile' },
 ];
 
@@ -55,7 +56,7 @@ export default function WorkerLayout({ children }: LayoutProps<'/'>) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-xl flex-col">
       {!isOnline ? (
-        <p role="status" className="bg-warning-bg px-4 py-2 text-center text-sm text-warning">
+        <p role="status" className="bg-warning-bg px-4 py-2 text-center text-sm text-text">
           Offline
           {sync.pendingCount > 0 ? ` — ${sync.pendingCount} waiting to sync` : ''}
         </p>

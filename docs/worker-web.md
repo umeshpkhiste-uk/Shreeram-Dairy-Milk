@@ -40,8 +40,9 @@ app closing before it syncs.
 Each is a way the ported code could lose or misfile a delivery, covered by
 `src/lib/sync/sync-engine.test.ts` unless noted:
 
-- **"No, not delivered" sends a reason.** The database requires one for anything but a completed
-  delivery; the mobile app sends none, so the server rejects every missed mark.
+- **"No, not delivered" records a reason.** The database requires one for anything but a completed
+  delivery. The mobile app sent none, so every missed mark was rejected; its sync engine now fills
+  the same reason in at upload, which also lets Retry recover marks already rejected.
 - **A correction waits for its creation.** Sent first, it is permanently rejected.
 - **An edit made during an upload is kept** — never shown as synced, never overwritten by the
   pull.
@@ -56,8 +57,7 @@ Each is a way the ported code could lose or misfile a delivery, covered by
 
 ## Not included
 
-- **Orders.** The mobile worker app has a read-only Orders tab; the plan's screen list does not.
-  Workers relying on it can't fully switch until it is added.
+- Orders offline: `/orders` (added after the plan, read-only) needs a connection, as on mobile.
 - `apps/mobile`'s worker role is superseded but not deleted.
 
 ## Running and deploying
@@ -72,16 +72,18 @@ npm run build -w worker-web && npm run start -w worker-web   # service worker on
 Deploy as its own Vercel project with root directory `apps/worker-web` and the two
 `NEXT_PUBLIC_*` variables. Not yet done; check that `/sw.js` is served after the first deploy,
 since it is generated after `next build`.
+Workers need the production domain: the admin project's preview URLs sit behind Vercel sign-in.
 
 ## Verified
 
-- `tsc`, `eslint`, build; unit tests 28/28. `packages/shared` 37/37, `apps/mobile` 88/88.
+- `tsc`, `eslint`, build; unit tests 28/28. `packages/shared` 37/37, `apps/mobile` 90/90.
 - Desktop Chrome, mobile viewport, production build, against a **local stub** of Supabase: with
   the app server stopped and the network cut, screens opened, a mark saved in 13 ms, records
   survived a reload; on reconnect a creation and its correction arrived in order as one
   version-2 row. Also wrong password, admin rejected, failed uploads retried, deactivation,
   account takeover refused, sign-out emptying every table.
-- Lighthouse (snapshot, mobile) accessibility 100, best practices 100. This version has no PWA
+- `/orders`, with a Pixel user agent and 360 px touch viewport (emulated, not a device).
+- Lighthouse on `/today` (snapshot, mobile): accessibility 100, best practices 100. This version has no PWA
   category; manifest, icons and an active service worker were checked by hand.
 
 ## Not verified — required before Stage 8 is done

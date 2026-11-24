@@ -132,6 +132,19 @@ describe('runSync', () => {
     expect(markOutboxFailed).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['missed', 'Marked not delivered by worker'],
+    ['completed', null],
+  ])('sends the reason the server requires for a %s delivery', async (status, reason) => {
+    const item = outboxItem();
+    item.payload = JSON.stringify({ ...JSON.parse(item.payload), status });
+    (listDueOutboxItems as jest.Mock).mockReturnValue([item]);
+
+    await runSync();
+
+    expect(submitDeliveryEvent).toHaveBeenCalledWith(expect.objectContaining({ status, reason }));
+  });
+
   it('flags a server-reported conflict without retrying it', async () => {
     (listDueOutboxItems as jest.Mock).mockReturnValue([outboxItem()]);
     (submitDeliveryEvent as jest.Mock).mockResolvedValue({

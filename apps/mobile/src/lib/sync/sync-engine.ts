@@ -125,7 +125,12 @@ export async function runSync(): Promise<void> {
           eventType: item.event_type,
           status: payload.status,
           deliveredQuantityMl: payload.deliveredQuantityMl,
-          reason: payload.reason,
+          // The server rejects anything but a completed delivery without a reason, and
+          // the calendar records none. Filled in here so Retry also recovers marks
+          // already rejected for it.
+          reason:
+            payload.reason ??
+            (payload.status === 'completed' ? null : 'Marked not delivered by worker'),
           expectedVersion: payload.expectedVersion,
           deviceRecordedAt: payload.deviceRecordedAt,
         });

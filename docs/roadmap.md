@@ -323,7 +323,7 @@ role (superseded, **not deleted**). Design, deviations from the plan, and the ma
 procedure: [`docs/worker-web.md`](worker-web.md). Unrelated to the `stage8*` migrations, which are
 the one-time orders feature.
 
-**Delivered:** `apps/worker-web` — sign-in, today's route, delivery calendar, history, sync status,
+**Delivered:** `apps/worker-web` — sign-in, today's route, delivery calendar, orders, history, sync status,
 profile; Dexie cache + outbox, ported sync engine, Serwist precache, installable manifest.
 Delivery validation copied into `packages/shared`.
 
@@ -335,4 +335,4 @@ desktop Chrome against a local stub of Supabase.
 - The manual airplane-mode pass on a real Android phone.
 - A Vercel deployment.
 
-**Known gap:** no Orders screen (the mobile worker app has one; the plan did not list it).
+Also fixed in `apps/mobile`: missed deliveries were sent without the reason the server requires.
