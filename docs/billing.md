@@ -15,8 +15,9 @@ why:
   mechanical guarantee against double-charging, not just a period-math assumption.
 - **Payments are recorded against a specific bill**, never a general customer wallet. A
   customer's "previous outstanding balance" for their *next* bill is computed at
-  draft-creation time as `sum over their prior non-voided bills of (total_payable − payments
-  received)`. Simpler and more auditable than a separate running ledger.
+  draft-creation time as `sum over their prior non-voided bills of (own charges + adjustments
+  − payments received)` — own charges, not `total_payable`, which already carries the earlier
+  balance and would count it twice. Simpler and more auditable than a separate running ledger.
 - **Bill status is derived**, except for the two explicit actions `finalize_bill`/`void_bill`:
   `draft` until finalized; after finalization, `finalized`/`partially_paid`/`paid` recomputed by
   `record_payment`/`void_payment`/`add_bill_adjustment` from `sum(payments) vs total_payable`
@@ -42,7 +43,7 @@ write goes through one of these `SECURITY DEFINER` RPCs, each admin-checked inte
 | `add_bill_adjustment(bill_id, amount_paise, reason)` | Signed amount — negative is a discount/credit. Allowed on draft or finalized bills, not voided. |
 | `finalize_bill(bill_id)` | `draft` → `finalized`. |
 | `void_bill(bill_id, reason)` | Any non-voided status → `voided`; frees its deliveries for a future bill. |
-| `cancel_draft_bill(bill_id)` | Draft-only; removes the bill row with its items and adjustments, keeping a copy in `audit_logs`. Refused only while a later non-voided bill really carries its balance (a zero bill never blocks). The bill number is not reused. |
+| `cancel_draft_bill(bill_id)` | Draft-only; removes the bill row with its items and adjustments, keeping a copy in `audit_logs`. Refused only while a later non-voided bill really carries its balance (a bill with no charges of its own never blocks). The bill number is not reused. |
 | `acknowledge_bill_flag(bill_id)` | Clears `flagged_for_review` after admin review. |
 | `record_payment(payment_id, bill_id, amount_paise, method, …)` | Idempotent on the client-generated `payment_id` — a retry answers from the stored row, never double-records. Rejects a duplicate `(bill_id, transaction_reference)`. |
 | `void_payment(payment_id, reason)` | Recomputes the bill's status excluding the voided payment. |
