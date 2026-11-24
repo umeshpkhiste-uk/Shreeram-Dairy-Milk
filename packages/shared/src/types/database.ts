@@ -485,6 +485,10 @@ export interface Database {
         Args: { p_bill_id: string; p_reason: string };
         Returns: Database['public']['Tables']['monthly_bills']['Row'];
       };
+      cancel_draft_bill: {
+        Args: { p_bill_id: string };
+        Returns: undefined;
+      };
       acknowledge_bill_flag: {
         Args: { p_bill_id: string };
         Returns: Database['public']['Tables']['monthly_bills']['Row'];

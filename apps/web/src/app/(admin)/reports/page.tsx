@@ -1,7 +1,7 @@
 import { firstOfMonth, formatPaiseAsRupees, shiftMonth, todayInBusinessTimezone } from '@shreeram/shared';
 import Link from 'next/link';
 
-import { Card, EmptyState, PageHeader, Table } from '@/components/ui';
+import { Card, EmptyState, PageHeader, Table, buttonClass } from '@/components/ui';
 import { listBillsForMonth } from '@/lib/data/bills';
 import { listCustomers } from '@/lib/data/customers';
 import { listPaymentsForBillIds } from '@/lib/data/payments';
@@ -48,7 +48,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
             <Link
               href={`/reports/print?month=${month}`}
               target="_blank"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-text-on-primary transition hover:bg-primary-hover"
+              className={buttonClass('info')}
             >
               Print / Save as PDF
             </Link>

@@ -44,7 +44,7 @@ export default function TodayRoutePage() {
       <div className="flex items-center justify-between gap-2">
         <Title>Today&rsquo;s Route</Title>
         <Button
-          variant="secondary"
+          variant="info"
           onClick={() => runSync()}
           disabled={sync.phase === 'syncing' || sync.phase === 'offline'}
         >

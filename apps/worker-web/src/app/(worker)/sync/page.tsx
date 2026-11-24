@@ -156,7 +156,7 @@ export default function SyncStatusPage() {
             </p>
             {item.last_error ? <p className="text-sm text-danger">{item.last_error}</p> : null}
             {item.status === 'failed' ? (
-              <Button variant="secondary" onClick={() => handleRetry(item.event_id)}>
+              <Button variant="info" onClick={() => handleRetry(item.event_id)}>
                 Retry
               </Button>
             ) : null}

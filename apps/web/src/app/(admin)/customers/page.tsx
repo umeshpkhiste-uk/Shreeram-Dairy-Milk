@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Badge, Card, EmptyState, PageHeader, Table } from '@/components/ui';
+import { Badge, Card, EmptyState, InfoButton, PageHeader, Table } from '@/components/ui';
 import { listCustomers, type CustomerFilters } from '@/lib/data/customers';
 import { createClient } from '@/lib/supabase/server';
 
@@ -56,12 +56,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
               <option value="all">All</option>
             </select>
           </label>
-          <button
-            type="submit"
-            className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted"
-          >
-            Apply
-          </button>
+          <InfoButton type="submit">Apply</InfoButton>
         </form>
       </Card>
 

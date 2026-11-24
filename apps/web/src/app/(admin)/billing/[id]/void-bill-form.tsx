@@ -16,9 +16,9 @@ export function VoidBillForm({
 
   if (!open) {
     return (
-      <SecondaryButton type="button" onClick={() => setOpen(true)}>
+      <DangerButton type="button" onClick={() => setOpen(true)}>
         Void bill
-      </SecondaryButton>
+      </DangerButton>
     );
   }
 

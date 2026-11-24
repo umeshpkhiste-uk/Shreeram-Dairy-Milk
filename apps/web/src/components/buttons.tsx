@@ -4,6 +4,8 @@ import type { ButtonHTMLAttributes } from 'react';
 
 import { useClickGuard } from '@/lib/use-click-guard';
 
+import { buttonClass, type ButtonTone } from './button-styles';
+
 /**
  * Split out of ui.tsx: these need the click-guard hook, which requires a
  * Client Component boundary. Keeping them in ui.tsx would have made every
@@ -13,53 +15,31 @@ import { useClickGuard } from '@/lib/use-click-guard';
  * bundle. Still imported as `@/components/ui` everywhere (see ui.tsx).
  */
 
-export function PrimaryButton({
-  children,
-  onClick,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
+
+function ToneButton({ tone, onClick, className = '', ...props }: ButtonProps & { tone: ButtonTone }) {
   const guardedOnClick = useClickGuard(onClick);
   return (
-    <button
-      {...props}
-      onClick={guardedOnClick}
-      className={`w-fit shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-text-on-primary transition hover:bg-primary-hover disabled:opacity-60 ${props.className ?? ''}`}
-    >
-      {children}
-    </button>
+    <button {...props} onClick={guardedOnClick} className={`${buttonClass(tone)} ${className}`} />
   );
 }
 
-export function SecondaryButton({
-  children,
-  onClick,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
-  const guardedOnClick = useClickGuard(onClick);
-  return (
-    <button
-      {...props}
-      onClick={guardedOnClick}
-      className={`w-fit shrink-0 rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted disabled:opacity-60 ${props.className ?? ''}`}
-    >
-      {children}
-    </button>
-  );
+export function PrimaryButton(props: ButtonProps) {
+  return <ToneButton tone="primary" {...props} />;
 }
 
-export function DangerButton({
-  children,
-  onClick,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
-  const guardedOnClick = useClickGuard(onClick);
-  return (
-    <button
-      {...props}
-      onClick={guardedOnClick}
-      className={`w-fit shrink-0 rounded-md bg-danger px-4 py-2 text-sm font-semibold text-text-on-primary transition hover:opacity-90 disabled:opacity-60 ${props.className ?? ''}`}
-    >
-      {children}
-    </button>
-  );
+export function SecondaryButton(props: ButtonProps) {
+  return <ToneButton tone="secondary" {...props} />;
+}
+
+export function InfoButton(props: ButtonProps) {
+  return <ToneButton tone="info" {...props} />;
+}
+
+export function WarningButton(props: ButtonProps) {
+  return <ToneButton tone="warning" {...props} />;
+}
+
+export function DangerButton(props: ButtonProps) {
+  return <ToneButton tone="danger" {...props} />;
 }

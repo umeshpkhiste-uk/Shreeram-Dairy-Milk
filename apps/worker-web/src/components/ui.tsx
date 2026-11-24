@@ -32,6 +32,8 @@ export const TONE_CLASSES: Record<StatusTone, string> = {
 
 const BUTTON_CLASSES = {
   primary: 'bg-primary text-text-on-primary hover:bg-primary-hover',
+  info: 'bg-info text-text-on-primary hover:opacity-90',
+  danger: 'bg-danger text-text-on-primary hover:opacity-90',
   secondary: 'border border-border text-text hover:bg-surface-muted',
 };
 

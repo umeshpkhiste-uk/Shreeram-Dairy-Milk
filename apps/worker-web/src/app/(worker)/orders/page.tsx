@@ -44,7 +44,7 @@ export default function OrdersPage() {
     <>
       <div className="flex items-center justify-between gap-2">
         <Title>Orders</Title>
-        <Button variant="secondary" onClick={() => setAttempt(attempt + 1)} disabled={!isOnline}>
+        <Button variant="info" onClick={() => setAttempt(attempt + 1)} disabled={!isOnline}>
           Refresh
         </Button>
       </div>

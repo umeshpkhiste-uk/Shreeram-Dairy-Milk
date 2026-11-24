@@ -237,7 +237,7 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
           <Button onClick={() => handleMark('completed')} disabled={saving}>
             Yes, delivered
           </Button>
-          <Button variant="secondary" onClick={() => handleMark('missed')} disabled={saving}>
+          <Button variant="danger" onClick={() => handleMark('missed')} disabled={saving}>
             No, not delivered
           </Button>
           <Button variant="secondary" onClick={() => dialogRef.current?.close()}>

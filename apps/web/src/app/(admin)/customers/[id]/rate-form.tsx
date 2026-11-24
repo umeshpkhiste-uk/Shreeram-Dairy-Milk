@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 
-import { ErrorText, SecondaryButton } from '@/components/ui';
+import { ErrorText, PrimaryButton } from '@/components/ui';
 import type { MilkTypeRow } from '@/lib/data/milk-types';
 
 import type { RateActionState } from './actions';
@@ -51,9 +51,9 @@ export function RateForm({
           className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
         />
       </label>
-      <SecondaryButton type="submit" disabled={pending}>
+      <PrimaryButton type="submit" disabled={pending}>
         {pending ? 'Saving…' : 'Set rate'}
-      </SecondaryButton>
+      </PrimaryButton>
       {state.error ? <ErrorText message={state.error} /> : null}
     </form>
   );

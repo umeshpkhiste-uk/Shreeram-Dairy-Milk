@@ -2,16 +2,14 @@
 
 import { useTransition } from 'react';
 
+import { PrimaryButton, WarningButton } from '@/components/ui';
 import type { RouteRow, WorkerSummary } from '@/lib/data/workers';
-import { useClickGuard } from '@/lib/use-click-guard';
 
 import { assignWorkerRouteAction, setWorkerActiveAction } from './actions';
 
 export function WorkerRowActions({ worker, routes }: { worker: WorkerSummary; routes: RouteRow[] }) {
   const [pending, startTransition] = useTransition();
-  const guardedToggleActive = useClickGuard(() =>
-    startTransition(() => void setWorkerActiveAction(worker.id, !worker.isActive)),
-  );
+  const ToggleButton = worker.isActive ? WarningButton : PrimaryButton;
 
   return (
     <div className="flex items-center gap-2">
@@ -32,14 +30,16 @@ export function WorkerRowActions({ worker, routes }: { worker: WorkerSummary; ro
           </option>
         ))}
       </select>
-      <button
+      <ToggleButton
         type="button"
         disabled={pending}
-        onClick={guardedToggleActive}
-        className="rounded-md border border-border px-3 py-1 text-sm font-medium text-text transition hover:bg-surface-muted disabled:opacity-60"
+        onClick={() =>
+          startTransition(() => void setWorkerActiveAction(worker.id, !worker.isActive))
+        }
+        className="!px-3 !py-1"
       >
         {worker.isActive ? 'Deactivate' : 'Reactivate'}
-      </button>
+      </ToggleButton>
     </div>
   );
 }

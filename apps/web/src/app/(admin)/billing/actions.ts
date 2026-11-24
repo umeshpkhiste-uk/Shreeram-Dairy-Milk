@@ -2,11 +2,12 @@
 
 import { parseRupeesToPaise, parseSignedRupeesToPaise, type PaymentMethod } from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { redirect, RedirectType } from 'next/navigation';
 
 import {
   acknowledgeBillFlag,
   addBillAdjustment,
+  cancelDraftBill,
   createDraftBill,
   finalizeBill,
   markBillSent,
@@ -65,6 +66,18 @@ export async function voidBillAction(
   }
   revalidatePath(`/billing/${billId}`);
   return { error: null };
+}
+
+export async function cancelBillAction(billId: string, billingMonth: string): Promise<ActionState> {
+  const supabase = await createClient();
+  try {
+    await cancelDraftBill(supabase, billId);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to cancel the bill.' };
+  }
+  revalidatePath('/billing');
+  // Replace, so Back doesn't return to the removed bill's page.
+  redirect(`/billing?month=${billingMonth}`, RedirectType.replace);
 }
 
 export async function addAdjustmentAction(

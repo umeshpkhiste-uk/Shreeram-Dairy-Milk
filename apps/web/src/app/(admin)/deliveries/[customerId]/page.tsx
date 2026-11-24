@@ -13,7 +13,16 @@ import {
   type DeliveryStatus,
 } from '@shreeram/shared';
 
-import { Badge, Card, EmptyState, PageHeader, PrimaryButton, SecondaryButton } from '@/components/ui';
+import {
+  Badge,
+  Card,
+  EmptyState,
+  InfoButton,
+  PageHeader,
+  PrimaryButton,
+  SecondaryButton,
+  WarningButton,
+} from '@/components/ui';
 import { listBillsForCustomer } from '@/lib/data/bills';
 import {
   listConflictingEvents,
@@ -261,7 +270,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
                 />
               </label>
               <div>
-                <PrimaryButton type="submit">Mark &ldquo;customer informed — no delivery&rdquo;</PrimaryButton>
+                <WarningButton type="submit">Mark &ldquo;customer informed — no delivery&rdquo;</WarningButton>
               </div>
             </form>
           ) : (
@@ -305,7 +314,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
               </p>
             </div>
             <Link href={`/billing/${bill.id}`}>
-              <PrimaryButton type="button">View &amp; share bill (PDF) →</PrimaryButton>
+              <InfoButton type="button">View &amp; share bill (PDF) →</InfoButton>
             </Link>
           </div>
         ) : (
@@ -359,7 +368,7 @@ function ConflictRecord({
         </p>
       </div>
       <form action={action}>
-        <SecondaryButton type="submit">{button}</SecondaryButton>
+        <PrimaryButton type="submit">{button}</PrimaryButton>
       </form>
     </li>
   );

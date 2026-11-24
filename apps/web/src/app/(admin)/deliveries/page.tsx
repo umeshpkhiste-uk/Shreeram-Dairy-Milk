@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { firstOfMonth, todayInBusinessTimezone } from '@shreeram/shared';
 
-import { Badge, Card, EmptyState, PageHeader, Table } from '@/components/ui';
+import { Badge, Card, EmptyState, InfoButton, PageHeader, Table } from '@/components/ui';
 import { listDailyDeliveryReport } from '@/lib/data/deliveries';
 import { listRoutes, listWorkers } from '@/lib/data/workers';
 import { createClient } from '@/lib/supabase/server';
@@ -118,12 +118,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
               className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
             />
           </label>
-          <button
-            type="submit"
-            className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted"
-          >
-            Apply
-          </button>
+          <InfoButton type="submit">Apply</InfoButton>
         </form>
       </Card>
 

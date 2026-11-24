@@ -120,6 +120,16 @@ export async function voidBill(
   return data;
 }
 
+/** Removes a draft bill outright; a finalized bill can only be voided. */
+export async function cancelDraftBill(
+  supabase: SupabaseServerClient,
+  billId: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('cancel_draft_bill', { p_bill_id: billId });
+  // Supabase errors aren't Error instances; wrapped so the admin sees the reason.
+  if (error) throw new Error(error.message);
+}
+
 export async function acknowledgeBillFlag(
   supabase: SupabaseServerClient,
   billId: string,

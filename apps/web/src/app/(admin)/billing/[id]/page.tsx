@@ -8,7 +8,7 @@ import {
   formatPaiseAsRupees,
 } from '@shreeram/shared';
 
-import { Badge, Card, SecondaryButton } from '@/components/ui';
+import { Badge, Card, InfoButton, PrimaryButton, buttonClass } from '@/components/ui';
 import { getBillWithDetails } from '@/lib/data/bills';
 import { getCustomer } from '@/lib/data/customers';
 import { listAllMilkTypes } from '@/lib/data/milk-types';
@@ -17,6 +17,7 @@ import { createClient } from '@/lib/supabase/server';
 import {
   acknowledgeBillFlagAction,
   addAdjustmentAction,
+  cancelBillAction,
   finalizeBillAction,
   markBillSentAction,
   recalculateBillAction,
@@ -26,6 +27,7 @@ import {
 } from '../actions';
 import { AdjustmentForm } from './adjustment-form';
 import { BackButton } from './back-button';
+import { CancelBillForm } from './cancel-bill-form';
 import { PaymentForm } from './payment-form';
 import { VoidBillForm } from './void-bill-form';
 import { VoidPaymentButton } from './void-payment-button';
@@ -72,7 +74,7 @@ export default async function BillDetailPage({ params }: PageProps) {
           {!isVoided ? (
             <Link
               href={`/billing/${id}/print`}
-              className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted"
+              className={buttonClass('info')}
             >
               Print / Save as PDF
             </Link>
@@ -85,7 +87,7 @@ export default async function BillDetailPage({ params }: PageProps) {
           <p className="font-medium text-warning">Flagged for review</p>
           <p className="mt-1 text-sm text-warning">{bill.flagged_reason}</p>
           <form action={acknowledgeBillFlagAction.bind(null, id)} className="mt-3">
-            <SecondaryButton type="submit">Acknowledge</SecondaryButton>
+            <PrimaryButton type="submit">Acknowledge</PrimaryButton>
           </form>
         </Card>
       ) : null}
@@ -94,19 +96,19 @@ export default async function BillDetailPage({ params }: PageProps) {
         <div className="mb-4 flex flex-wrap gap-2">
           {isDraft ? (
             <form action={recalculateBillAction.bind(null, id)}>
-              <SecondaryButton type="submit">Recalculate</SecondaryButton>
+              <InfoButton type="submit">Recalculate</InfoButton>
             </form>
           ) : null}
           {isDraft ? (
             <form action={finalizeBillAction.bind(null, id)}>
-              <SecondaryButton type="submit">Finalize</SecondaryButton>
+              <PrimaryButton type="submit">Finalize</PrimaryButton>
             </form>
           ) : null}
           {!isVoided ? (
             <form action={markBillSentAction.bind(null, id)}>
-              <SecondaryButton type="submit" disabled={!!bill.sent_at}>
+              <PrimaryButton type="submit" disabled={isDraft || !!bill.sent_at}>
                 {bill.sent_at ? `Sent ${bill.sent_at.slice(0, 10)}` : 'Mark as sent'}
-              </SecondaryButton>
+              </PrimaryButton>
             </form>
           ) : null}
           {!isVoided ? <VoidBillForm action={boundVoid} /> : null}
@@ -168,7 +170,12 @@ export default async function BillDetailPage({ params }: PageProps) {
       {!isVoided ? (
         <Card>
           <h2 className="mb-3 text-lg font-semibold text-text">Adjustments</h2>
-          <AdjustmentForm action={boundAddAdjustment} />
+          <div className="flex flex-wrap items-end gap-3">
+            <AdjustmentForm action={boundAddAdjustment} />
+            {isDraft ? (
+              <CancelBillForm action={cancelBillAction.bind(null, id, bill.billing_month)} />
+            ) : null}
+          </div>
           {adjustments.length > 0 ? (
             <ul className="mt-4 flex flex-col gap-1 text-sm text-text-secondary">
               {adjustments.map((a) => (

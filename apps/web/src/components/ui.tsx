@@ -6,7 +6,8 @@ import type { StatusTone } from '@shreeram/shared';
 
 // Re-exported here (not defined here) because they need client-side state
 // (the click guard) — see buttons.tsx for why that can't live in this file.
-export { PrimaryButton, SecondaryButton, DangerButton } from './buttons';
+export { PrimaryButton, SecondaryButton, InfoButton, WarningButton, DangerButton } from './buttons';
+export { buttonClass } from './button-styles';
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (

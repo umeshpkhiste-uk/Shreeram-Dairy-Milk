@@ -71,7 +71,7 @@ All under `src/app/(admin)/*` except `/login` — the route group's `layout.tsx`
 | `/deliveries` | The daily delivery report — same left-join logic as the mobile app's admin screen, same "no record yet ≠ missed" rule. Each customer name links to `/deliveries/[customerId]`. |
 | `/deliveries/[customerId]` | Per-customer delivery calendar (added post-launch, admin-website-only, per owner feedback) — see "Per-customer delivery calendar" below. |
 | `/orders` | One-time product orders (paneer, ghee, dahi, etc.) — see "One-time product orders" below. |
-| `/billing`, `/billing/[id]`, `/billing/[id]/print` | Month picker, create/view bills, full breakdown, adjustments, payments, finalize/recalculate/void, the flagged-for-review banner, a back button, a delivery summary (days delivered / total quantity / average per delivery), and the website's PDF path (see below). |
+| `/billing`, `/billing/[id]`, `/billing/[id]/print` | Month picker, create/view bills, full breakdown, adjustments, payments, finalize/recalculate/void, cancel (drafts only), the flagged-for-review banner, a back button, a delivery summary (days delivered / total quantity / average per delivery), and the website's PDF path (see below). |
 | `/payments` | Cross-customer payments ledger. |
 | `/reports`, `/reports/print` | Billing-summary table + PDF export (`/reports/print`, the same browser-print-to-PDF mechanism as the bill/order PDFs — see "Report generation is PDF-only" below). |
 | `/settings` | Business settings + order items (New Order catalog) management. |

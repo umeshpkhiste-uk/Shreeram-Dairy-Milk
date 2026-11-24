@@ -5,7 +5,13 @@ import { useActionState, useState, useTransition } from 'react';
 
 import type { PaymentMethod } from '@shreeram/shared';
 
-import { ErrorText, SecondaryButton } from '@/components/ui';
+import {
+  DangerButton,
+  ErrorText,
+  InfoButton,
+  PrimaryButton,
+  SecondaryButton,
+} from '@/components/ui';
 
 import {
   cancelOrderAction,
@@ -46,41 +52,41 @@ export function OrderActions({
   return (
     <div className="mt-3 border-t border-border pt-3">
       <div className="flex flex-wrap gap-2">
-        <SecondaryButton
+        <PrimaryButton
           type="button"
           className={smallButtonClass}
           onClick={() => setPanel(panel === 'payment' ? null : 'payment')}
         >
           Proceed for payment
-        </SecondaryButton>
-        <SecondaryButton
+        </PrimaryButton>
+        <InfoButton
           type="button"
           className={smallButtonClass}
           onClick={() => setPanel(panel === 'worker' ? null : 'worker')}
         >
           Change the worker
-        </SecondaryButton>
-        <SecondaryButton
+        </InfoButton>
+        <InfoButton
           type="button"
           className={smallButtonClass}
           onClick={() => setPanel(panel === 'reschedule' ? null : 'reschedule')}
         >
           Reschedule the delivery
-        </SecondaryButton>
-        <SecondaryButton
+        </InfoButton>
+        <InfoButton
           type="button"
           className={smallButtonClass}
           onClick={() => setPanel(panel === 'update' ? null : 'update')}
         >
           Update the order
-        </SecondaryButton>
-        <SecondaryButton
+        </InfoButton>
+        <DangerButton
           type="button"
           className={smallButtonClass}
           onClick={() => setPanel(panel === 'cancel' ? null : 'cancel')}
         >
           Cancel the order
-        </SecondaryButton>
+        </DangerButton>
         {panel ? (
           <SecondaryButton type="button" className={smallButtonClass} onClick={close}>
             Close
@@ -175,16 +181,16 @@ function PaymentPanel({
 
       <div className="flex flex-wrap gap-2">
         {method ? (
-          <SecondaryButton
+          <PrimaryButton
             type="button"
             disabled={pending || paymentStatus === 'paid'}
             onClick={() => startTransition(() => void markOrderPaidAction(orderId, method))}
           >
             Mark as paid
-          </SecondaryButton>
+          </PrimaryButton>
         ) : null}
         <Link href={`/orders/${orderId}/print`} target="_blank">
-          <SecondaryButton type="button">Generate bill</SecondaryButton>
+          <InfoButton type="button">Generate bill</InfoButton>
         </Link>
         <SecondaryButton type="button" onClick={onDone}>
           Close
@@ -226,9 +232,9 @@ function ChangeWorkerPanel({
           ))}
         </select>
       </label>
-      <SecondaryButton type="submit" disabled={pending}>
+      <PrimaryButton type="submit" disabled={pending}>
         {pending ? 'Saving…' : 'Save'}
-      </SecondaryButton>
+      </PrimaryButton>
       <SecondaryButton type="button" onClick={onDone}>
         Close
       </SecondaryButton>
@@ -252,9 +258,9 @@ function ReschedulePanel({ orderId, onDone }: { orderId: string; onDone: () => v
           className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
         />
       </label>
-      <SecondaryButton type="submit" disabled={pending}>
+      <PrimaryButton type="submit" disabled={pending}>
         {pending ? 'Saving…' : 'Save'}
-      </SecondaryButton>
+      </PrimaryButton>
       <SecondaryButton type="button" onClick={onDone}>
         Close
       </SecondaryButton>
@@ -268,13 +274,13 @@ function CancelPanel({ orderId, onDone }: { orderId: string; onDone: () => void 
   return (
     <div className="mt-3 flex items-center gap-2 rounded-md border border-danger bg-danger-bg p-3">
       <p className="text-sm text-danger">Cancel this order? This can&rsquo;t be undone.</p>
-      <SecondaryButton
+      <DangerButton
         type="button"
         disabled={pending}
         onClick={() => startTransition(async () => { await cancelOrderAction(orderId); onDone(); })}
       >
         {pending ? 'Cancelling…' : 'Confirm cancel'}
-      </SecondaryButton>
+      </DangerButton>
       <SecondaryButton type="button" onClick={onDone}>
         Close
       </SecondaryButton>

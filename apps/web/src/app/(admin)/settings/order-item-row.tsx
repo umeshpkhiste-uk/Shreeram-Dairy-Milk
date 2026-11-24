@@ -4,7 +4,7 @@ import { useActionState, useState, useTransition } from 'react';
 
 import { formatPaiseAsRupees } from '@shreeram/shared';
 
-import { Badge, DangerButton, ErrorText, SecondaryButton } from '@/components/ui';
+import { Badge, DangerButton, ErrorText, PrimaryButton, SecondaryButton } from '@/components/ui';
 import type { ProductRow } from '@/lib/data/products';
 
 import { deleteOrderItemAction, updateOrderItemPriceAction, type DeleteOrderItemState } from './actions';
@@ -47,9 +47,9 @@ export function OrderItemRow({ product }: { product: ProductRow }) {
             placeholder={`Item New Price (₹/${unitLabel})`}
             className="w-44 rounded-md border border-border bg-surface px-2 py-1 text-sm text-text outline-none focus:border-primary"
           />
-          <SecondaryButton type="submit" disabled={pending}>
+          <PrimaryButton type="submit" disabled={pending}>
             {pending ? 'Saving…' : 'Update price'}
-          </SecondaryButton>
+          </PrimaryButton>
         </form>
         {confirming ? (
           <>
@@ -64,9 +64,9 @@ export function OrderItemRow({ product }: { product: ProductRow }) {
             </SecondaryButton>
           </>
         ) : (
-          <SecondaryButton type="button" onClick={() => setConfirming(true)}>
+          <DangerButton type="button" onClick={() => setConfirming(true)}>
             Delete
-          </SecondaryButton>
+          </DangerButton>
         )}
       </div>
       {state.error ? <ErrorText message={state.error} /> : null}
