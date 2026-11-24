@@ -11,6 +11,7 @@ export * from './lib/billing/status';
 export * from './lib/validation/customer';
 export * from './lib/validation/bill';
 export * from './lib/validation/payment';
+export * from './lib/validation/delivery';
 export * from './lib/dashboard/metrics';
 export * from './lib/pdf/bill-template';
 export * from './lib/pdf/order-receipt-template';

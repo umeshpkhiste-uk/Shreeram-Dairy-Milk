@@ -1,6 +1,6 @@
 # Roadmap
 
-Shreeram Daily Milk is built in 7 stages, each with its own acceptance criteria. We do not
+Shreeram Daily Milk is built in 8 stages, each with its own acceptance criteria. We do not
 move to the next stage until the current one's criteria are verified. This file is updated
 as each stage completes.
 
@@ -13,6 +13,7 @@ as each stage completes.
 | 5 | Monthly Billing, Payments and PDF Reports | ✅ Complete |
 | 6 | Security, Testing and Android Release | ✅ Complete |
 | 7 | Future Website and Vercel Deployment | ✅ Complete |
+| 8 | Worker Web App (PWA) | 🚧 Built — live and Android verification pending |
 
 ## Stage 1 — Project Foundation ✅
 
@@ -314,3 +315,24 @@ business logic. Full design and verification: [`docs/web-admin.md`](web-admin.md
 - No Supabase Realtime on the website (the mobile admin screens have it from Stage 4) — every
   page here is freshly server-rendered per request already.
 - No end-to-end (browser) test suite, consistent with the mobile app's own Stage 6 gap.
+
+## Stage 8 — Worker Web App (PWA) 🚧
+
+An offline-first web app for delivery workers on Android Chrome, replacing `apps/mobile`'s worker
+role (superseded, **not deleted**). Design, deviations from the plan, and the manual Android
+procedure: [`docs/worker-web.md`](worker-web.md). Unrelated to the `stage8*` migrations, which are
+the one-time orders feature.
+
+**Delivered:** `apps/worker-web` — sign-in, today's route, delivery calendar, history, sync status,
+profile; Dexie cache + outbox, ported sync engine, Serwist precache, installable manifest.
+Delivery validation copied into `packages/shared`.
+
+**Verified:** typecheck, lint, build, 28/28 unit tests; offline mark → reload → reconnect → sync in
+desktop Chrome against a local stub of Supabase.
+
+**Not verified — this stage is not done until these are:**
+- Live tests against the real Supabase project (paused on 2026-11-24).
+- The manual airplane-mode pass on a real Android phone.
+- A Vercel deployment.
+
+**Known gap:** no Orders screen (the mobile worker app has one; the plan did not list it).

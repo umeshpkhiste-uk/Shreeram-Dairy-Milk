@@ -11,6 +11,7 @@ Supabase backend.
 apps/
   mobile/            Expo (React Native + TypeScript + Expo Router) app — admin and worker roles
   web/               Next.js (App Router) admin website — added in Stage 7
+  worker-web/        Next.js offline-first worker PWA — added in Stage 8 (see docs/worker-web.md)
 packages/
   shared/            Framework-agnostic types/validation/logic used by apps/web (see docs/web-admin.md)
 supabase/
