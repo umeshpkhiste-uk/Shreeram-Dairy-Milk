@@ -42,7 +42,7 @@ write goes through one of these `SECURITY DEFINER` RPCs, each admin-checked inte
 | `add_bill_adjustment(bill_id, amount_paise, reason)` | Signed amount — negative is a discount/credit. Allowed on draft or finalized bills, not voided. |
 | `finalize_bill(bill_id)` | `draft` → `finalized`. |
 | `void_bill(bill_id, reason)` | Any non-voided status → `voided`; frees its deliveries for a future bill. |
-| `cancel_draft_bill(bill_id)` | Draft-only; removes the bill row with its items and adjustments, keeping a copy in `audit_logs`. Refused while a later non-voided bill carries its balance. The bill number is not reused. |
+| `cancel_draft_bill(bill_id)` | Draft-only; removes the bill row with its items and adjustments, keeping a copy in `audit_logs`. Refused only while a later non-voided bill really carries its balance (a zero bill never blocks). The bill number is not reused. |
 | `acknowledge_bill_flag(bill_id)` | Clears `flagged_for_review` after admin review. |
 | `record_payment(payment_id, bill_id, amount_paise, method, …)` | Idempotent on the client-generated `payment_id` — a retry answers from the stored row, never double-records. Rejects a duplicate `(bill_id, transaction_reference)`. |
 | `void_payment(payment_id, reason)` | Recomputes the bill's status excluding the voided payment. |
