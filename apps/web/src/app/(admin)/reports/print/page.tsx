@@ -1,4 +1,5 @@
 import { BILL_STYLE, formatPaiseAsRupees } from '@shreeram/shared';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { getBusinessSettings } from '@/lib/data/business-settings';
@@ -42,7 +43,14 @@ export default async function ReportsPrintPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-3xl p-6">
       <style dangerouslySetInnerHTML={{ __html: BILL_STYLE }} />
-      <div className="no-print mb-4 flex justify-end">
+      <div className="no-print mb-4 flex justify-between">
+        {/* Not BackButton: this page opens in a new tab, which has no history to go back to. */}
+        <Link
+          href={`/reports?month=${month}`}
+          className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted"
+        >
+          ← Back
+        </Link>
         <PrintButton />
       </div>
       <div className="bill-doc rounded-lg border border-border bg-white p-8">
