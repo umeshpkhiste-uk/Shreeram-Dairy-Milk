@@ -48,7 +48,7 @@ export function AdminShell({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="no-print sticky top-0 z-20 flex flex-col border-b border-border bg-surface md:relative md:flex-row md:items-stretch">
+      <div className="no-print sticky top-0 z-20 flex flex-col border-b border-border bg-surface md:h-14 md:flex-row md:items-stretch">
         <div
           className={`flex shrink-0 items-center gap-2 px-4 py-3 md:border-r md:border-border ${railWidth}`}
         >
@@ -80,9 +80,12 @@ export function AdminShell({
       </div>
 
       <div className="flex flex-1 flex-col md:flex-row">
+        {/* Pinned below the h-14 top bar while the page scrolls. Scrolls itself
+            on a short screen, but only when open: overflow would clip the
+            collapsed rail's tooltips. */}
         <aside
-          className={`no-print flex shrink-0 flex-col border-b border-border bg-surface px-4 py-6 transition-[width] md:min-h-full md:border-b-0 md:border-r ${
-            open ? 'w-full md:w-64' : 'w-full md:w-14'
+          className={`no-print flex shrink-0 flex-col border-b border-border bg-surface px-4 py-6 transition-[width] md:sticky md:top-14 md:z-10 md:h-[calc(100dvh-3.5rem)] md:border-b-0 md:border-r ${
+            open ? 'w-full md:w-64 md:overflow-y-auto' : 'w-full md:w-14'
           }`}
         >
           <AdminNav collapsed={!open} onExpand={() => setOpen(true)} />
