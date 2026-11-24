@@ -6,6 +6,7 @@ import { getBusinessSettings } from '@/lib/data/business-settings';
 import { getOrder } from '@/lib/data/orders';
 import { createClient } from '@/lib/supabase/server';
 
+import { BackButton } from '../../../billing/[id]/back-button';
 import { PrintButton } from '../../../billing/[id]/print/print-button';
 
 type PageProps = { params: Promise<{ orderId: string }> };
@@ -46,7 +47,8 @@ export default async function OrderPrintPage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-3xl p-6">
       <style dangerouslySetInnerHTML={{ __html: ORDER_RECEIPT_STYLE }} />
-      <div className="no-print mb-4 flex justify-end">
+      <div className="no-print mb-4 flex justify-between">
+        <BackButton fallbackHref="/orders" />
         <PrintButton />
       </div>
       <div

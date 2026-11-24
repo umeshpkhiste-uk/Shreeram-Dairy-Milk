@@ -8,6 +8,7 @@ import { getCustomer } from '@/lib/data/customers';
 import { listAllMilkTypes } from '@/lib/data/milk-types';
 import { createClient } from '@/lib/supabase/server';
 
+import { BackButton } from '../back-button';
 import { PrintButton } from './print-button';
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -77,7 +78,8 @@ export default async function BillPrintPage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-3xl p-6">
       <style dangerouslySetInnerHTML={{ __html: BILL_STYLE }} />
-      <div className="no-print mb-4 flex justify-end">
+      <div className="no-print mb-4 flex justify-between">
+        <BackButton fallbackHref={`/billing/${id}`} />
         <PrintButton />
       </div>
       <div
