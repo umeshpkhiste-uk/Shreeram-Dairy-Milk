@@ -20,8 +20,10 @@ why:
   balance and would count it twice. Simpler and more auditable than a separate running ledger.
 - **Bill status is derived**, except for the two explicit actions `finalize_bill`/`void_bill`:
   `draft` until finalized; after finalization, `finalized`/`partially_paid`/`paid` recomputed by
-  `record_payment`/`void_payment`/`add_bill_adjustment` from `sum(payments) vs total_payable`
-  (see `public._recompute_bill_status`).
+  `record_payment`/`void_payment`/`add_bill_adjustment` (and finalize/void/cancel) from
+  `sum(payments) vs total_payable`; a bill is also `paid` once the customer owes nothing up to it
+  or a later finalized bill (e.g. the latest bill, carrying the old balance, was paid in full)
+  (see `public._recompute_customer_bill_statuses`).
 - **A late offline delivery never silently changes a finalized bill.** `submit_delivery_event`
   (Stage 3) was extended to check, after applying an event, whether a `finalized`/
   `partially_paid`/`paid` bill already exists for that customer's billing period — if so it
@@ -42,7 +44,7 @@ write goes through one of these `SECURITY DEFINER` RPCs, each admin-checked inte
 | `recalculate_draft_bill(bill_id)` | Draft-only; re-derives line items from scratch (picks up deliveries that synced in late). |
 | `add_bill_adjustment(bill_id, amount_paise, reason)` | Signed amount — negative is a discount/credit. Allowed on draft or finalized bills, not voided. |
 | `finalize_bill(bill_id)` | `draft` → `finalized`. |
-| `void_bill(bill_id, reason)` | Any non-voided status → `voided`; frees its deliveries for a future bill. |
+| `void_bill(bill_id, reason)` | Any non-voided status → `voided`; frees its deliveries for a future bill. Refused while a later non-voided bill carries its balance. |
 | `cancel_draft_bill(bill_id)` | Draft-only; removes the bill row with its items and adjustments, keeping a copy in `audit_logs`. Refused only while a later non-voided bill really carries its balance (a bill with no charges of its own never blocks). The bill number is not reused. |
 | `acknowledge_bill_flag(bill_id)` | Clears `flagged_for_review` after admin review. |
 | `record_payment(payment_id, bill_id, amount_paise, method, …)` | Idempotent on the client-generated `payment_id` — a retry answers from the stored row, never double-records. Rejects a duplicate `(bill_id, transaction_reference)`. |

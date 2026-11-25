@@ -1,4 +1,4 @@
-import type { Database } from '@shreeram/shared';
+import { billAmountDue, type Database } from '@shreeram/shared';
 
 type MonthlyBillRow = Database['public']['Tables']['monthly_bills']['Row'];
 type PaymentRow = Database['public']['Tables']['payments']['Row'];
@@ -32,7 +32,7 @@ export function buildBillingSummaryRows(
       billNumber: b.bill_number,
       billedPaise: b.total_payable_paise,
       paidPaise: paid,
-      outstandingPaise: b.total_payable_paise - paid,
+      outstandingPaise: billAmountDue(b.status, b.total_payable_paise, paid).duePaise,
     };
   });
 }

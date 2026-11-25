@@ -85,6 +85,9 @@ the first deploy it did not, though the build was green: Vercel moves the HTML b
   survived a reload; on reconnect a creation and its correction arrived in order as one
   version-2 row. Also wrong password, admin rejected, failed uploads retried, deactivation,
   account takeover refused, sign-out emptying every table.
+- Live site, 2026-11-25, Pixel user agent and 360 px touch viewport (emulated, signed out): service
+  worker active, 36 files and all 7 screens cached, manifest and icons served, 48 px controls, no
+  sideways scroll; with the network cut the screens still come from the cache.
 - `/orders`, with a Pixel user agent and 360 px touch viewport (emulated, not a device).
 - Lighthouse on `/today` (snapshot, mobile): accessibility 100, best practices 100. This version has no PWA
   category; manifest, icons and an active service worker were checked by hand.

@@ -29,7 +29,7 @@ import { getBusinessSettings, type BusinessSettingsRow } from '@/lib/api/busines
 import { getCustomer, type CustomerRow } from '@/lib/api/customers';
 import { listAllMilkTypes } from '@/lib/api/milk-types';
 import { recordPayment } from '@/lib/api/payments';
-import { BILL_STATUS_LABEL, BILL_STATUS_TONE } from '@/lib/billing/status';
+import { BILL_STATUS_LABEL, BILL_STATUS_TONE, billAmountDue } from '@/lib/billing/status';
 import { formatPaiseAsRupees, parseRupeesToPaise, parseSignedRupeesToPaise } from '@/lib/money';
 import { previewHtml, shareHtmlAsPdf } from '@/lib/pdf/generate';
 import { renderBillHtml } from '@/lib/pdf/bill-template';
@@ -97,7 +97,11 @@ export function BillDetailScreen({ billId }: { billId: string }) {
   const { details, customer, milkTypeNames, business } = loaded;
   const { bill, items, adjustments, payments } = details;
   const totalPaid = payments.reduce((sum, p) => (p.voided_at ? sum : sum + p.amount_paise), 0);
-  const amountDue = bill.total_payable_paise - totalPaid;
+  const { duePaise, settledElsewherePaise } = billAmountDue(
+    bill.status,
+    bill.total_payable_paise,
+    totalPaid,
+  );
 
   async function runAction(action: () => Promise<unknown>) {
     setBusy(true);
@@ -226,7 +230,10 @@ export function BillDetailScreen({ billId }: { billId: string }) {
         <TotalsRow label="Adjustments" value={bill.adjustments_total_paise} />
         <TotalsRow label="Total payable" value={bill.total_payable_paise} emphasize />
         <TotalsRow label="Payments received" value={-totalPaid} />
-        <TotalsRow label="Amount due" value={amountDue} emphasize />
+        {settledElsewherePaise > 0 ? (
+          <TotalsRow label="Settled on another bill" value={-settledElsewherePaise} />
+        ) : null}
+        <TotalsRow label="Amount due" value={duePaise} emphasize />
       </Card>
 
       <AdjustmentsSection

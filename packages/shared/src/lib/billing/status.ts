@@ -20,8 +20,9 @@ export const BILL_STATUS_TONE: Record<BillStatus, StatusTone> = {
 };
 
 /**
- * Mirrors `public._recompute_bill_status` exactly (see
- * supabase/migrations/20261028110005_stage5_status_case_fix.sql) — used for optimistic UI
+ * Mirrors the per-bill part of `public._recompute_customer_bill_statuses` (see
+ * supabase/migrations/20261125130000_void_check_and_settled_bills.sql), which also marks a bill
+ * paid once a later bill carrying its balance is settled — used for optimistic UI
  * right after a payment/adjustment RPC call returns, never as a substitute for the server's
  * own recomputation. `currentStatus` lets `draft`/`voided` pass through unchanged, since only
  * `finalize_bill`/`void_bill` ever set those.
@@ -41,4 +42,18 @@ export function paymentOutcomeStatus(
     return 'partially_paid';
   }
   return 'finalized';
+}
+
+/**
+ * What is still due on a bill. A `paid` bill has nothing due even when the money was recorded on
+ * another bill that included its balance; that part is `settledElsewherePaise`.
+ */
+export function billAmountDue(
+  status: BillStatus,
+  totalPayablePaise: number,
+  totalPaidPaise: number,
+): { duePaise: number; settledElsewherePaise: number } {
+  const unpaid = totalPayablePaise - totalPaidPaise;
+  const duePaise = status === 'paid' ? Math.min(unpaid, 0) : unpaid;
+  return { duePaise, settledElsewherePaise: unpaid - duePaise };
 }

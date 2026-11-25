@@ -1,5 +1,5 @@
 import { formatPaiseAsRupees } from '@/lib/money';
-import { BILL_STATUS_LABEL } from '@/lib/billing/status';
+import { BILL_STATUS_LABEL, billAmountDue } from '@/lib/billing/status';
 import type { BillStatus } from '@/types/database';
 
 import { LOGO_DATA_URI } from './logo';
@@ -100,6 +100,13 @@ export function renderBillHtml(data: BillPdfData): string {
     )
     .join('');
 
+  const paymentsTotal = payments.reduce((sum, p) => sum + p.amountPaise, 0);
+  const { duePaise, settledElsewherePaise } = billAmountDue(
+    bill.status,
+    bill.totalPayablePaise,
+    paymentsTotal,
+  );
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -172,12 +179,13 @@ export function renderBillHtml(data: BillPdfData): string {
     <tr><td class="label">Previous outstanding balance</td><td class="num">${formatPaiseAsRupees(bill.previousOutstandingBalancePaise)}</td></tr>
     <tr><td class="label">Delivery charges</td><td class="num">${formatPaiseAsRupees(bill.subtotalPaise)}</td></tr>
     <tr><td class="label">Adjustments</td><td class="num">${formatPaiseAsRupees(bill.adjustmentsTotalPaise)}</td></tr>
-    <tr><td class="label">Payments received</td><td class="num">-${formatPaiseAsRupees(
-      payments.reduce((sum, p) => sum + p.amountPaise, 0),
-    )}</td></tr>
-    <tr class="grand"><td>Amount due</td><td class="num">${formatPaiseAsRupees(
-      bill.totalPayablePaise - payments.reduce((sum, p) => sum + p.amountPaise, 0),
-    )}</td></tr>
+    <tr><td class="label">Payments received</td><td class="num">-${formatPaiseAsRupees(paymentsTotal)}</td></tr>${
+      settledElsewherePaise > 0
+        ? `
+    <tr><td class="label">Settled on another bill</td><td class="num">-${formatPaiseAsRupees(settledElsewherePaise)}</td></tr>`
+        : ''
+    }
+    <tr class="grand"><td>Amount due</td><td class="num">${formatPaiseAsRupees(duePaise)}</td></tr>
   </table>
 </body>
 </html>`;

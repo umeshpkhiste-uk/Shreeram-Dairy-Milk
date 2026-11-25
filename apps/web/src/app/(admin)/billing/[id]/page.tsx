@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import {
   BILL_STATUS_LABEL,
   BILL_STATUS_TONE,
+  billAmountDue,
   formatBillingMonth,
   formatPaiseAsRupees,
 } from '@shreeram/shared';
@@ -49,7 +50,12 @@ export default async function BillDetailPage({ params }: PageProps) {
   ]);
   const milkTypeNameById = new Map(milkTypes.map((m) => [m.id, m.name]));
 
-  const totalPaid = payments.reduce((sum, p) => sum + p.amount_paise, 0);
+  const totalPaid = payments.reduce((sum, p) => (p.voided_at ? sum : sum + p.amount_paise), 0);
+  const { duePaise, settledElsewherePaise } = billAmountDue(
+    bill.status,
+    bill.total_payable_paise,
+    totalPaid,
+  );
   const totalMl = items.reduce((sum, item) => sum + item.quantity_ml, 0);
   const isDraft = bill.status === 'draft';
   const isVoided = bill.status === 'voided';
@@ -164,7 +170,10 @@ export default async function BillDetailPage({ params }: PageProps) {
           <Row label="Delivery charges" value={bill.subtotal_paise} />
           <Row label="Adjustments" value={bill.adjustments_total_paise} />
           <Row label="Payments received" value={-totalPaid} />
-          <Row label="Amount due" value={bill.total_payable_paise - totalPaid} strong />
+          {settledElsewherePaise > 0 ? (
+            <Row label="Settled on another bill" value={-settledElsewherePaise} />
+          ) : null}
+          <Row label="Amount due" value={duePaise} strong />
         </div>
       </Card>
 

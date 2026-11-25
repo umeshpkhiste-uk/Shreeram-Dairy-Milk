@@ -13,6 +13,7 @@ import { listBillsForMonth, type MonthlyBillRow } from '@/lib/api/bills';
 import { getBusinessSettings } from '@/lib/api/business-settings';
 import { listCustomers, type CustomerRow } from '@/lib/api/customers';
 import { listPaymentsForBillIds } from '@/lib/api/payments';
+import { billAmountDue } from '@/lib/billing/status';
 import { firstOfMonth, shiftMonth, todayInBusinessTimezone } from '@/lib/date';
 import { formatPaiseAsRupees } from '@/lib/money';
 import { shareHtmlAsPdf } from '@/lib/pdf/generate';
@@ -52,7 +53,7 @@ export function BillingReportScreen() {
               billNumber: b.bill_number,
               billedPaise: b.total_payable_paise,
               paidPaise: paid,
-              outstandingPaise: b.total_payable_paise - paid,
+              outstandingPaise: billAmountDue(b.status, b.total_payable_paise, paid).duePaise,
             };
           }),
         );
