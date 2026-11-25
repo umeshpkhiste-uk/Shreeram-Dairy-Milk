@@ -300,9 +300,9 @@ business use. No real `eas build`-equivalent concern here (web, not native), but
 
 ## Speed and regions
 
-Measured from Pune on 2026-11-25: Mumbai 12 ms, Seoul (the database) 120 ms, Washington (Vercel's
-default, where both sites ran) 255 ms. Both apps' functions now run in Seoul, `icn1`, beside the
-database (`vercel.json`). If the database moves, change that region with it.
+Measured from Pune on 2026-11-25: Mumbai 12 ms, Seoul (the database then) 120 ms, Washington
+(Vercel's default, where both sites ran) 255 ms. The database moved to Mumbai on 2026-11-26; both
+apps' functions run beside it, `bom1` (`vercel.json`). If the database moves, change that region with it.
 
 The proxy and `requireAdmin` verify the session's signature locally (`getClaims`) instead of asking
 Supabase Auth on every request; `requireAdmin`'s profile query still checks role and `is_active` on

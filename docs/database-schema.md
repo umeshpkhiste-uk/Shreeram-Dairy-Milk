@@ -1,6 +1,6 @@
 # Database schema (Stage 2)
 
-Project: `bdrtsrbmsoanrqjhesop` ("Shreeram Dairy Milk", Supabase, `ap-northeast-2`). Schema is
+Project: `hpgtxvnobnqwsqiethmn` ("Shreeram Dairy Milk Mumbai", Supabase, `ap-south-1`; moved from Seoul on 2026-11-26). Schema is
 entirely version-controlled in `supabase/migrations/`; this file explains the *why* behind it.
 
 ## Tables

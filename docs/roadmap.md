@@ -62,7 +62,7 @@ code is in git at `bce7dda`.
 
 ## Stage 2 — Supabase, Authentication, Customers and Workers ✅
 
-Project: `bdrtsrbmsoanrqjhesop`, Seoul region. Full detail, verification results, and the
+Project: `hpgtxvnobnqwsqiethmn`, Mumbai region (Seoul until 2026-11-26). Full detail, verification results, and the
 admin-bootstrap / worker-provisioning flows: [`docs/database-schema.md`](database-schema.md).
 
 **Delivered:**

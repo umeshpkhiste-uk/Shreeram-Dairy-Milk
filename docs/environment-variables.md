@@ -22,7 +22,7 @@ project's environment variables (Production and Preview).
 ## Supabase project (CLI / migrations)
 
 The repo root is linked to the Supabase project via `supabase link --project-ref
-bdrtsrbmsoanrqjhesop` (run once; the link itself isn't a secret and isn't stored in the
+hpgtxvnobnqwsqiethmn` (run once; the link itself isn't a secret and isn't stored in the
 repo — `supabase/.temp/` is git-ignored). To work on the database:
 
 ```bash
