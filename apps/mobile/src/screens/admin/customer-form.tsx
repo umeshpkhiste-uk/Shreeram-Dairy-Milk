@@ -197,7 +197,7 @@ export function CustomerForm({ initial, submitLabel, onSubmit }: CustomerFormPro
         </Text>
       ) : null}
       <Input
-        label="Daily quantity (ml, or grams for Kg products)"
+        label="Daily quantity (ml or grams)"
         value={form.defaultDailyQuantityMl}
         onChangeText={(v) => setField('defaultDailyQuantityMl', v)}
         keyboardType="number-pad"

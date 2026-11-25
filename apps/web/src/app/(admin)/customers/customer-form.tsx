@@ -98,7 +98,7 @@ export function CustomerForm({ customer, milkTypes, workers, action, submitLabel
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <label className={labelClass}>
-          Daily quantity (ml, or grams for Kg products)
+          Daily quantity (ml or grams)
           <input
             name="defaultDailyQuantityMl"
             type="number"
