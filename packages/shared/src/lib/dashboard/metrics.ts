@@ -1,4 +1,5 @@
 import type { Database, DeliveryStatus } from '../../types/database';
+import { dayProducts } from '../products';
 
 /**
  * Pure aggregation — no Supabase calls — shared by the mobile dashboard and
@@ -23,11 +24,12 @@ export type WorkerSummary = {
 export type DashboardMetrics = {
   activeCustomers: number;
   activeWorkers: number;
+  /** Product deliveries, not customers: one customer can take several products. */
   scheduledToday: number;
   completedToday: number;
   partialToday: number;
   missedToday: number;
-  /** No `deliveries` row reached the server for this customer yet. Not proof
+  /** No `deliveries` row reached the server for this customer's product yet. Not proof
    * of a missed delivery — it may be genuinely pending, or completed offline
    * and not yet synced. See docs/admin-monitoring.md. */
   noRecordToday: number;
@@ -43,8 +45,7 @@ export function computeDashboardMetrics(
   today: string,
 ): DashboardMetrics {
   const scheduled = activeCustomers.filter((c) => c.delivery_start_date <= today);
-  const recordedCustomerIds = new Set(deliveriesToday.map((d) => d.customer_id));
-  const noRecordToday = scheduled.filter((c) => !recordedCustomerIds.has(c.id)).length;
+  const scheduledProducts = mergeDeliveryReport(scheduled, deliveriesToday);
 
   let completedToday = 0;
   let partialToday = 0;
@@ -64,11 +65,11 @@ export function computeDashboardMetrics(
   return {
     activeCustomers: activeCustomers.length,
     activeWorkers: workers.filter((w) => w.isActive).length,
-    scheduledToday: scheduled.length,
+    scheduledToday: scheduledProducts.length,
     completedToday,
     partialToday,
     missedToday,
-    noRecordToday,
+    noRecordToday: scheduledProducts.filter((row) => row.delivery === null).length,
     estimatedSalesPaiseToday,
   };
 }
@@ -77,12 +78,15 @@ export type DeliveryReportStatusFilter = DeliveryStatus | 'no_record' | null;
 
 export type DeliveryReportRow = {
   customer: CustomerRow;
+  milkTypeId: string;
+  /** Scheduled ml or grams. */
+  quantity: number;
   delivery: DeliveryRow | null;
 };
 
 /**
- * Left-joins the scheduled-customer list with that date's deliveries, so a
- * customer with no delivery row still appears — labeled `no_record`, never
+ * One row per customer and product, left-joined with that date's deliveries, so a
+ * product with no delivery row still appears — labeled `no_record`, never
  * silently dropped or presented as `missed`.
  */
 export function mergeDeliveryReport(
@@ -90,11 +94,12 @@ export function mergeDeliveryReport(
   deliveries: DeliveryRow[],
   statusFilter: DeliveryReportStatusFilter = null,
 ): DeliveryReportRow[] {
-  const deliveryByCustomerId = new Map(deliveries.map((d) => [d.customer_id, d]));
-  const rows = customers.map((customer) => ({
-    customer,
-    delivery: deliveryByCustomerId.get(customer.id) ?? null,
-  }));
+  const rows = customers.flatMap((customer) =>
+    dayProducts(
+      customer,
+      deliveries.filter((d) => d.customer_id === customer.id),
+    ).map((product) => ({ customer, ...product })),
+  );
 
   if (!statusFilter) return rows;
   return rows.filter((row) =>

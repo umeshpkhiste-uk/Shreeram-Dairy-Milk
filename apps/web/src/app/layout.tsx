@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Shreeram Doodh Diary & Sweets — Admin",
+  title: "Shreeram Doodh Dairy & Sweets — Admin",
   description:
-    "Admin console for Shreeram Doodh Diary & Sweets: customers, workers, deliveries, billing, and payments.",
+    "Admin console for Shreeram Doodh Dairy & Sweets: customers, workers, deliveries, billing, and payments.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

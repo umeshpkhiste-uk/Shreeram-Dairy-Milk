@@ -58,6 +58,10 @@ function toCustomerFields(values: CustomerFormValues) {
     route_sequence: values.routeSequence ?? null,
     default_daily_quantity_ml: values.defaultDailyQuantityMl,
     milk_type_id: values.milkTypeId,
+    extra_products: values.extraProducts.map((p) => ({
+      milk_type_id: p.milkTypeId,
+      quantity_ml: p.quantityMl,
+    })),
     preferred_delivery_window: values.preferredDeliveryWindow || null,
     delivery_start_date: values.deliveryStartDate,
     notes: values.notes || null,

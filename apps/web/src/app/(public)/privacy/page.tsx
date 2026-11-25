@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { CONTACT_EMAIL } from '@/lib/public-contact';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Shreeram Doodh Diary & Sweets',
-  description: 'How the Shreeram Doodh Diary & Sweets staff app collects, uses and protects data.',
+  title: 'Privacy Policy — Shreeram Doodh Dairy & Sweets',
+  description: 'How the Shreeram Doodh Dairy & Sweets staff app collects, uses and protects data.',
 };
 
 // Keep in sync with docs/play-store/privacy-policy.md (the Play Console source of truth).
@@ -18,8 +18,8 @@ export default function PrivacyPolicyPage() {
       </div>
 
       <p>
-        Shreeram Doodh Diary &amp; Sweets (&ldquo;we&rdquo;, &ldquo;us&rdquo;) runs the{' '}
-        <strong>Shreeram Doodh Diary &amp; Sweets</strong> Android app and this admin website. The
+        Shreeram Doodh Dairy &amp; Sweets (&ldquo;we&rdquo;, &ldquo;us&rdquo;) runs the{' '}
+        <strong>Shreeram Doodh Dairy &amp; Sweets</strong> Android app and this admin website. The
         app is used only by our own staff — delivery workers and administrators — to manage daily
         milk deliveries, one-time orders, and monthly bills. There is no public sign-up; accounts
         are created by our administrator.
@@ -130,7 +130,7 @@ export default function PrivacyPolicyPage() {
       <section>
         <h2>Contact</h2>
         <p>
-          Shreeram Doodh Diary &amp; Sweets, R9 Sector, Life Republic, Kolte Patil.
+          Shreeram Doodh Dairy &amp; Sweets, R9 Sector, Life Republic, Kolte Patil.
           <br />
           Email: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         </p>

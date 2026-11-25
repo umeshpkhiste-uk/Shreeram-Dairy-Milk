@@ -1,4 +1,4 @@
-import { formatQuantity } from '@shreeram/shared';
+import { customerProducts, formatQuantity } from '@shreeram/shared';
 import Link from 'next/link';
 
 import { Badge, Card, EmptyState, InfoButton, PageHeader, Table } from '@/components/ui';
@@ -74,7 +74,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
             <tr>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Mobile</th>
-              <th className="px-4 py-3">Daily qty</th>
+              <th className="px-4 py-3">Daily products</th>
               <th className="px-4 py-3">Status</th>
             </tr>
           </thead>
@@ -88,10 +88,12 @@ export default async function CustomersPage({ searchParams }: PageProps) {
                 </td>
                 <td className="px-4 py-3 text-text-secondary">{customer.mobile_number}</td>
                 <td className="px-4 py-3 text-text-secondary">
-                  {formatQuantity(
-                    customer.default_daily_quantity_ml,
-                    milkTypeById.get(customer.milk_type_id)?.unit,
-                  )}
+                  {customerProducts(customer)
+                    .map(({ milkTypeId, quantity }) => {
+                      const product = milkTypeById.get(milkTypeId);
+                      return `${product?.name ?? 'Product'} ${formatQuantity(quantity, product?.unit)}`;
+                    })
+                    .join(', ')}
                 </td>
                 <td className="px-4 py-3">
                   <Badge

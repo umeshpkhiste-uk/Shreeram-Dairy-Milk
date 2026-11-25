@@ -1,9 +1,15 @@
-import type { DeliveryStatus } from '@shreeram/shared';
+import { dayProducts, type DeliveryStatus, type ExtraProduct } from '@shreeram/shared';
 
-type SummaryCustomer = { id: string };
+type SummaryCustomer = {
+  id: string;
+  milk_type_id: string;
+  default_daily_quantity_ml: number;
+  extra_products?: ExtraProduct[];
+};
 type SummaryDelivery = {
   customer_id: string;
   milk_type_id: string;
+  scheduled_quantity_ml: number;
   delivered_quantity_ml: number;
   status: DeliveryStatus;
   sync_status: string;
@@ -15,6 +21,7 @@ export type TodayDeliverySummary = {
   partial: number;
   missed: number;
   skipped: number;
+  /** Products, not customers, like the counts above. */
   notRecorded: number;
   /** Delivered ml (or grams) per product type id, only types with deliveries today. */
   deliveredMlByMilkType: Record<string, number>;
@@ -40,7 +47,14 @@ export function summarizeTodayDeliveries(
     partial: 0,
     missed: 0,
     skipped: 0,
-    notRecorded: customers.length - new Set(todays.map((d) => d.customer_id)).size,
+    notRecorded: customers
+      .flatMap((c) =>
+        dayProducts(
+          c,
+          todays.filter((d) => d.customer_id === c.id),
+        ),
+      )
+      .filter((product) => product.delivery === null).length,
     deliveredMlByMilkType: {},
     synced: 0,
     waitingToSync: 0,

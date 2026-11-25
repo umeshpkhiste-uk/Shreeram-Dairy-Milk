@@ -15,7 +15,7 @@ export type RecordDeliveryInput = {
 /**
  * Saves a delivery and enqueues the matching outbox event in one transaction
  * — the two are never out of sync, and this never waits on the network.
- * Creating the first record for a customer+date is a "created" event; editing
+ * Creating the first record for a customer+date+product is a "created" event; editing
  * an already-recorded one is a "corrected" event carrying the version it was
  * based on, for server-side optimistic-concurrency conflict detection.
  */
@@ -33,6 +33,7 @@ export async function recordDelivery(input: RecordDeliveryInput): Promise<void> 
     const existing = await db.local_deliveries.get({
       customer_id: input.customerId,
       delivery_date: input.deliveryDate,
+      milk_type_id: input.milkTypeId,
     });
     const edited = {
       delivered_quantity_ml: input.deliveredQuantityMl,
@@ -132,9 +133,10 @@ export async function applyServerDelivery({ has_conflict, ...d }: ServerDelivery
     const local = await db.local_deliveries.get({
       customer_id: d.customer_id,
       delivery_date: d.delivery_date,
+      milk_type_id: d.milk_type_id,
     });
     if (local && (await hasUnsentEvents(local.delivery_id))) return;
-    // A different server id already owns this customer+date (unique index).
+    // A different server id already owns this customer+date+product (unique index).
     if (local && local.delivery_id !== d.delivery_id) {
       await db.local_deliveries.delete(local.delivery_id);
     }

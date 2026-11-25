@@ -39,13 +39,13 @@ Object.defineProperty(globalThis, 'navigator', {
   },
 });
 
-const mark = async (status: 'completed' | 'missed', customerId = 'c1') => {
+const mark = async (status: 'completed' | 'missed', customerId = 'c1', milkTypeId = 'milk') => {
   // The outbox is ordered by millisecond timestamp; two taps are never in the same one.
   await new Promise((resolve) => setTimeout(resolve, 2));
   await recordDelivery({
     customerId,
     deliveryDate: '2026-11-24',
-    milkTypeId: 'milk',
+    milkTypeId,
     scheduledQuantityMl: 1000,
     deliveredQuantityMl: status === 'completed' ? 1000 : 0,
     status,
@@ -89,6 +89,20 @@ describe('recordDelivery', () => {
       delivery_id: created.delivery_id,
       payload: { expectedVersion: 1 },
     });
+  });
+
+  it('keeps a separate record and event for each product of a customer', async () => {
+    await mark('completed');
+    await mark('missed', 'c1', 'curd');
+    await mark('completed', 'c1', 'curd');
+    const events = await outbox();
+    expect(await db.local_deliveries.count()).toBe(2);
+    expect(events.map((e) => [e.event_type, e.payload.milkTypeId])).toEqual([
+      ['created', 'milk'],
+      ['created', 'curd'],
+      ['corrected', 'curd'],
+    ]);
+    expect(events[2].delivery_id).toBe(events[1].delivery_id);
   });
 
   it('refuses a missed delivery with no reason, which the server would reject for good', async () => {

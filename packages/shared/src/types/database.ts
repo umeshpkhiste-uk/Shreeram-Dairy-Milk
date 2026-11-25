@@ -17,6 +17,8 @@ export type DeliveryEventType = 'created' | 'corrected';
 export type BillStatus = 'draft' | 'finalized' | 'partially_paid' | 'paid' | 'voided';
 export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'other';
 export type ProductUnit = 'litre' | 'kg';
+/** A product besides the customer's first one — ml or grams, see milk_types.unit. */
+export type ExtraProduct = { milk_type_id: string; quantity_ml: number };
 export type OrderStatus = 'active' | 'cancelled';
 export type OrderPaymentStatus = 'unpaid' | 'paid';
 
@@ -188,6 +190,7 @@ export interface Database {
           status: CustomerStatus;
           default_daily_quantity_ml: number;
           milk_type_id: string;
+          extra_products: ExtraProduct[];
           preferred_delivery_window: string | null;
           delivery_start_date: string;
           notes: string | null;
@@ -212,6 +215,7 @@ export interface Database {
           status?: CustomerStatus;
           default_daily_quantity_ml: number;
           milk_type_id: string;
+          extra_products?: ExtraProduct[];
           preferred_delivery_window?: string | null;
           delivery_start_date?: string;
           notes?: string | null;
@@ -232,6 +236,7 @@ export interface Database {
           status: CustomerStatus;
           default_daily_quantity_ml: number;
           milk_type_id: string;
+          extra_products?: ExtraProduct[];
           preferred_delivery_window: string | null;
           delivery_start_date: string;
           notes: string | null;

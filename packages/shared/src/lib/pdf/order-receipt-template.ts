@@ -67,7 +67,7 @@ export function renderOrderReceiptBodyHtml(data: OrderReceiptPdfData): string {
         </div>
       </div>
     </div>
-    <div>
+    <div class="doc-info">
       <div><strong>Order Receipt</strong></div>
       <div class="muted">${escapeHtml(orderDate)}</div>
       <div class="status">${paymentStatus === 'paid' ? 'Paid' + (paymentMethod ? ' · ' + PAYMENT_METHOD_LABEL[paymentMethod] : '') : 'Unpaid'}</div>

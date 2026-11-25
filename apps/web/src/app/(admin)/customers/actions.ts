@@ -11,7 +11,11 @@ export type CustomerActionState = { error: string | null };
 
 function parseFormValues(formData: FormData): unknown {
   const routeSequenceRaw = formData.get('routeSequence');
-  const quantityRaw = formData.get('defaultDailyQuantityMl');
+  const quantities = formData.getAll('dailyQuantity');
+  const [first, ...extraProducts] = formData.getAll('milkTypeId').map((id, i) => ({
+    milkTypeId: String(id),
+    quantityMl: quantities[i] ? Number(quantities[i]) : undefined,
+  }));
   return {
     fullName: String(formData.get('fullName') ?? ''),
     mobileNumber: String(formData.get('mobileNumber') ?? ''),
@@ -22,8 +26,9 @@ function parseFormValues(formData: FormData): unknown {
     assignedWorkerId: formData.get('assignedWorkerId') || null,
     routeId: formData.get('routeId') || null,
     routeSequence: routeSequenceRaw ? Number(routeSequenceRaw) : null,
-    defaultDailyQuantityMl: quantityRaw ? Number(quantityRaw) : undefined,
-    milkTypeId: String(formData.get('milkTypeId') ?? ''),
+    defaultDailyQuantityMl: first?.quantityMl,
+    milkTypeId: first?.milkTypeId ?? '',
+    extraProducts,
     preferredDeliveryWindow: String(formData.get('preferredDeliveryWindow') ?? ''),
     deliveryStartDate: String(formData.get('deliveryStartDate') ?? ''),
     notes: String(formData.get('notes') ?? ''),

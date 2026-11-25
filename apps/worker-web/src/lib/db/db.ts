@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable, type Table } from 'dexie';
 
-import type { Database, DeliveryStatus, ProductUnit } from '@shreeram/shared';
+import type { Database, DeliveryStatus, ExtraProduct, ProductUnit } from '@shreeram/shared';
 
 /**
  * Local IndexedDB — a cache + durable outbox, never a second source of truth
@@ -17,6 +17,8 @@ export type CachedCustomer = {
   locality: string | null;
   milk_type_id: string;
   default_daily_quantity_ml: number;
+  /** Missing on rows cached before multiple products. */
+  extra_products?: ExtraProduct[];
   route_sequence: number | null;
   preferred_delivery_window: string | null;
 };
@@ -88,6 +90,11 @@ class WorkerDb extends Dexie {
       local_deliveries: 'delivery_id, &[customer_id+delivery_date], delivery_date',
       sync_outbox: 'event_id, delivery_id, status, created_at',
       sync_meta: 'key',
+    });
+    // One record per customer, day and product. Rows and the outbox are kept.
+    this.version(2).stores({
+      local_deliveries:
+        'delivery_id, &[customer_id+delivery_date+milk_type_id], [customer_id+delivery_date], delivery_date',
     });
   }
 }

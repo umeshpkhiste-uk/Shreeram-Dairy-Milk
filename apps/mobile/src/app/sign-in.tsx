@@ -51,7 +51,7 @@ export default function SignInScreen() {
         <View style={styles.brandHalf}>
           <Image source={logo} style={styles.logo} contentFit="contain" />
           <Text variant="title" style={styles.centerText}>
-            Shreeram Doodh Diary &amp; Sweets
+            Shreeram Doodh Dairy &amp; Sweets
           </Text>
           <Text variant="body" color="secondary" style={styles.centerText}>
             Quality &amp; Purity are our first priority.
@@ -99,7 +99,7 @@ export default function SignInScreen() {
 
           <Text variant="caption" color="secondary" style={styles.footnote}>
             Accounts are created by your administrator. There is no public sign-up — contact
-            Shreeram Doodh Diary &amp; Sweets if you need access.
+            Shreeram Doodh Dairy &amp; Sweets if you need access.
           </Text>
         </View>
       </KeyboardAvoidingView>

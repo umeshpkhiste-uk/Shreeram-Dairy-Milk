@@ -6,6 +6,7 @@ const validInput = {
   address: '12 MG Road, Pune',
   defaultDailyQuantityMl: 500,
   milkTypeId: '11111111-1111-4111-8111-111111111111',
+  extraProducts: [],
   deliveryStartDate: '2026-01-01',
 };
 
@@ -53,5 +54,15 @@ describe('customerFormSchema', () => {
   it('rejects an invalid milk type id', () => {
     const result = customerFormSchema.safeParse({ ...validInput, milkTypeId: 'not-a-uuid' });
     expect(result.success).toBe(false);
+  });
+
+  it('accepts extra products, but not the same product twice', () => {
+    const curd = { milkTypeId: '22222222-2222-4222-8222-222222222222', quantityMl: 500 };
+    const parse = (extraProducts: unknown[]) =>
+      customerFormSchema.safeParse({ ...validInput, extraProducts }).success;
+    expect(parse([curd])).toBe(true);
+    expect(parse([curd, curd])).toBe(false);
+    expect(parse([{ ...curd, milkTypeId: validInput.milkTypeId }])).toBe(false);
+    expect(parse([{ ...curd, quantityMl: 0 }])).toBe(false);
   });
 });

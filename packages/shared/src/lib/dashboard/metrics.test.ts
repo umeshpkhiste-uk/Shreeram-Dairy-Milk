@@ -21,6 +21,7 @@ function customer(overrides: Partial<CustomerRow> = {}): CustomerRow {
     status: 'active',
     default_daily_quantity_ml: 500,
     milk_type_id: 'milk-1',
+    extra_products: [],
     preferred_delivery_window: null,
     delivery_start_date: '2026-01-01',
     notes: null,
@@ -112,6 +113,16 @@ describe('computeDashboardMetrics', () => {
     expect(metrics.partialToday).toBe(1);
     expect(metrics.missedToday).toBe(1);
     expect(metrics.noRecordToday).toBe(1);
+  });
+
+  it('counts each product of a customer as its own delivery', () => {
+    const metrics = computeDashboardMetrics(
+      [customer({ extra_products: [{ milk_type_id: 'curd', quantity_ml: 500 }] })],
+      [],
+      [delivery()],
+      today,
+    );
+    expect(metrics).toMatchObject({ scheduledToday: 2, completedToday: 1, noRecordToday: 1 });
   });
 
   it('sums delivered millilitres and estimated sales as exact integer paise', () => {

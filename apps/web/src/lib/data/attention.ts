@@ -1,6 +1,7 @@
 import { formatBillingMonth, formatPaiseAsRupees } from '@shreeram/shared';
 
 import { listDailyDeliveryReport } from './deliveries';
+import { listAllMilkTypes } from './milk-types';
 import type { SupabaseServerClient } from './types';
 
 export type AttentionItem = {
@@ -47,7 +48,7 @@ export async function listNotificationItems(
   supabase: SupabaseServerClient,
   today: string,
 ): Promise<AttentionItem[]> {
-  const [conflicts, flagged, report] = await Promise.all([
+  const [conflicts, flagged, report, milkTypes] = await Promise.all([
     supabase
       .from('deliveries')
       .select('*')
@@ -55,6 +56,7 @@ export async function listNotificationItems(
       .order('delivery_date', { ascending: false }),
     supabase.from('monthly_bills').select('*').eq('flagged_for_review', true).neq('status', 'voided'),
     listDailyDeliveryReport(supabase, { date: today }),
+    listAllMilkTypes(supabase),
   ]);
   if (conflicts.error) throw conflicts.error;
   if (flagged.error) throw flagged.error;
@@ -64,6 +66,9 @@ export async function listNotificationItems(
     ...flagged.data.map((b) => b.customer_id),
   ]);
 
+  const productNames = new Map(milkTypes.map((m) => [m.id, m.name]));
+  const productName = (id: string) => productNames.get(id) ?? 'Product';
+
   const calendarHref = (customerId: string, date: string) =>
     `/deliveries/${customerId}?month=${date.slice(0, 7)}-01&day=${date}`;
 
@@ -72,7 +77,7 @@ export async function listNotificationItems(
       (d): AttentionItem => ({
         id: `conflict-${d.id}`,
         title: names.get(d.customer_id) ?? 'Customer',
-        detail: `Two different records for ${d.delivery_date}. Check which one is right.`,
+        detail: `${productName(d.milk_type_id)}: two different records for ${d.delivery_date}. Check which one is right.`,
         href: calendarHref(d.customer_id, d.delivery_date),
         label: 'Conflict',
         tone: 'danger',
@@ -91,12 +96,14 @@ export async function listNotificationItems(
     ...report
       .filter((row) => row.delivery === null || row.delivery.status === 'missed')
       .map(
-        ({ customer, delivery }): AttentionItem => ({
-          id: `today-${customer.id}`,
+        ({ customer, milkTypeId, delivery }): AttentionItem => ({
+          id: `today-${customer.id}-${milkTypeId}`,
           title: customer.full_name,
-          detail: delivery
-            ? (delivery.reason ?? 'Marked not delivered today')
-            : 'No delivery recorded yet today',
+          detail: `${productName(milkTypeId)}: ${
+            delivery
+              ? (delivery.reason ?? 'Marked not delivered today')
+              : 'No delivery recorded yet today'
+          }`,
           href: calendarHref(customer.id, today),
           label: delivery ? 'Missed' : 'No record',
           tone: delivery ? 'danger' : 'neutral',

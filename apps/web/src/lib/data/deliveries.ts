@@ -65,7 +65,7 @@ export async function markDeliverySkipped(
 
 export type DeliveryEventRow = Database['public']['Tables']['delivery_events']['Row'];
 
-/** The rejected submissions behind a day's conflict flag, newest first. */
+/** The rejected submissions behind a day's conflict flags, newest first. */
 export async function listConflictingEvents(
   supabase: SupabaseServerClient,
   customerId: string,

@@ -19,6 +19,7 @@ function customer(overrides: Partial<CustomerRow> = {}): CustomerRow {
     status: 'active',
     default_daily_quantity_ml: 500,
     milk_type_id: 'milk-1',
+    extra_products: [],
     preferred_delivery_window: null,
     delivery_start_date: '2026-01-01',
     notes: null,

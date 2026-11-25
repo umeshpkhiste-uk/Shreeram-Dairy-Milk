@@ -1,7 +1,7 @@
 'use client';
 
-import { unitLabel } from '@shreeram/shared';
-import { useActionState } from 'react';
+import { customerProducts } from '@shreeram/shared';
+import { startTransition, useActionState } from 'react';
 
 import type { CustomerRow } from '@/lib/data/customers';
 import type { MilkTypeRow } from '@/lib/data/milk-types';
@@ -10,6 +10,7 @@ import type { WorkerSummary } from '@/lib/data/workers';
 import { ErrorText, PrimaryButton } from '@/components/ui';
 
 import type { CustomerActionState } from './actions';
+import { ProductFields } from './product-fields';
 
 type Props = {
   customer?: CustomerRow;
@@ -25,9 +26,18 @@ const labelClass = 'flex flex-col gap-1 text-sm font-medium text-text';
 
 export function CustomerForm({ customer, milkTypes, workers, action, submitLabel }: Props) {
   const [state, formAction, pending] = useActionState(action, { error: null });
+  const products = customer ? customerProducts(customer) : [];
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form
+      // Not `action`: React would clear everything typed when the save is refused.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        startTransition(() => formAction(formData));
+      }}
+      className="flex flex-col gap-5"
+    >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className={labelClass}>
           Full name
@@ -46,25 +56,14 @@ export function CustomerForm({ customer, milkTypes, workers, action, submitLabel
           Email (optional)
           <input name="email" type="email" defaultValue={customer?.email ?? ''} className={inputClass} />
         </label>
-        <label className={labelClass}>
-          Product type
-          <select
-            name="milkTypeId"
-            required
-            defaultValue={customer?.milk_type_id ?? ''}
-            className={inputClass}
-          >
-            <option value="" disabled>
-              Select a product type
-            </option>
-            {milkTypes.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} ({unitLabel(m.unit)})
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
+
+      {/* Keyed so the rows follow the saved customer after a save. */}
+      <ProductFields
+        key={JSON.stringify(products)}
+        products={products}
+        milkTypes={milkTypes}
+      />
 
       <label className={labelClass}>
         Address
@@ -96,18 +95,7 @@ export function CustomerForm({ customer, milkTypes, workers, action, submitLabel
         </label>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <label className={labelClass}>
-          Daily quantity (ml or grams)
-          <input
-            name="defaultDailyQuantityMl"
-            type="number"
-            min={1}
-            required
-            defaultValue={customer?.default_daily_quantity_ml}
-            className={inputClass}
-          />
-        </label>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className={labelClass}>
           Delivery start date
           <input

@@ -11,7 +11,7 @@ app closing before it syncs.
 ## Architecture
 
 - **Local data** (`src/lib/db`): Dexie (IndexedDB), same tables as the mobile SQLite schema —
-  `cached_customers`, `cached_milk_types`, `local_deliveries` (unique on customer + date),
+  `cached_customers`, `cached_milk_types`, `local_deliveries` (unique on customer + date + product),
   `sync_outbox`, `sync_meta` (the signed-in worker's profile and last sync time). Opened with
   strict durability, so a committed mark survives the phone dying. `navigator.storage.persist()`
   is requested at startup; Chrome decides (installing the app makes a grant likely), and a

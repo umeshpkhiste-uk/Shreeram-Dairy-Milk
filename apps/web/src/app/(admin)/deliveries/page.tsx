@@ -132,6 +132,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
           <thead className="bg-surface-muted text-xs font-medium uppercase text-text-secondary">
             <tr>
               <th className="px-4 py-3">Customer</th>
+              <th className="px-4 py-3">Product</th>
               <th className="px-4 py-3">Quantity</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Note</th>
@@ -139,12 +140,10 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
           </thead>
           <tbody className="divide-y divide-border">
             {rows.map((row) => {
-              const unit = milkTypeById.get(
-                row.delivery?.milk_type_id ?? row.customer.milk_type_id,
-              )?.unit;
+              const product = milkTypeById.get(row.milkTypeId);
               const statusKey = row.delivery?.status ?? 'no_record';
               return (
-                <tr key={row.customer.id} className="hover:bg-surface-muted">
+                <tr key={`${row.customer.id}-${row.milkTypeId}`} className="hover:bg-surface-muted">
                   <td className="px-4 py-3 font-medium text-text">
                     <Link
                       href={`/deliveries/${row.customer.id}?month=${firstOfMonth(date)}&day=${date}`}
@@ -153,10 +152,11 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
                       {row.customer.full_name}
                     </Link>
                   </td>
+                  <td className="px-4 py-3 text-text-secondary">{product?.name ?? 'Product'}</td>
                   <td className="px-4 py-3 text-text-secondary">
                     {row.delivery
-                      ? formatQuantity(row.delivery.delivered_quantity_ml, unit)
-                      : `${formatQuantity(row.customer.default_daily_quantity_ml, unit)} scheduled`}
+                      ? formatQuantity(row.delivery.delivered_quantity_ml, product?.unit)
+                      : `${formatQuantity(row.quantity, product?.unit)} scheduled`}
                   </td>
                   <td className="px-4 py-3">
                     <Badge label={STATUS_LABEL[statusKey]} tone={STATUS_TONE[statusKey]} />

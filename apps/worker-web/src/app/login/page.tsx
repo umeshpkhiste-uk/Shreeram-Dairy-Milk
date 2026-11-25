@@ -15,7 +15,7 @@ export default function LoginPage() {
             height={112}
             className="mb-4 h-28 w-28 rounded-full object-contain"
           />
-          <h1 className="text-xl font-semibold text-text">Shreeram Doodh Diary &amp; Sweets</h1>
+          <h1 className="text-xl font-semibold text-text">Shreeram Doodh Dairy &amp; Sweets</h1>
           <p className="mt-3 text-sm font-medium text-text">Worker sign in</p>
         </div>
         <Suspense>

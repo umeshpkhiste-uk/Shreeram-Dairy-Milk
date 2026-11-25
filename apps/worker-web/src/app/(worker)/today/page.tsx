@@ -1,6 +1,6 @@
 'use client';
 
-import { formatQuantity } from '@shreeram/shared';
+import { dayProducts, dayStatus, formatQuantity } from '@shreeram/shared';
 
 import {
   Badge,
@@ -30,9 +30,7 @@ export default function TodayRoutePage() {
         : {
             customers: await listCachedCustomers(),
             milkTypes: await getCachedMilkTypes(),
-            deliveries: new Map(
-              (await listLocalDeliveriesForDate(today)).map((d) => [d.customer_id, d]),
-            ),
+            deliveries: await listLocalDeliveriesForDate(today),
           },
     [today],
   );
@@ -68,28 +66,36 @@ export default function TodayRoutePage() {
         )
       ) : (
         data.customers.map((customer) => {
-          const delivery = data.deliveries.get(customer.id);
+          const products = dayProducts(
+            customer,
+            data.deliveries.filter((d) => d.customer_id === customer.id),
+          );
+          const recorded = products.flatMap((p) => p.delivery ?? []);
+          const status =
+            recorded.length < products.length ? null : dayStatus(recorded.map((d) => d.status));
           return (
             <a key={customer.id} href={`/today/customer?id=${customer.id}`}>
               <Card className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-lg font-semibold">{customer.full_name}</span>
                   <Badge
-                    label={delivery ? DELIVERY_STATUS_LABEL[delivery.status] : 'Pending'}
-                    tone={delivery ? DELIVERY_STATUS_TONE[delivery.status] : 'neutral'}
+                    label={status ? DELIVERY_STATUS_LABEL[status] : 'Pending'}
+                    tone={status ? DELIVERY_STATUS_TONE[status] : 'neutral'}
                   />
                 </div>
                 <span className="text-text-secondary">{customer.address}</span>
-                <span className="text-sm text-text-secondary">
-                  {data.milkTypes[customer.milk_type_id]?.name ?? 'Product'} ·{' '}
-                  {formatQuantity(
-                    customer.default_daily_quantity_ml,
-                    data.milkTypes[customer.milk_type_id]?.unit,
-                  )}
-                </span>
-                {delivery?.status === 'skipped' && delivery.reason ? (
-                  <span className="text-sm text-text-secondary">Note: {delivery.reason}</span>
-                ) : null}
+                {products.map(({ milkTypeId, quantity, delivery }) => (
+                  <span key={milkTypeId} className="text-sm text-text-secondary">
+                    {data.milkTypes[milkTypeId]?.name ?? 'Product'} ·{' '}
+                    {formatQuantity(quantity, data.milkTypes[milkTypeId]?.unit)}
+                    {products.length > 1 && delivery
+                      ? ` · ${DELIVERY_STATUS_LABEL[delivery.status]}`
+                      : ''}
+                    {delivery?.status === 'skipped' && delivery.reason
+                      ? ` · Note: ${delivery.reason}`
+                      : ''}
+                  </span>
+                ))}
               </Card>
             </a>
           );

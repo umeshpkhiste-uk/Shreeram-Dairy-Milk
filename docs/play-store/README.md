@@ -1,6 +1,6 @@
 # Google Play submission kit
 
-Everything needed to list **Shreeram Doodh Diary & Sweets** (`com.shreeramdairy.dailymilk`) on
+Everything needed to list **Shreeram Doodh Dairy & Sweets** (`com.shreeramdairy.dailymilk`) on
 Google Play, except the app bundle (`.aab`), which is built last with
 `eas build -p android --profile production` once development settles (see
 [../android-release.md](../android-release.md) §6).
@@ -38,7 +38,7 @@ Play Console or automatically later with `fastlane supply --skip_upload_aab`.
 
 **Before anything else**
 - [ ] Google Play developer account (one-time US$25) — personal or organisation
-- [ ] Create app in Play Console: name `Shreeram Doodh Diary & Sweets`, default language
+- [ ] Create app in Play Console: name `Shreeram Doodh Dairy & Sweets`, default language
       **English (India) – en-IN**, App, Free
 - [ ] Open https://shreeram-dairy-milk.vercel.app/privacy and `/delete-account` signed out —
       both must load without a login

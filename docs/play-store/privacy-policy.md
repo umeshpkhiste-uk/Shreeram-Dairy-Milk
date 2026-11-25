@@ -1,4 +1,4 @@
-# Privacy Policy — Shreeram Doodh Diary & Sweets
+# Privacy Policy — Shreeram Doodh Dairy & Sweets
 
 Published at **https://shreeram-dairy-milk.vercel.app/privacy** (source:
 `apps/web/src/app/(public)/privacy/page.tsx`). That page is what Google Play links to — if you change
@@ -6,7 +6,7 @@ this text, change the page in the same commit so they never drift apart.
 
 _Last updated: 2 November 2026_
 
-Shreeram Doodh Diary & Sweets ("we", "us") runs the **Shreeram Doodh Diary & Sweets** Android
+Shreeram Doodh Dairy & Sweets ("we", "us") runs the **Shreeram Doodh Dairy & Sweets** Android
 app and the admin website at shreeram-dairy-milk.vercel.app. The app is used only by our own
 staff — delivery workers and administrators — to manage daily milk deliveries, one-time
 orders, and monthly bills. There is no public sign-up; accounts are created by our
@@ -83,6 +83,6 @@ We'll update this page if our practices change and revise the "Last updated" dat
 
 ## Contact
 
-Shreeram Doodh Diary & Sweets
+Shreeram Doodh Dairy & Sweets
 R9 Sector, Life Republic, Kolte Patil
 Email: deepomeshcreation@gmail.com

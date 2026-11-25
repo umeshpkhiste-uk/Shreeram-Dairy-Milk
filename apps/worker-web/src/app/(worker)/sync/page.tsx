@@ -1,6 +1,6 @@
 'use client';
 
-import { formatQuantity, formatQuantityTotal, type StatusTone } from '@shreeram/shared';
+import { dayProducts, formatQuantity, formatQuantityTotal, type StatusTone } from '@shreeram/shared';
 
 import {
   Badge,
@@ -59,7 +59,12 @@ export default function SyncStatusPage() {
   const deliveredByProduct = Object.entries(summary.deliveredMlByMilkType).map(
     ([id, quantity]) => [id, { quantity, unit: data.milkTypes[id]?.unit }] as const,
   );
-  const deliveryByCustomerId = new Map(data.deliveries.map((d) => [d.customer_id, d]));
+  const products = data.customers.flatMap((customer) =>
+    dayProducts(
+      customer,
+      data.deliveries.filter((d) => d.customer_id === customer.id),
+    ).map((product) => ({ customer, ...product })),
+  );
 
   async function handleRetry(eventId: string) {
     await retryFailedOutboxItem(eventId);
@@ -86,9 +91,9 @@ export default function SyncStatusPage() {
         <Row
           label="Scheduled quantity"
           value={formatQuantityTotal(
-            data.customers.map((c) => ({
-              quantity: c.default_daily_quantity_ml,
-              unit: data.milkTypes[c.milk_type_id]?.unit,
+            products.map((p) => ({
+              quantity: p.quantity,
+              unit: data.milkTypes[p.milkTypeId]?.unit,
             })),
           )}
         />
@@ -110,19 +115,18 @@ export default function SyncStatusPage() {
       {data.customers.length > 0 ? (
         <Card className="flex flex-col gap-2">
           <h2 className="text-lg font-semibold">Customer-wise check</h2>
-          {data.customers.map((customer) => {
-            const delivery = deliveryByCustomerId.get(customer.id);
-            const unit =
-              data.milkTypes[delivery?.milk_type_id ?? customer.milk_type_id]?.unit;
+          {products.map(({ customer, milkTypeId, quantity, delivery }) => {
+            const product = data.milkTypes[milkTypeId];
             return (
-              <div key={customer.id} className="flex items-center justify-between gap-2 py-1">
+              <div key={`${customer.id}-${milkTypeId}`} className="flex items-center justify-between gap-2 py-1">
                 <div>
                   <p>{customer.full_name}</p>
                   <p className="text-sm text-text-secondary">
+                    {product?.name ?? 'Product'} ·{' '}
                     {delivery
-                      ? `${delivery.delivered_quantity_ml} of ${formatQuantity(delivery.scheduled_quantity_ml, unit)}` +
+                      ? `${delivery.delivered_quantity_ml} of ${formatQuantity(delivery.scheduled_quantity_ml, product?.unit)}` +
                         (delivery.sync_status === 'synced' ? ' · synced' : ' · not synced yet')
-                      : `${formatQuantity(customer.default_daily_quantity_ml, unit)} scheduled`}
+                      : `${formatQuantity(quantity, product?.unit)} scheduled`}
                   </p>
                 </div>
                 <Badge

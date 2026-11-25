@@ -3,12 +3,12 @@ import type { Metadata } from 'next';
 import { CONTACT_EMAIL } from '@/lib/public-contact';
 
 export const metadata: Metadata = {
-  title: 'Delete your account — Shreeram Doodh Diary & Sweets',
+  title: 'Delete your account — Shreeram Doodh Dairy & Sweets',
   description:
-    'How to request deletion of your Shreeram Doodh Diary & Sweets app account and data.',
+    'How to request deletion of your Shreeram Doodh Dairy & Sweets app account and data.',
 };
 
-const MAIL_SUBJECT = encodeURIComponent('Account deletion request — Shreeram Doodh Diary & Sweets');
+const MAIL_SUBJECT = encodeURIComponent('Account deletion request — Shreeram Doodh Dairy & Sweets');
 
 export default function DeleteAccountPage() {
   return (
@@ -16,8 +16,8 @@ export default function DeleteAccountPage() {
       <div>
         <h1>Delete your account</h1>
         <p className="text-text-secondary">
-          For the <strong>Shreeram Doodh Diary &amp; Sweets</strong> Android app, by Shreeram Doodh
-          Diary &amp; Sweets.
+          For the <strong>Shreeram Doodh Dairy &amp; Sweets</strong> Android app, by Shreeram Doodh
+          Dairy &amp; Sweets.
         </p>
       </div>
 

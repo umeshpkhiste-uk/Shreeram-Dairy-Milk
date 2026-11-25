@@ -33,7 +33,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
           <h1 className="mb-2 text-xl font-semibold text-text">Not authorized</h1>
           <p className="mb-6 text-sm text-text-secondary">
             {profile?.full_name ? `${profile.full_name}, ` : ''}this account doesn&rsquo;t have
-            admin access to the Shreeram Doodh Diary &amp; Sweets website. Sign out and sign in
+            admin access to the Shreeram Doodh Dairy &amp; Sweets website. Sign out and sign in
             with an admin account, or contact the business owner.
           </p>
           <form action={signOut}>
@@ -56,12 +56,12 @@ export default async function LoginPage({ searchParams }: PageProps) {
           {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no optimization needed */}
           <img
             src="/logo.png"
-            alt="Shreeram Doodh Diary & Sweets"
+            alt="Shreeram Doodh Dairy & Sweets"
             width={112}
             height={112}
             className="mb-4 h-28 w-28 rounded-full object-contain"
           />
-          <h1 className="text-xl font-semibold text-text">Shreeram Doodh Diary &amp; Sweets</h1>
+          <h1 className="text-xl font-semibold text-text">Shreeram Doodh Dairy &amp; Sweets</h1>
           <p className="text-sm text-text-secondary">Quality &amp; Purity are our first priority.</p>
           <p className="text-sm text-text-secondary">R9 Sector, Life Republic, Kolte Patil</p>
           <p className="mt-3 text-sm font-medium text-text">Admin sign in</p>

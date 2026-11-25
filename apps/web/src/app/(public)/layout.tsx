@@ -11,7 +11,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           {/* eslint-disable-next-line @next/next/no-img-element -- static public asset */}
           <img src="/logo.png" alt="" width={56} height={56} className="h-14 w-14 rounded-full" />
           <div>
-            <p className="text-lg font-semibold text-text">Shreeram Doodh Diary &amp; Sweets</p>
+            <p className="text-lg font-semibold text-text">Shreeram Doodh Dairy &amp; Sweets</p>
             <p className="text-sm text-text-secondary">Quality &amp; Purity are our first priority.</p>
           </div>
         </header>

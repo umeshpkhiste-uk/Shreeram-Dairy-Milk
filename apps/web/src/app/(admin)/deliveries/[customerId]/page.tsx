@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import {
   BILL_STATUS_LABEL,
   BILL_STATUS_TONE,
+  dayProducts,
+  dayStatus,
   firstOfMonth,
   formatPaiseAsRupees,
   formatQuantity,
@@ -53,14 +55,14 @@ const STATUS_LABEL: Record<DeliveryStatus, string> = {
 
 const STATUS_TONE: Record<DeliveryStatus, 'success' | 'warning' | 'danger' | 'neutral'> = {
   completed: 'success',
-  partial: 'success',
+  partial: 'warning',
   missed: 'danger',
   skipped: 'warning',
 };
 
 const DAY_CELL_CLASS: Record<DeliveryStatus | 'no_record' | 'future', string> = {
   completed: 'bg-success-bg text-success border-transparent',
-  partial: 'bg-success-bg text-success border-transparent',
+  partial: 'bg-warning-bg text-warning border-transparent',
   missed: 'bg-danger-bg text-danger border-transparent',
   skipped: 'bg-warning-bg text-warning border-transparent',
   no_record: 'bg-surface text-text-secondary border-border hover:bg-surface-muted',
@@ -98,11 +100,16 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
     listBillsForCustomer(supabase, customerId),
     listAllMilkTypes(supabase),
   ]);
-  const unitById = new Map(milkTypes.map((m) => [m.id, m.unit]));
+  const productById = new Map(milkTypes.map((m) => [m.id, m]));
 
   if (!customer) notFound();
 
-  const entriesByDate = new Map<string, DeliveryRow>(deliveries.map((d) => [d.delivery_date, d]));
+  const entriesByDate = new Map<string, DeliveryRow[]>();
+  for (const d of deliveries) {
+    entriesByDate.set(d.delivery_date, [...(entriesByDate.get(d.delivery_date) ?? []), d]);
+  }
+  const statusOn = (date: string) =>
+    dayStatus((entriesByDate.get(date) ?? []).map((d) => d.status));
   const grid = buildMonthGrid(month);
 
   const monthLabel = new Date(`${month}T00:00:00Z`).toLocaleDateString('en-US', {
@@ -112,18 +119,20 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
   });
 
   const countedThrough = month <= firstOfMonth(today) ? (month === firstOfMonth(today) ? today : lastOfMonth(month)) : null;
-  const summary = { completed: 0, partial: 0, missed: 0, skipped: 0, noRecord: 0 };
+  const summary = { completed: 0, partial: 0, missed: 0, skipped: 0, noRecord: 0, daysDelivered: 0 };
   const delivered: { quantity: number; unit: ProductUnit | undefined }[] = [];
   if (countedThrough) {
     for (let d = month; d <= countedThrough; d = shiftDate(d, 1)) {
-      const entry = entriesByDate.get(d);
-      if (!entry) {
-        summary.noRecord += 1;
-      } else {
-        summary[entry.status as 'completed' | 'partial' | 'missed' | 'skipped'] += 1;
+      const entries = entriesByDate.get(d) ?? [];
+      if (entries.length === 0) summary.noRecord += 1;
+      if (entries.some((e) => e.status === 'completed' || e.status === 'partial')) {
+        summary.daysDelivered += 1;
+      }
+      for (const entry of entries) {
+        summary[entry.status] += 1;
         delivered.push({
           quantity: entry.delivered_quantity_ml,
-          unit: unitById.get(entry.milk_type_id),
+          unit: productById.get(entry.milk_type_id)?.unit,
         });
       }
     }
@@ -134,10 +143,15 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
     bills.find((b) => b.billing_month === month) ??
     null;
 
-  const selectedEntry = day ? entriesByDate.get(day) : undefined;
+  const selectedEntries = day ? (entriesByDate.get(day) ?? []) : [];
   const conflictingEvents =
-    day && selectedEntry?.has_conflict ? await listConflictingEvents(supabase, customerId, day) : [];
-  const canMarkSkipped = !!day && selectedEntry?.status !== 'completed' && selectedEntry?.status !== 'partial';
+    day && selectedEntries.some((e) => e.has_conflict)
+      ? await listConflictingEvents(supabase, customerId, day)
+      : [];
+  const selectedProducts =
+    day === today ? dayProducts(customer, selectedEntries) : recordedProducts(selectedEntries);
+  const canMarkSkipped =
+    !!day && !selectedEntries.some((e) => e.status === 'completed' || e.status === 'partial');
 
   return (
     <div className="flex flex-col gap-6">
@@ -180,11 +194,10 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
               <div key={i} className="grid grid-cols-7 gap-1">
                 {week.map((date, j) => {
                   if (!date) return <div key={j} className="aspect-square" />;
-                  const entry = entriesByDate.get(date);
                   const isFuture = date > today;
                   const key: DeliveryStatus | 'no_record' | 'future' = isFuture
                     ? 'future'
-                    : (entry?.status ?? 'no_record');
+                    : (statusOn(date) ?? 'no_record');
                   const isSelected = date === day;
                   const isToday = date === today;
                   return (
@@ -210,7 +223,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
           <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-text-secondary">
             <LegendDot className="bg-success-bg" label="Delivered" />
             <LegendDot className="bg-danger-bg" label="Missed" />
-            <LegendDot className="bg-warning-bg" label="Customer informed" />
+            <LegendDot className="bg-warning-bg" label="Partial / customer informed" />
             <LegendDot className="border border-border bg-surface" label="No record" />
           </div>
         </div>
@@ -228,53 +241,75 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
                 timeZone: 'UTC',
               })}
             </h2>
-            {selectedEntry ? (
-              <Badge label={STATUS_LABEL[selectedEntry.status]} tone={STATUS_TONE[selectedEntry.status]} />
-            ) : (
-              <Badge label="No record" tone="neutral" />
-            )}
+            {selectedProducts.length === 0 ? <Badge label="No record" tone="neutral" /> : null}
           </div>
-          {selectedEntry?.reason ? (
-            <p className="mb-3 text-sm text-text-secondary">Note: {selectedEntry.reason}</p>
-          ) : null}
+          <ul className="mb-3 flex flex-col gap-2">
+            {selectedProducts.map(({ milkTypeId, quantity, delivery }) => {
+              const product = productById.get(milkTypeId);
+              return (
+                <li key={milkTypeId} className="text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-text">
+                      {product?.name ?? 'Product'} ·{' '}
+                      {formatQuantity(delivery?.delivered_quantity_ml ?? quantity, product?.unit)}
+                      {delivery ? '' : ' scheduled'}
+                    </span>
+                    {delivery ? (
+                      <Badge label={STATUS_LABEL[delivery.status]} tone={STATUS_TONE[delivery.status]} />
+                    ) : (
+                      <Badge label="No record" tone="neutral" />
+                    )}
+                  </div>
+                  {delivery?.reason ? (
+                    <p className="text-text-secondary">Note: {delivery.reason}</p>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
 
-          {selectedEntry?.has_conflict ? (
-            <div className="mb-4 rounded-md border border-warning bg-warning-bg p-4">
-              <p className="font-medium text-warning">Conflict: two different records for this day</p>
+          {selectedEntries.filter((e) => e.has_conflict).map((entry) => (
+            <div key={entry.id} className="mb-4 rounded-md border border-warning bg-warning-bg p-4">
+              <p className="font-medium text-warning">
+                Conflict: two different {productById.get(entry.milk_type_id)?.name ?? 'product'} records
+                for this day
+              </p>
               <p className="mt-1 text-sm text-text">
                 Choose which one is right. Using the other record can change this month&rsquo;s bill.
               </p>
               <ul className="mt-3 flex flex-col gap-3">
                 <ConflictRecord
                   heading="Current record"
-                  status={selectedEntry.status}
+                  status={entry.status}
                   quantity={formatQuantity(
-                    selectedEntry.delivered_quantity_ml,
-                    unitById.get(selectedEntry.milk_type_id),
+                    entry.delivered_quantity_ml,
+                    productById.get(entry.milk_type_id)?.unit,
                   )}
-                  reason={selectedEntry.reason}
-                  recordedAt={selectedEntry.device_recorded_at}
-                  action={resolveConflictAction.bind(null, customerId, day, month, selectedEntry.id, null)}
+                  reason={entry.reason}
+                  recordedAt={entry.device_recorded_at}
+                  action={resolveConflictAction.bind(null, customerId, day, month, entry.id, null)}
                   button="Keep this record"
                 />
-                {conflictingEvents.map((event) => (
+                {conflictingEvents
+                  .filter((event) => event.payload.milk_type_id === entry.milk_type_id)
+                  .map((event) => (
                   <ConflictRecord
                     key={event.id}
                     heading="Other record from the worker&rsquo;s phone"
                     status={event.payload.status as DeliveryStatus}
                     quantity={formatQuantity(
                       Number(event.payload.delivered_quantity_ml),
-                      unitById.get(selectedEntry.milk_type_id),
+                      productById.get(entry.milk_type_id)?.unit,
                     )}
                     reason={event.payload.reason as string | null}
                     recordedAt={event.device_recorded_at}
-                    action={resolveConflictAction.bind(null, customerId, day, month, selectedEntry.id, event.id)}
+                    action={resolveConflictAction.bind(null, customerId, day, month, entry.id, event.id)}
                     button="Use this record"
                   />
                 ))}
               </ul>
             </div>
-          ) : null}
+          ))}
 
           {canMarkSkipped ? (
             <ActionForm
@@ -285,7 +320,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
                 Reason (shown to the business, e.g. &ldquo;Customer on vacation till 5th&rdquo;)
                 <input
                   name="reason"
-                  defaultValue={selectedEntry?.reason ?? ''}
+                  defaultValue={selectedEntries[0]?.reason ?? ''}
                   placeholder="Customer informed — no delivery"
                   className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
                 />
@@ -311,7 +346,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
             <Stat label="Delivered" value={summary.completed + summary.partial} />
             <Stat label="Missed" value={summary.missed} />
             <Stat label="Customer informed" value={summary.skipped} />
-            <Stat label="No record" value={summary.noRecord} />
+            <Stat label="Days with no record" value={summary.noRecord} />
           </div>
         ) : (
           <p className="text-sm text-text-secondary">This month hasn&rsquo;t started yet.</p>
@@ -319,7 +354,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
         {countedThrough ? (
           <p className="mt-3 text-sm text-text-secondary">
             Total delivered: {formatQuantityTotal(delivered)} across{' '}
-            {summary.completed + summary.partial} day{summary.completed + summary.partial === 1 ? '' : 's'}.
+            {summary.daysDelivered} day{summary.daysDelivered === 1 ? '' : 's'}.
           </p>
         ) : null}
       </Card>
@@ -356,6 +391,15 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
       </Card>
     </div>
   );
+}
+
+/** A past day shows what was recorded: the customer's products may have changed since. */
+function recordedProducts(entries: DeliveryRow[]) {
+  return entries.map((delivery) => ({
+    milkTypeId: delivery.milk_type_id,
+    quantity: delivery.scheduled_quantity_ml,
+    delivery,
+  }));
 }
 
 function ConflictRecord({

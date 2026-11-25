@@ -51,9 +51,9 @@ export function CustomerDeliverySummary() {
         />
       ) : (
         <Card className="flex flex-col gap-2">
-          <Row label="Days delivered" value={summary.delivered} />
-          <Row label="Days missed" value={summary.missed} />
-          <Row label="Days skipped" value={summary.skipped} />
+          <Row label="Delivered" value={summary.delivered} />
+          <Row label="Missed" value={summary.missed} />
+          <Row label="Skipped" value={summary.skipped} />
           <Row
             label="Total quantity"
             value={formatQuantityTotal(

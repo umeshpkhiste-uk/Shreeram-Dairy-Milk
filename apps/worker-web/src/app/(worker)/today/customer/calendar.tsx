@@ -4,12 +4,15 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import {
+  dayProducts,
+  dayStatus,
   firstOfMonth,
   formatBillingMonth,
   formatQuantity,
   lastOfMonth,
   shiftMonth,
   todayInBusinessTimezone,
+  type DeliveryStatus,
 } from '@shreeram/shared';
 
 import {
@@ -56,12 +59,17 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
   const customer = useLive(() => getCachedCustomer(customerId), [customerId]);
   const milkTypes = useLive(getCachedMilkTypes, []);
   const entries = useLive(
-    async () =>
-      new Map(
-        (
-          await listLocalDeliveriesForCustomerInRange(customerId, month, lastOfMonth(month))
-        ).map((d) => [d.delivery_date, d]),
-      ),
+    async () => {
+      const byDate = new Map<string, LocalDelivery[]>();
+      for (const d of await listLocalDeliveriesForCustomerInRange(
+        customerId,
+        month,
+        lastOfMonth(month),
+      )) {
+        byDate.set(d.delivery_date, [...(byDate.get(d.delivery_date) ?? []), d]);
+      }
+      return byDate;
+    },
     [customerId, month],
   );
 
@@ -96,19 +104,33 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
     );
   }
 
-  const product = milkTypes[customer.milk_type_id];
-  const selectedEntry = selectedDate ? entries.get(selectedDate) : undefined;
   const selectedIsToday = selectedDate === today;
+  const selectedEntries = selectedDate ? (entries.get(selectedDate) ?? []) : [];
+  const selectedProducts = selectedIsToday
+    ? dayProducts(customer, selectedEntries)
+    : // A past day shows what was recorded: the products may have changed since.
+      selectedEntries.map((delivery) => ({
+        milkTypeId: delivery.milk_type_id,
+        quantity: delivery.scheduled_quantity_ml,
+        delivery,
+      }));
+  const productName = (milkTypeId: string) => milkTypes[milkTypeId]?.name ?? 'Product';
 
-  async function handleMark(status: 'completed' | 'missed') {
+  async function handleMark(
+    { milkTypeId, quantity, delivery }: (typeof selectedProducts)[number],
+    status: 'completed' | 'missed',
+  ) {
     if (!customer) return;
     if (todayInBusinessTimezone() !== today) {
       dialogRef.current?.close();
       setError('The date has changed. Reopen this customer to mark today’s delivery.');
       return;
     }
-    if (entries?.get(today)?.status === status) {
-      dialogRef.current?.close();
+    const lastToMark = selectedProducts.every(
+      (p) => p.milkTypeId === milkTypeId || p.delivery !== null,
+    );
+    if (delivery?.status === status) {
+      if (lastToMark) dialogRef.current?.close();
       return;
     }
     setSaving(true);
@@ -116,9 +138,9 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
       await recordDelivery({
         customerId: customer.id,
         deliveryDate: today,
-        milkTypeId: customer.milk_type_id,
-        scheduledQuantityMl: customer.default_daily_quantity_ml,
-        deliveredQuantityMl: status === 'completed' ? customer.default_daily_quantity_ml : 0,
+        milkTypeId,
+        scheduledQuantityMl: quantity,
+        deliveredQuantityMl: status === 'completed' ? quantity : 0,
         status,
         // The server requires a reason for anything but a completed delivery.
         reason: status === 'missed' ? 'Marked not delivered by worker' : null,
@@ -127,9 +149,10 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
       runSync();
     } catch (err) {
       setError(`Not saved: ${err instanceof Error ? err.message : String(err)}`);
+      dialogRef.current?.close();
     } finally {
       setSaving(false);
-      dialogRef.current?.close();
+      if (lastToMark) dialogRef.current?.close();
     }
   }
 
@@ -174,7 +197,7 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
                 key={date}
                 date={date}
                 today={today}
-                entry={entries.get(date)}
+                status={dayStatus((entries.get(date) ?? []).map((d) => d.status))}
                 selected={date === selectedDate}
                 onSelect={() => setSelectedDate(date)}
               />
@@ -195,29 +218,44 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
                 timeZone: 'UTC',
               })}
             </span>
-            {selectedEntry ? (
-              <Badge
-                label={DELIVERY_STATUS_LABEL[selectedEntry.status]}
-                tone={DELIVERY_STATUS_TONE[selectedEntry.status]}
-              />
-            ) : (
-              <Badge label={selectedIsToday ? 'Not marked yet' : 'No record'} />
-            )}
+            {selectedProducts.length === 0 ? <Badge label="No record" /> : null}
           </div>
-          {selectedEntry?.reason ? (
-            <p className="text-sm text-text-secondary">Note: {selectedEntry.reason}</p>
+          {selectedProducts.map(({ milkTypeId, quantity, delivery }) => (
+            <div key={milkTypeId}>
+              <div className="flex items-center justify-between gap-2">
+                <span>
+                  {productName(milkTypeId)} ·{' '}
+                  {formatQuantity(
+                    delivery?.delivered_quantity_ml || quantity,
+                    milkTypes[milkTypeId]?.unit,
+                  )}
+                </span>
+                {delivery ? (
+                  <Badge
+                    label={DELIVERY_STATUS_LABEL[delivery.status]}
+                    tone={DELIVERY_STATUS_TONE[delivery.status]}
+                  />
+                ) : (
+                  <Badge label="Not marked yet" />
+                )}
+              </div>
+              {delivery?.reason ? (
+                <p className="text-sm text-text-secondary">Note: {delivery.reason}</p>
+              ) : null}
+            </div>
+          ))}
+          {selectedIsToday ? (
+            selectedProducts.every((p) => p.delivery?.status === 'completed') ? (
+              <p className="text-sm text-text-secondary">
+                Delivery already confirmed for today — this can no longer be changed here.
+              </p>
+            ) : (
+              <Button onClick={() => dialogRef.current?.showModal()}>
+                Mark today&rsquo;s delivery
+              </Button>
+            )
           ) : null}
-          {selectedIsToday && selectedEntry?.status === 'completed' ? (
-            <p className="text-sm text-text-secondary">
-              Delivery already confirmed for today — this can no longer be changed here.
-            </p>
-          ) : null}
-          {selectedIsToday && selectedEntry?.status !== 'completed' ? (
-            <Button onClick={() => dialogRef.current?.showModal()}>
-              Mark today&rsquo;s delivery
-            </Button>
-          ) : null}
-          {!selectedIsToday && !selectedEntry ? (
+          {!selectedIsToday && selectedEntries.length === 0 ? (
             <p className="text-sm text-text-secondary">
               Only today&rsquo;s delivery can be marked here.
             </p>
@@ -232,20 +270,46 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
       >
         <div className="flex flex-col gap-3">
           <h2 id="mark-title" className="text-lg font-semibold">
-            {product?.name ?? 'Product'} delivered today?
+            Delivered today?
           </h2>
-          <p className="text-text-secondary">
-            {customer.full_name} ·{' '}
-            {formatQuantity(customer.default_daily_quantity_ml, product?.unit)}
-          </p>
-          <Button onClick={() => handleMark('completed')} disabled={saving}>
-            Yes, delivered
-          </Button>
-          <Button variant="danger" onClick={() => handleMark('missed')} disabled={saving}>
-            No, not delivered
-          </Button>
+          <p className="text-text-secondary">{customer.full_name}</p>
+          {(selectedIsToday ? selectedProducts : []).map((product) => (
+            <div
+              key={product.milkTypeId}
+              role="group"
+              aria-label={productName(product.milkTypeId)}
+              className="flex flex-col gap-2 border-t border-border pt-3"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium">
+                  {productName(product.milkTypeId)} ·{' '}
+                  {formatQuantity(product.quantity, milkTypes[product.milkTypeId]?.unit)}
+                </span>
+                {product.delivery ? (
+                  <Badge
+                    label={DELIVERY_STATUS_LABEL[product.delivery.status]}
+                    tone={DELIVERY_STATUS_TONE[product.delivery.status]}
+                  />
+                ) : null}
+              </div>
+              {product.delivery?.status !== 'completed' ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={() => handleMark(product, 'completed')} disabled={saving}>
+                    Delivered
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => handleMark(product, 'missed')}
+                    disabled={saving}
+                  >
+                    Not delivered
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          ))}
           <Button variant="secondary" onClick={() => dialogRef.current?.close()}>
-            Cancel
+            Close
           </Button>
         </div>
       </dialog>
@@ -256,19 +320,19 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
 function DayCell({
   date,
   today,
-  entry,
+  status,
   selected,
   onSelect,
 }: {
   date: string;
   today: string;
-  entry?: LocalDelivery;
+  status: DeliveryStatus | null;
   selected: boolean;
   onSelect: () => void;
 }) {
   const isToday = date === today;
-  const background = entry
-    ? TONE_CLASSES[DELIVERY_STATUS_TONE[entry.status]]
+  const background = status
+    ? TONE_CLASSES[DELIVERY_STATUS_TONE[status]]
     : isToday
       ? 'bg-primary-muted'
       : '';
@@ -284,7 +348,7 @@ function DayCell({
       onClick={onSelect}
       disabled={date > today}
       aria-pressed={selected}
-      aria-label={`${date}${entry ? `, ${DELIVERY_STATUS_LABEL[entry.status]}` : ''}`}
+      aria-label={`${date}${status ? `, ${DELIVERY_STATUS_LABEL[status]}` : ''}`}
       className={`aspect-square rounded-md text-sm disabled:opacity-35 ${background} ${border}`}
     >
       {Number(date.slice(8))}

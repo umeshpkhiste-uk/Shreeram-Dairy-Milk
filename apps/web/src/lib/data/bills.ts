@@ -47,7 +47,7 @@ export async function getBillWithDetails(
 ): Promise<BillWithDetails | null> {
   const [billRes, itemsRes, adjustmentsRes, paymentsRes] = await Promise.all([
     supabase.from('monthly_bills').select('*').eq('id', billId).maybeSingle(),
-    supabase.from('bill_items').select('*').eq('bill_id', billId).order('delivery_date'),
+    supabase.from('bill_items').select('*').eq('bill_id', billId).order('delivery_date').order('milk_type_id'),
     supabase.from('bill_adjustments').select('*').eq('bill_id', billId).order('created_at'),
     supabase.from('payments').select('*').eq('bill_id', billId).order('payment_date'),
   ]);

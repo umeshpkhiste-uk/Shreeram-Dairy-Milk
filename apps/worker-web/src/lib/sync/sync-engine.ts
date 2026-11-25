@@ -213,6 +213,7 @@ async function pullLatestData(workerId: string): Promise<void> {
       locality: c.locality,
       milk_type_id: c.milk_type_id,
       default_daily_quantity_ml: c.default_daily_quantity_ml,
+      extra_products: c.extra_products,
       route_sequence: c.route_sequence,
       preferred_delivery_window: c.preferred_delivery_window,
     })),

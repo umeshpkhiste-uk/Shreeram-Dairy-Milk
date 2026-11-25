@@ -133,7 +133,7 @@ export default async function BillDetailPage({ params }: PageProps) {
 
         <h2 className="mb-3 text-lg font-semibold text-text">Delivery summary</h2>
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Stat label="Days delivered" value={String(items.length)} />
+          <Stat label="Days delivered" value={String(new Set(items.map((item) => item.delivery_date)).size)} />
           <Stat label="Total quantity" value={formatQuantityTotal(quantities)} />
           <Stat
             label="Average per delivery"

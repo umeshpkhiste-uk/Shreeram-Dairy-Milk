@@ -84,7 +84,8 @@ export const BILL_STYLE = `
     .bill-doc .totals td { border-bottom: none; padding: 3px 8px; }
     .bill-doc .totals .label { color: #555; }
     .bill-doc .totals .grand { font-weight: bold; font-size: 15px; border-top: 2px solid #1a1a1a; }
-    .bill-doc .status { display: inline-block; padding: 2px 10px; border-radius: 10px; background: #eee; font-size: 12px; }
+    .bill-doc .doc-info { text-align: right; padding-right: 8px; white-space: nowrap; }
+    .bill-doc .status { font-size: 12px; font-weight: bold; }
 `;
 
 /**
@@ -150,7 +151,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
         </div>
       </div>
     </div>
-    <div>
+    <div class="doc-info">
       <div><strong>Bill ${escapeHtml(bill.billNumber)}</strong></div>
       <div class="muted">${billingMonthLabel(bill.billingMonth)}</div>
       <div class="status">${BILL_STATUS_LABEL[bill.status]}</div>

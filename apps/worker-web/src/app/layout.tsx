@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Shreeram Doodh Diary & Sweets — Worker',
+  title: 'Shreeram Doodh Dairy & Sweets — Worker',
   description: "Delivery workers: today's route, delivery history and sync.",
   manifest: '/manifest.json',
 };
