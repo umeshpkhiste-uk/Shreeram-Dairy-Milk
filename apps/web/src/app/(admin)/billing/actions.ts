@@ -177,7 +177,7 @@ export async function voidPaymentAction(
   try {
     await voidPayment(supabase, paymentId, reason);
   } catch (err) {
-    return { error: errorMessage(err, 'Failed to void the payment.') };
+    return { error: errorMessage(err, 'Failed to undo the payment.') };
   }
   revalidatePath(`/billing/${billId}`);
   revalidatePath('/payments');

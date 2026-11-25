@@ -196,9 +196,15 @@ function PaymentPanel({
             Mark as paid
           </PrimaryButton>
         ) : null}
-        <Link href={`/orders/${orderId}/print`} target="_blank">
-          <InfoButton type="button">Generate bill</InfoButton>
-        </Link>
+        {paymentStatus === 'paid' ? (
+          <InfoButton type="button" disabled>
+            Bill paid
+          </InfoButton>
+        ) : (
+          <Link href={`/orders/${orderId}/print`} target="_blank">
+            <InfoButton type="button">Generate bill</InfoButton>
+          </Link>
+        )}
         <SecondaryButton type="button" onClick={onDone}>
           Close
         </SecondaryButton>

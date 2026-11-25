@@ -9,6 +9,8 @@ import {
   formatPaiseAsRupees,
   formatQuantityTotal,
   groupBillItems,
+  lastOfMonth,
+  todayInBusinessTimezone,
   unitLabel,
 } from '@shreeram/shared';
 
@@ -56,6 +58,13 @@ export default async function BillDetailPage({ params }: PageProps) {
   );
   const isDraft = bill.status === 'draft';
   const isVoided = bill.status === 'voided';
+  // Days after a bill paid mid-month still have to be billed, and a flagged bill generated again.
+  const today = todayInBusinessTimezone();
+  const monthEnd = lastOfMonth(bill.billing_month);
+  const isPaid =
+    bill.status === 'paid' &&
+    !bill.flagged_for_review &&
+    document.bill.billedThrough >= (today < monthEnd ? today : monthEnd);
 
   const boundAddAdjustment = addAdjustmentAction.bind(null, id);
   const boundRecordPayment = recordPaymentAction.bind(null, id);
@@ -76,7 +85,7 @@ export default async function BillDetailPage({ params }: PageProps) {
         <div className="flex flex-wrap items-center gap-2">
           <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
           {!isVoided ? (
-            <GenerateBillButton billId={id} />
+            <GenerateBillButton billId={id} paid={isPaid} />
           ) : null}
         </div>
       </div>
@@ -208,7 +217,7 @@ export default async function BillDetailPage({ params }: PageProps) {
                     {p.payment_date} · {p.method}
                     {p.transaction_reference ? ` · ${p.transaction_reference}` : ''} ·{' '}
                     {formatPaiseAsRupees(p.amount_paise)}
-                    {p.voided_at ? ' (voided)' : ''}
+                    {p.voided_at ? ' (undone)' : ''}
                   </span>
                   {!p.voided_at ? (
                     <VoidPaymentButton billId={id} paymentId={p.id} action={voidPaymentAction} />

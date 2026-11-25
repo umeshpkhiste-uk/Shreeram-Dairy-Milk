@@ -14,7 +14,7 @@ function whatsappUrl(phone: string, message: string) {
   return `${base}text=${encodeURIComponent(message)}`;
 }
 
-export function GenerateBillButton({ billId }: { billId: string }) {
+export function GenerateBillButton({ billId, paid }: { billId: string; paid: boolean }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -39,8 +39,8 @@ export function GenerateBillButton({ billId }: { billId: string }) {
 
   return (
     <div className="flex flex-col items-end gap-2">
-      <PrimaryButton type="button" disabled={pending} onClick={generate}>
-        {pending ? 'Generating…' : 'Generate and send Bill'}
+      <PrimaryButton type="button" disabled={pending || paid} onClick={generate}>
+        {paid ? 'Bill paid' : pending ? 'Generating…' : 'Generate and send Bill'}
       </PrimaryButton>
       {error ? <ErrorText message={error} /> : null}
     </div>

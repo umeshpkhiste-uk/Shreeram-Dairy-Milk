@@ -35,7 +35,7 @@ export function VoidPaymentButton({ billId, paymentId, action }: Props) {
         onClick={() => setOpen(true)}
         className="text-sm font-medium text-danger hover:underline"
       >
-        Void
+        Undo payment
       </button>
     );
   }
@@ -45,7 +45,7 @@ export function VoidPaymentButton({ billId, paymentId, action }: Props) {
       <input
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        placeholder="Reason for voiding"
+        placeholder="Why was this payment wrong?"
         className="rounded-md border border-border bg-surface px-2 py-1 text-sm text-text outline-none focus:border-primary"
       />
       <button
@@ -54,7 +54,7 @@ export function VoidPaymentButton({ billId, paymentId, action }: Props) {
         onClick={guardedConfirm}
         className="text-sm font-medium text-danger hover:underline disabled:opacity-50"
       >
-        {pending ? 'Voiding…' : 'Confirm'}
+        {pending ? 'Undoing…' : 'Confirm'}
       </button>
       <button
         type="button"
