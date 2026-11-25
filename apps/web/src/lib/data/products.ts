@@ -38,7 +38,8 @@ export async function createProduct(
  * Always hard-deletes the product, even if it was used in a past order —
  * order_items.product_id is ON DELETE CASCADE (see migration
  * 20261102090000), so this also removes that order's line item for this
- * product. The order itself and its other items are untouched.
+ * product. The order itself and its other items are untouched. Refused by the
+ * database when a paid order has the product.
  */
 export async function deleteProduct(supabase: SupabaseServerClient, id: string): Promise<void> {
   const { error } = await supabase.from('products').delete().eq('id', id);

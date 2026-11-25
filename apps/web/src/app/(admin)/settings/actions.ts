@@ -76,6 +76,20 @@ export async function updateOrderItemPriceAction(
   return { error: null };
 }
 
+export async function setOrderItemActiveAction(
+  productId: string,
+  isActive: boolean,
+): Promise<SettingsActionState> {
+  const supabase = await createClient();
+  try {
+    await updateProduct(supabase, productId, { isActive });
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to update the item.') };
+  }
+  revalidatePath('/settings');
+  return { error: null };
+}
+
 export async function deleteOrderItemAction(productId: string): Promise<DeleteOrderItemState> {
   const supabase = await createClient();
   try {

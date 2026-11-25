@@ -4,10 +4,16 @@ import { useActionState, useState, useTransition } from 'react';
 
 import { formatPaiseAsRupees } from '@shreeram/shared';
 
-import { Badge, DangerButton, ErrorText, PrimaryButton, SecondaryButton } from '@/components/ui';
+import { ActionForm } from '@/components/action-form';
+import { Badge, DangerButton, ErrorText, PrimaryButton, SecondaryButton, WarningButton } from '@/components/ui';
 import type { ProductRow } from '@/lib/data/products';
 
-import { deleteOrderItemAction, updateOrderItemPriceAction, type DeleteOrderItemState } from './actions';
+import {
+  deleteOrderItemAction,
+  setOrderItemActiveAction,
+  updateOrderItemPriceAction,
+  type DeleteOrderItemState,
+} from './actions';
 
 export function OrderItemRow({ product }: { product: ProductRow }) {
   const boundUpdatePrice = updateOrderItemPriceAction.bind(null, product.id);
@@ -51,6 +57,9 @@ export function OrderItemRow({ product }: { product: ProductRow }) {
             {pending ? 'Saving…' : 'Update price'}
           </PrimaryButton>
         </form>
+        <ActionForm action={setOrderItemActiveAction.bind(null, product.id, !product.is_active)}>
+          <WarningButton type="submit">{product.is_active ? 'Turn off' : 'Turn on'}</WarningButton>
+        </ActionForm>
         {confirming ? (
           <>
             <span className="text-sm text-text-secondary">
