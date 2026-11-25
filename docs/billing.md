@@ -32,6 +32,11 @@ why:
   mechanical guarantee against double-charging, not just a period-math assumption.
 - **Where to pay** on the bill ("Pay to", "UPI ID") is the contact phone and UPI ID from Settings;
   the block is left out while both are empty.
+- **"I have paid" (`payment_claims`)** on the customer's bill page takes the amount and 12-digit UPI
+  transaction number without signing in. It is only what the customer says: it shows in the Inbox
+  and on the admin's bill, and becomes a payment when the admin clicks Payment received
+  (`resolve_payment_claim`). One waiting claim per bill; a transaction number already recorded on
+  another bill, or a bill already paid, is refused.
 - **Payments are recorded against a specific bill**, never a general customer wallet. A
   customer's "previous outstanding balance" for their *next* bill is computed each
   time it is created or generated, as `sum over their prior non-voided bills of (own charges + adjustments

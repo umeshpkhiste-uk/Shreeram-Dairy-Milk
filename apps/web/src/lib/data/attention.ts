@@ -2,6 +2,7 @@ import { formatBillingMonth, formatPaiseAsRupees } from '@shreeram/shared';
 
 import { listDailyDeliveryReport } from './deliveries';
 import { listAllMilkTypes } from './milk-types';
+import { listPendingPaymentClaims } from './payments';
 import type { SupabaseServerClient } from './types';
 
 export type AttentionItem = {
@@ -23,24 +24,46 @@ async function customerNames(supabase: SupabaseServerClient, ids: string[]) {
   return new Map((data ?? []).map((c) => [c.id, c.full_name]));
 }
 
-/** Inbox: monthly bills created but not finalized yet, any month. */
+/** Inbox: payments customers say they made, and bills not generated yet, any month. */
 export async function listInboxItems(supabase: SupabaseServerClient): Promise<AttentionItem[]> {
+  const claims = await listPendingPaymentClaims(supabase);
   const { data: bills, error } = await supabase
     .from('monthly_bills')
     .select('*')
-    .eq('status', 'draft')
+    .or(`status.eq.draft,id.in.(${claims.map((c) => c.bill_id).join(',')})`)
     .order('billing_month', { ascending: false });
   if (error) throw error;
 
   const names = await customerNames(supabase, bills.map((b) => b.customer_id));
-  return bills.map((bill) => ({
-    id: bill.id,
-    title: names.get(bill.customer_id) ?? 'Customer',
-    detail: `${bill.bill_number} · ${formatBillingMonth(bill.billing_month)} · ${formatPaiseAsRupees(bill.total_payable_paise)}`,
-    href: `/billing/${bill.id}`,
-    label: 'Draft',
-    tone: 'neutral',
-  }));
+  const billById = new Map(bills.map((b) => [b.id, b]));
+  return [
+    ...claims.flatMap((claim): AttentionItem[] => {
+      const bill = billById.get(claim.bill_id);
+      if (!bill) return [];
+      return [
+        {
+          id: claim.id,
+          title: names.get(bill.customer_id) ?? 'Customer',
+          detail: `${bill.bill_number}: says ${formatPaiseAsRupees(claim.amount_paise)} was paid by UPI, transaction ${claim.transaction_reference}. Check your bank.`,
+          href: `/billing/${bill.id}`,
+          label: 'Payment to check',
+          tone: 'warning',
+        },
+      ];
+    }),
+    ...bills
+      .filter((bill) => bill.status === 'draft')
+      .map(
+        (bill): AttentionItem => ({
+          id: bill.id,
+          title: names.get(bill.customer_id) ?? 'Customer',
+          detail: `${bill.bill_number} · ${formatBillingMonth(bill.billing_month)} · ${formatPaiseAsRupees(bill.total_payable_paise)}`,
+          href: `/billing/${bill.id}`,
+          label: 'Draft',
+          tone: 'neutral',
+        }),
+      ),
+  ];
 }
 
 /** Notifications: delivery conflicts, flagged bills, and today's missed or unrecorded deliveries. */

@@ -8,9 +8,9 @@ export default async function InboxPage() {
 
   return (
     <div>
-      <PageHeader title="Inbox" description="Draft bills waiting to be generated and sent." />
+      <PageHeader title="Inbox" description="Payments to check and draft bills to generate and send." />
       {items.length === 0 ? (
-        <EmptyState title="Nothing waiting" description="There are no draft bills." />
+        <EmptyState title="Nothing waiting" description="There are no payments to check or draft bills." />
       ) : (
         <AttentionList items={items} />
       )}

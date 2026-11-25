@@ -75,7 +75,8 @@ export default function PrivacyPolicyPage() {
           </li>
           <li>
             <strong>A customer&rsquo;s bill</strong> can be opened without signing in by anyone who
-            has the private link we send that customer on WhatsApp.
+            has the private link we send that customer on WhatsApp. There the customer can send us
+            the amount and UPI transaction number of a payment, so we can check it.
           </li>
           <li>Access rules are enforced on the server, not just in the app.</li>
         </ul>

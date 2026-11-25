@@ -30,6 +30,8 @@ export type BillPdfData = {
     adjustmentsTotalPaise: number;
     totalPayablePaise: number;
   };
+  /** The customer sent payment details that no admin has checked yet. */
+  paymentClaimed: boolean;
   /** Days the customer informed, so nothing was delivered. */
   noDeliveryDays: number;
   items: {
@@ -111,6 +113,7 @@ export const BILL_STYLE = `
     .bill-doc .bill-totals .label { width: 200px; }
     .bill-doc .bill-totals .num { width: 120px; }
     .bill-doc .bill-totals .heading { font-size: 16px; font-weight: bold; }
+    .bill-doc .bill-totals .adjustments td { border-top: 1px solid #e0e0e0; }
     .bill-doc .bill-totals .grand { border-top: none; }
     .bill-doc .bill-totals .grand td + td { border-top: 2px solid #1a1a1a; white-space: nowrap; }
     .bill-doc .status { font-size: 12px; font-weight: bold; }
@@ -153,7 +156,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
   const adjustmentRows = adjustments
     .map(
       (adj, index) => `
-    <tr>
+    <tr${index === 0 ? ' class="adjustments"' : ''}>
           <td class="heading">${index === 0 ? 'Adjustments' : ''}</td>
           <td class="label">${escapeHtml(adj.reason)}</td>
           <td class="num">${formatPaiseAsRupees(adj.amountPaise)}</td>

@@ -440,6 +440,21 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      payment_claims: {
+        Row: {
+          id: string;
+          bill_id: string;
+          amount_paise: number;
+          transaction_reference: string;
+          status: 'pending' | 'confirmed' | 'dismissed';
+          created_at: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+        };
+        Insert: Record<string, never>; // written only by submit_/resolve_payment_claim
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -513,6 +528,14 @@ export interface Database {
       mark_bill_sent: {
         Args: { p_bill_id: string };
         Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      submit_payment_claim: {
+        Args: { p_bill_id: string; p_amount_paise: number; p_transaction_reference: string };
+        Returns: undefined;
+      };
+      resolve_payment_claim: {
+        Args: { p_claim_id: string; p_received: boolean };
+        Returns: undefined;
       };
       record_payment: {
         Args: {

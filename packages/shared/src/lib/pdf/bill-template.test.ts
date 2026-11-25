@@ -24,6 +24,7 @@ const BASE: BillPdfData = {
     adjustmentsTotalPaise: -1000,
     totalPayablePaise: 16600,
   },
+  paymentClaimed: false,
   noDeliveryDays: 2,
   items: [
     {

@@ -14,6 +14,7 @@ const DATA: BillPdfData = {
     adjustmentsTotalPaise: 0,
     totalPayablePaise: 15600,
   },
+  paymentClaimed: false,
   noDeliveryDays: 1,
   items: ['2026-11-01', '2026-11-02'].map((deliveryDate) => ({
     deliveryDate,

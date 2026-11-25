@@ -20,7 +20,7 @@ import {
   getBillDocument,
 } from '@/lib/data/bills';
 import { getCustomer } from '@/lib/data/customers';
-import { recordPayment, voidPayment } from '@/lib/data/payments';
+import { recordPayment, resolvePaymentClaim, voidPayment } from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/server';
 
 export type ActionState = { error: string | null };
@@ -148,6 +148,23 @@ export async function recordPaymentAction(
   }
   revalidatePath(`/billing/${billId}`);
   revalidatePath('/payments');
+  return { error: null };
+}
+
+export async function resolvePaymentClaimAction(
+  billId: string,
+  claimId: string,
+  received: boolean,
+): Promise<ActionState> {
+  const supabase = await createClient();
+  try {
+    await resolvePaymentClaim(supabase, claimId, received);
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to save.') };
+  }
+  revalidatePath(`/billing/${billId}`);
+  revalidatePath('/payments');
+  revalidatePath('/inbox');
   return { error: null };
 }
 

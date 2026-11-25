@@ -13,8 +13,9 @@ import {
 } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
-import { Badge, Card, PrimaryButton } from '@/components/ui';
+import { Badge, Card, DangerButton, PrimaryButton } from '@/components/ui';
 import { getBillDocument, getBillWithDetails } from '@/lib/data/bills';
+import { listPendingPaymentClaims } from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/server';
 
 import {
@@ -22,6 +23,7 @@ import {
   addAdjustmentAction,
   cancelBillAction,
   recordPaymentAction,
+  resolvePaymentClaimAction,
   voidPaymentAction,
 } from '../actions';
 import { AdjustmentForm } from './adjustment-form';
@@ -37,9 +39,10 @@ export default async function BillDetailPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [details, document] = await Promise.all([
+  const [details, document, claims] = await Promise.all([
     getBillWithDetails(supabase, id),
     getBillDocument(supabase, id),
+    listPendingPaymentClaims(supabase, id),
   ]);
   if (!details || !document) notFound();
   const { bill, adjustments, payments } = details;
@@ -87,6 +90,26 @@ export default async function BillDetailPage({ params }: PageProps) {
           </ActionForm>
         </Card>
       ) : null}
+
+      {claims.map((claim) => (
+        <Card key={claim.id} className="border-warning bg-warning-bg">
+          <p className="font-medium text-warning">
+            The customer says {formatPaiseAsRupees(claim.amount_paise)} was paid by UPI
+          </p>
+          <p className="mt-1 text-sm text-text">
+            Transaction number {claim.transaction_reference}. Check it in your bank or UPI app before
+            you confirm.
+          </p>
+          <div className="mt-3 flex flex-wrap items-start gap-3">
+            <ActionForm action={resolvePaymentClaimAction.bind(null, id, claim.id, true)}>
+              <PrimaryButton type="submit">Payment received</PrimaryButton>
+            </ActionForm>
+            <ActionForm action={resolvePaymentClaimAction.bind(null, id, claim.id, false)}>
+              <DangerButton type="submit">Not received</DangerButton>
+            </ActionForm>
+          </div>
+        </Card>
+      ))}
 
       <Card>
         <h2 className="mb-3 text-lg font-semibold text-text">Delivery summary</h2>

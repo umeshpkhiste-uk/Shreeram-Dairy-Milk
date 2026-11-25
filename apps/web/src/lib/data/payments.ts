@@ -1,7 +1,9 @@
-import type { PaymentMethod } from '@shreeram/shared';
+import type { Database, PaymentMethod } from '@shreeram/shared';
 
 import type { MonthlyBillRow, PaymentRow } from './bills';
 import type { SupabaseServerClient } from './types';
+
+export type PaymentClaimRow = Database['public']['Tables']['payment_claims']['Row'];
 
 export type RecordPaymentInput = {
   /**
@@ -52,6 +54,45 @@ export async function voidPayment(
   });
   if (error) throw error;
   return data;
+}
+
+/** Customers' "I have paid" details that no admin has checked yet, for one bill or all. */
+export async function listPendingPaymentClaims(
+  supabase: SupabaseServerClient,
+  billId?: string,
+): Promise<PaymentClaimRow[]> {
+  let query = supabase.from('payment_claims').select('*').eq('status', 'pending').order('created_at');
+  if (billId) query = query.eq('bill_id', billId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function submitPaymentClaim(
+  supabase: SupabaseServerClient,
+  billId: string,
+  amountPaise: number,
+  transactionReference: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('submit_payment_claim', {
+    p_bill_id: billId,
+    p_amount_paise: amountPaise,
+    p_transaction_reference: transactionReference,
+  });
+  if (error) throw error;
+}
+
+/** `received` records the payment; otherwise the claim is only put away. */
+export async function resolvePaymentClaim(
+  supabase: SupabaseServerClient,
+  claimId: string,
+  received: boolean,
+): Promise<void> {
+  const { error } = await supabase.rpc('resolve_payment_claim', {
+    p_claim_id: claimId,
+    p_received: received,
+  });
+  if (error) throw error;
 }
 
 export async function listRecentPayments(
