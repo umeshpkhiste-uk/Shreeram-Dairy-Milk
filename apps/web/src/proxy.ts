@@ -58,10 +58,11 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getUser();
+  // Verified here with the project's public key; getUser() would call Supabase on every request.
+  const { data } = await supabase.auth.getClaims();
   const isPublicPath = PUBLIC_PATHS.includes(request.nextUrl.pathname);
 
-  if (!data.user && !isPublicPath) {
+  if (!data && !isPublicPath) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);

@@ -20,21 +20,22 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 export async function requireAdmin(
   supabase: SupabaseServerClient,
 ): Promise<{ profile: Profile; email: string | null }> {
-  const { data: userData } = await supabase.auth.getUser();
+  // The profile query below is what asks the server, so this only needs the verified id.
+  const { data } = await supabase.auth.getClaims();
 
-  if (!userData.user) {
+  if (!data) {
     redirect('/login');
   }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', userData.user.id)
+    .eq('id', data.claims.sub)
     .single();
 
   if (!profile || !profile.is_active || profile.role !== 'admin') {
     redirect('/login?error=not-authorized');
   }
 
-  return { profile, email: userData.user.email ?? null };
+  return { profile, email: data.claims.email ?? null };
 }

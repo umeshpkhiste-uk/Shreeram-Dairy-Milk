@@ -300,3 +300,14 @@ business use. No real `eas build`-equivalent concern here (web, not native), but
   own state (Stage 6 noted the same gap there).
 - Worker self-service (password reset, profile editing) is out of scope — this remains an
   admin-only console, matching the checklist's own framing ("responsive **admin** website").
+
+## Speed and regions
+
+Measured from Pune on 2026-11-25: Mumbai 12 ms, Seoul (the database) 120 ms, Washington (Vercel's
+default, where both sites ran) 255 ms. Both apps' functions now run in Seoul, `icn1`, beside the
+database (`vercel.json`). If the database moves, change that region with it.
+
+The proxy and `requireAdmin` verify the session's signature locally (`getClaims`) instead of asking
+Supabase Auth on every request; `requireAdmin`'s profile query still checks role and `is_active` on
+the server. A session revoked elsewhere can therefore load pages until its token expires (an hour at
+most) unless the account is deactivated.
