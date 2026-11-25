@@ -1,6 +1,6 @@
 'use client';
 
-import { unitLabel } from '@shreeram/shared';
+import { todayInBusinessTimezone, unitLabel } from '@shreeram/shared';
 import { useActionState } from 'react';
 
 import { ErrorText, PrimaryButton } from '@/components/ui';
@@ -48,7 +48,7 @@ export function RateForm({
           name="effectiveFrom"
           type="date"
           required
-          defaultValue={new Date().toISOString().slice(0, 10)}
+          defaultValue={todayInBusinessTimezone()}
           className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
         />
       </label>

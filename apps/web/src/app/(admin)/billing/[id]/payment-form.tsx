@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 
-import { PAYMENT_METHOD_OPTIONS } from '@shreeram/shared';
+import { PAYMENT_METHOD_OPTIONS, todayInBusinessTimezone } from '@shreeram/shared';
 
 import { ErrorText, PrimaryButton } from '@/components/ui';
 
@@ -50,7 +50,7 @@ export function PaymentForm({
             name="paymentDate"
             type="date"
             required
-            defaultValue={new Date().toISOString().slice(0, 10)}
+            defaultValue={todayInBusinessTimezone()}
             className={inputClass}
           />
         </label>

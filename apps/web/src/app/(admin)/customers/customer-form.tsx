@@ -1,6 +1,6 @@
 'use client';
 
-import { customerProducts } from '@shreeram/shared';
+import { customerProducts, todayInBusinessTimezone } from '@shreeram/shared';
 import { startTransition, useActionState } from 'react';
 
 import type { CustomerRow } from '@/lib/data/customers';
@@ -102,7 +102,7 @@ export function CustomerForm({ customer, milkTypes, workers, action, submitLabel
             name="deliveryStartDate"
             type="date"
             required
-            defaultValue={customer?.delivery_start_date ?? new Date().toISOString().slice(0, 10)}
+            defaultValue={customer?.delivery_start_date ?? todayInBusinessTimezone()}
             className={inputClass}
           />
         </label>
