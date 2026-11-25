@@ -18,7 +18,7 @@ export async function setCustomerRateAction(
   const effectiveFrom = String(formData.get('effectiveFrom') ?? '');
 
   const pricePaise = parseRupeesToPaise(priceRupees);
-  if (!milkTypeId) return { error: 'Select a milk type.' };
+  if (!milkTypeId) return { error: 'Select a product type.' };
   if (pricePaise === null) return { error: 'Enter a valid price, e.g. 55 or 55.50' };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveFrom)) return { error: 'Choose an effective date.' };
 

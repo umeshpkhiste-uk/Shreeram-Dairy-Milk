@@ -87,6 +87,7 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          unit: ProductUnit;
           default_price_paise: number;
           is_active: boolean;
           created_at: string;
@@ -95,6 +96,7 @@ export interface Database {
         Insert: {
           id?: string;
           name: string;
+          unit?: ProductUnit;
           default_price_paise: number;
           is_active?: boolean;
         };

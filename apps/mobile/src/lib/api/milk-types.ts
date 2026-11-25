@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
+import type { Database, ProductUnit } from '@/types/database';
 
 export type MilkTypeRow = Database['public']['Tables']['milk_types']['Row'];
 
@@ -22,11 +22,16 @@ export async function listAllMilkTypes(): Promise<MilkTypeRow[]> {
 
 export async function createMilkType(input: {
   name: string;
+  unit: ProductUnit;
   defaultPricePaise: number;
 }): Promise<MilkTypeRow> {
   const { data, error } = await supabase
     .from('milk_types')
-    .insert({ name: input.name, default_price_paise: input.defaultPricePaise })
+    .insert({
+      name: input.name,
+      unit: input.unit,
+      default_price_paise: input.defaultPricePaise,
+    })
     .select('*')
     .single();
   if (error) throw error;

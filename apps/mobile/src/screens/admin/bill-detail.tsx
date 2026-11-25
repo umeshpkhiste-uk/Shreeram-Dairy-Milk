@@ -27,10 +27,11 @@ import {
 } from '@/lib/api/bills';
 import { getBusinessSettings, type BusinessSettingsRow } from '@/lib/api/business-settings';
 import { getCustomer, type CustomerRow } from '@/lib/api/customers';
-import { listAllMilkTypes } from '@/lib/api/milk-types';
+import { listAllMilkTypes, type MilkTypeRow } from '@/lib/api/milk-types';
 import { recordPayment } from '@/lib/api/payments';
 import { BILL_STATUS_LABEL, BILL_STATUS_TONE, billAmountDue } from '@/lib/billing/status';
 import { formatPaiseAsRupees, parseRupeesToPaise, parseSignedRupeesToPaise } from '@/lib/money';
+import { formatQuantity } from '@/lib/quantity';
 import { previewHtml, shareHtmlAsPdf } from '@/lib/pdf/generate';
 import { renderBillHtml } from '@/lib/pdf/bill-template';
 import { billAdjustmentSchema } from '@/lib/validation/bill';
@@ -41,7 +42,7 @@ import type { PaymentMethod } from '@/types/database';
 type Loaded = {
   details: BillWithDetails;
   customer: CustomerRow;
-  milkTypeNames: Record<string, string>;
+  milkTypes: Partial<Record<string, MilkTypeRow>>;
   business: BusinessSettingsRow;
 };
 
@@ -56,7 +57,7 @@ export function BillDetailScreen({ billId }: { billId: string }) {
     setError(null);
     getBillWithDetails(billId)
       .then(async (details) => {
-        const [customer, milkTypes, business] = await Promise.all([
+        const [customer, milkTypeRows, business] = await Promise.all([
           getCustomer(details.bill.customer_id),
           listAllMilkTypes(),
           getBusinessSettings(),
@@ -65,7 +66,7 @@ export function BillDetailScreen({ billId }: { billId: string }) {
         setLoaded({
           details,
           customer,
-          milkTypeNames: Object.fromEntries(milkTypes.map((m) => [m.id, m.name])),
+          milkTypes: Object.fromEntries(milkTypeRows.map((m) => [m.id, m])),
           business,
         });
       })
@@ -94,7 +95,7 @@ export function BillDetailScreen({ billId }: { billId: string }) {
     );
   }
 
-  const { details, customer, milkTypeNames, business } = loaded;
+  const { details, customer, milkTypes, business } = loaded;
   const { bill, items, adjustments, payments } = details;
   const totalPaid = payments.reduce((sum, p) => (p.voided_at ? sum : sum + p.amount_paise), 0);
   const { duePaise, settledElsewherePaise } = billAmountDue(
@@ -156,8 +157,9 @@ export function BillDetailScreen({ billId }: { billId: string }) {
       },
       items: items.map((item) => ({
         deliveryDate: item.delivery_date,
-        milkTypeName: milkTypeNames[item.milk_type_id] ?? 'Milk',
+        milkTypeName: milkTypes[item.milk_type_id]?.name ?? 'Product',
         quantityMl: item.quantity_ml,
+        unit: milkTypes[item.milk_type_id]?.unit,
         pricePaise: item.price_paise,
         amountPaise: item.amount_paise,
       })),
@@ -215,7 +217,7 @@ export function BillDetailScreen({ billId }: { billId: string }) {
           </Text>
         ) : (
           items.map((item) => (
-            <BillItemRowView key={item.id} item={item} milkTypeNames={milkTypeNames} />
+            <BillItemRowView key={item.id} item={item} milkTypes={milkTypes} />
           ))
         )}
       </Card>
@@ -324,18 +326,19 @@ export function BillDetailScreen({ billId }: { billId: string }) {
 
 function BillItemRowView({
   item,
-  milkTypeNames,
+  milkTypes,
 }: {
   item: BillItemRow;
-  milkTypeNames: Record<string, string>;
+  milkTypes: Partial<Record<string, MilkTypeRow>>;
 }) {
   return (
     <View style={styles.itemRow}>
       <Text variant="body">
-        {item.delivery_date} · {milkTypeNames[item.milk_type_id] ?? 'Milk'}
+        {item.delivery_date} · {milkTypes[item.milk_type_id]?.name ?? 'Product'}
       </Text>
       <Text variant="body" color="secondary">
-        {item.quantity_ml} ml · {formatPaiseAsRupees(item.amount_paise)}
+        {formatQuantity(item.quantity_ml, milkTypes[item.milk_type_id]?.unit)} ·{' '}
+        {formatPaiseAsRupees(item.amount_paise)}
       </Text>
     </View>
   );

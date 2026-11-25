@@ -2,14 +2,13 @@
 
 import { useSearchParams } from 'next/navigation';
 
-import { shiftDate, todayInBusinessTimezone } from '@shreeram/shared';
+import { formatQuantityTotal, shiftDate, todayInBusinessTimezone } from '@shreeram/shared';
 
 import { Card, EmptyState, LoadingState, Row, Title } from '@/components/ui';
-import { getCachedCustomer } from '@/lib/db/cache-repo';
+import { getCachedCustomer, getCachedMilkTypes } from '@/lib/db/cache-repo';
 import { listLocalDeliveriesForCustomerInRange } from '@/lib/db/deliveries-repo';
 import { useLive } from '@/lib/db/use-live';
 import { HISTORY_DAYS, summarizeHistory } from '@/lib/history-summary';
-import { formatMlAsLitres } from '@/lib/sync/today-summary';
 
 /** Numbers-only summary for one customer — counts and total quantity, no per-day rows. */
 export function CustomerDeliverySummary() {
@@ -18,6 +17,7 @@ export function CustomerDeliverySummary() {
     const today = todayInBusinessTimezone();
     return {
       customer: await getCachedCustomer(customerId),
+      milkTypes: await getCachedMilkTypes(),
       deliveries: await listLocalDeliveriesForCustomerInRange(
         customerId,
         shiftDate(today, -HISTORY_DAYS),
@@ -54,7 +54,15 @@ export function CustomerDeliverySummary() {
           <Row label="Days delivered" value={summary.delivered} />
           <Row label="Days missed" value={summary.missed} />
           <Row label="Days skipped" value={summary.skipped} />
-          <Row label="Total quantity" value={formatMlAsLitres(summary.totalMl)} />
+          <Row
+            label="Total quantity"
+            value={formatQuantityTotal(
+              summary.quantities.map(({ milkTypeId, quantity }) => ({
+                quantity,
+                unit: data.milkTypes[milkTypeId]?.unit,
+              })),
+            )}
+          />
         </Card>
       )}
     </>

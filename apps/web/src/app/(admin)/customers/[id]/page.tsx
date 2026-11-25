@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { formatBillingMonth, formatPaiseAsRupees } from '@shreeram/shared';
+import { formatBillingMonth, formatPaiseAsRupees, unitLabel } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
 import { Badge, Card, EmptyState, PageHeader, PrimaryButton, WarningButton } from '@/components/ui';
@@ -85,7 +85,8 @@ export default async function CustomerDetailPage({ params }: PageProps) {
           <ul className="mt-4 flex flex-col gap-1 text-sm text-text-secondary">
             {rates.map((r) => (
               <li key={r.id}>
-                {milkTypeById.get(r.milk_type_id)?.name ?? 'Milk type'}: {formatPaiseAsRupees(r.price_paise)}/L
+                {milkTypeById.get(r.milk_type_id)?.name ?? 'Product'}: {formatPaiseAsRupees(r.price_paise)}/
+                {unitLabel(milkTypeById.get(r.milk_type_id)?.unit)}{' '}
                 from {r.effective_from}
                 {r.effective_to ? ` to ${r.effective_to}` : ' (current)'}
               </li>

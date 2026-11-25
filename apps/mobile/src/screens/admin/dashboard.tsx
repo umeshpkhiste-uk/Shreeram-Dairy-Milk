@@ -10,10 +10,12 @@ import { Screen } from '@/components/screen';
 import { Text } from '@/components/text';
 import { listCustomers } from '@/lib/api/customers';
 import { listDeliveriesForDate } from '@/lib/api/deliveries';
+import { listAllMilkTypes } from '@/lib/api/milk-types';
 import { listWorkers } from '@/lib/api/workers';
 import { computeDashboardMetrics, type DashboardMetrics } from '@/lib/dashboard/metrics';
 import { todayInBusinessTimezone } from '@/lib/date';
 import { formatPaiseAsRupees } from '@/lib/money';
+import { formatQuantityTotal } from '@/lib/quantity';
 import { subscribeToDeliveryChanges } from '@/lib/realtime/deliveries-channel';
 import { Spacing } from '@/theme/tokens';
 
@@ -27,12 +29,27 @@ const QUICK_ACTIONS = [
 export function AdminDashboardScreen() {
   const today = useMemo(() => todayInBusinessTimezone(), []);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [quantityDelivered, setQuantityDelivered] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setError(null);
-    Promise.all([listCustomers({ status: 'active' }), listWorkers(), listDeliveriesForDate(today)])
-      .then(([customers, workers, deliveries]) => {
+    Promise.all([
+      listCustomers({ status: 'active' }),
+      listWorkers(),
+      listDeliveriesForDate(today),
+      listAllMilkTypes(),
+    ])
+      .then(([customers, workers, deliveries, milkTypes]) => {
+        const unitById = new Map(milkTypes.map((m) => [m.id, m.unit]));
+        setQuantityDelivered(
+          formatQuantityTotal(
+            deliveries.map((d) => ({
+              quantity: d.delivered_quantity_ml,
+              unit: unitById.get(d.milk_type_id),
+            })),
+          ),
+        );
         setMetrics(computeDashboardMetrics(customers, workers, deliveries, today));
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load dashboard'));
@@ -81,7 +98,7 @@ export function AdminDashboardScreen() {
           value={String(metrics.noRecordToday)}
           hint="Not proof of a missed delivery — may be pending or completed offline, not yet synced."
         />
-        <Tile label="Milk delivered today" value={`${metrics.totalMlDeliveredToday} ml`} />
+        <Tile label="Quantity delivered today" value={quantityDelivered} />
         <Tile
           label="Estimated sales today"
           value={formatPaiseAsRupees(metrics.estimatedSalesPaiseToday)}

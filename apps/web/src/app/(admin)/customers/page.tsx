@@ -1,7 +1,9 @@
+import { formatQuantity } from '@shreeram/shared';
 import Link from 'next/link';
 
 import { Badge, Card, EmptyState, InfoButton, PageHeader, Table } from '@/components/ui';
 import { listCustomers, type CustomerFilters } from '@/lib/data/customers';
+import { listAllMilkTypes } from '@/lib/data/milk-types';
 import { createClient } from '@/lib/supabase/server';
 
 type PageProps = {
@@ -16,7 +18,11 @@ export default async function CustomersPage({ searchParams }: PageProps) {
     status: status === 'inactive' ? 'inactive' : status === 'all' ? 'all' : 'active',
     search,
   };
-  const customers = await listCustomers(supabase, filters);
+  const [customers, milkTypes] = await Promise.all([
+    listCustomers(supabase, filters),
+    listAllMilkTypes(supabase),
+  ]);
+  const milkTypeById = new Map(milkTypes.map((m) => [m.id, m]));
 
   return (
     <div>
@@ -82,7 +88,10 @@ export default async function CustomersPage({ searchParams }: PageProps) {
                 </td>
                 <td className="px-4 py-3 text-text-secondary">{customer.mobile_number}</td>
                 <td className="px-4 py-3 text-text-secondary">
-                  {customer.default_daily_quantity_ml} ml
+                  {formatQuantity(
+                    customer.default_daily_quantity_ml,
+                    milkTypeById.get(customer.milk_type_id)?.unit,
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <Badge

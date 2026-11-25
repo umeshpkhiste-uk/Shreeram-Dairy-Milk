@@ -1,10 +1,16 @@
 import Link from 'next/link';
 
-import { computeDashboardMetrics, formatPaiseAsRupees, todayInBusinessTimezone } from '@shreeram/shared';
+import {
+  computeDashboardMetrics,
+  formatPaiseAsRupees,
+  formatQuantityTotal,
+  todayInBusinessTimezone,
+} from '@shreeram/shared';
 
 import { Card } from '@/components/ui';
 import { listCustomers } from '@/lib/data/customers';
 import { listDeliveriesForDate } from '@/lib/data/deliveries';
+import { listAllMilkTypes } from '@/lib/data/milk-types';
 import { listWorkers } from '@/lib/data/workers';
 import { createClient } from '@/lib/supabase/server';
 
@@ -18,11 +24,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const sp = await searchParams;
   const date = sp.date && sp.date <= today ? sp.date : today;
 
-  const [activeCustomers, workers, deliveriesForDate] = await Promise.all([
+  const [activeCustomers, workers, deliveriesForDate, milkTypes] = await Promise.all([
     listCustomers(supabase, { status: 'active' }),
     listWorkers(supabase),
     listDeliveriesForDate(supabase, date),
+    listAllMilkTypes(supabase),
   ]);
+  const unitById = new Map(milkTypes.map((m) => [m.id, m.unit]));
 
   const metrics = computeDashboardMetrics(activeCustomers, workers, deliveriesForDate, date);
 
@@ -34,7 +42,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     { label: 'Partial', value: String(metrics.partialToday), href: '/deliveries' },
     { label: 'Missed', value: String(metrics.missedToday), href: '/deliveries' },
     { label: 'No record yet', value: String(metrics.noRecordToday), href: '/deliveries' },
-    { label: 'Milk delivered', value: `${(metrics.totalMlDeliveredToday / 1000).toFixed(1)} L` },
+    {
+      label: 'Quantity delivered',
+      value: formatQuantityTotal(
+        deliveriesForDate.map((d) => ({
+          quantity: d.delivered_quantity_ml,
+          unit: unitById.get(d.milk_type_id),
+        })),
+      ),
+    },
     {
       label: 'Estimated sales',
       value: formatPaiseAsRupees(metrics.estimatedSalesPaiseToday),

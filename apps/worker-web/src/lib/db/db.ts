@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable, type Table } from 'dexie';
 
-import type { Database, DeliveryStatus } from '@shreeram/shared';
+import type { Database, DeliveryStatus, ProductUnit } from '@shreeram/shared';
 
 /**
  * Local IndexedDB — a cache + durable outbox, never a second source of truth
@@ -21,7 +21,8 @@ export type CachedCustomer = {
   preferred_delivery_window: string | null;
 };
 
-export type CachedMilkType = { id: string; name: string };
+/** `unit` is missing on rows cached before products had units. */
+export type CachedMilkType = { id: string; name: string; unit?: ProductUnit };
 
 export type LocalDeliverySyncStatus = 'pending' | 'syncing' | 'synced' | 'failed' | 'conflict';
 

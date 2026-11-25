@@ -1,6 +1,6 @@
 'use client';
 
-import type { StatusTone } from '@shreeram/shared';
+import { formatQuantity, formatQuantityTotal, type StatusTone } from '@shreeram/shared';
 
 import {
   Badge,
@@ -13,14 +13,14 @@ import {
   Row,
   Title,
 } from '@/components/ui';
-import { getCachedMilkTypeNames, listCachedCustomers } from '@/lib/db/cache-repo';
+import { getCachedMilkTypes, listCachedCustomers } from '@/lib/db/cache-repo';
 import type { OutboxStatus } from '@/lib/db/db';
 import { listLocalDeliveriesForDate } from '@/lib/db/deliveries-repo';
 import { listOutboxItems, retryFailedOutboxItem } from '@/lib/db/outbox-repo';
 import { useLive } from '@/lib/db/use-live';
 import { useIsOnline } from '@/lib/sync/connectivity';
 import { runSync, useSyncStatus } from '@/lib/sync/sync-engine';
-import { formatMlAsLitres, summarizeTodayDeliveries } from '@/lib/sync/today-summary';
+import { summarizeTodayDeliveries } from '@/lib/sync/today-summary';
 import { useToday } from '@/lib/use-today';
 
 const OUTBOX_STATUS_LABEL: Record<OutboxStatus, string> = {
@@ -48,7 +48,7 @@ export default function SyncStatusPage() {
             items: await listOutboxItems(),
             customers: await listCachedCustomers(),
             deliveries: await listLocalDeliveriesForDate(today),
-            milkTypeNames: await getCachedMilkTypeNames(),
+            milkTypes: await getCachedMilkTypes(),
           },
     [today],
   );
@@ -56,6 +56,9 @@ export default function SyncStatusPage() {
   if (!data || !today) return <LoadingState label="Loading sync status…" />;
 
   const summary = summarizeTodayDeliveries(data.customers, data.deliveries);
+  const deliveredByProduct = Object.entries(summary.deliveredMlByMilkType).map(
+    ([id, quantity]) => [id, { quantity, unit: data.milkTypes[id]?.unit }] as const,
+  );
   const deliveryByCustomerId = new Map(data.deliveries.map((d) => [d.customer_id, d]));
 
   async function handleRetry(eventId: string) {
@@ -80,13 +83,24 @@ export default function SyncStatusPage() {
           <Stat label="Customer informed" value={summary.skipped} />
           <Stat label="Not recorded yet" value={summary.notRecorded} />
         </dl>
-        <Row label="Scheduled milk" value={formatMlAsLitres(summary.scheduledMl)} />
-        <Row label="Delivered milk" value={formatMlAsLitres(summary.deliveredMl)} />
-        {Object.entries(summary.deliveredMlByMilkType).map(([milkTypeId, ml]) => (
+        <Row
+          label="Scheduled quantity"
+          value={formatQuantityTotal(
+            data.customers.map((c) => ({
+              quantity: c.default_daily_quantity_ml,
+              unit: data.milkTypes[c.milk_type_id]?.unit,
+            })),
+          )}
+        />
+        <Row
+          label="Delivered quantity"
+          value={formatQuantityTotal(deliveredByProduct.map(([, total]) => total))}
+        />
+        {deliveredByProduct.map(([milkTypeId, total]) => (
           <Row
             key={milkTypeId}
-            label={data.milkTypeNames[milkTypeId] ?? 'Milk'}
-            value={formatMlAsLitres(ml)}
+            label={data.milkTypes[milkTypeId]?.name ?? 'Product'}
+            value={formatQuantityTotal([total])}
           />
         ))}
         <Row label="Synced to server" value={summary.synced} />
@@ -98,15 +112,17 @@ export default function SyncStatusPage() {
           <h2 className="text-lg font-semibold">Customer-wise check</h2>
           {data.customers.map((customer) => {
             const delivery = deliveryByCustomerId.get(customer.id);
+            const unit =
+              data.milkTypes[delivery?.milk_type_id ?? customer.milk_type_id]?.unit;
             return (
               <div key={customer.id} className="flex items-center justify-between gap-2 py-1">
                 <div>
                   <p>{customer.full_name}</p>
                   <p className="text-sm text-text-secondary">
                     {delivery
-                      ? `${delivery.delivered_quantity_ml} of ${delivery.scheduled_quantity_ml} ml` +
+                      ? `${delivery.delivered_quantity_ml} of ${formatQuantity(delivery.scheduled_quantity_ml, unit)}` +
                         (delivery.sync_status === 'synced' ? ' · synced' : ' · not synced yet')
-                      : `${customer.default_daily_quantity_ml} ml scheduled`}
+                      : `${formatQuantity(customer.default_daily_quantity_ml, unit)} scheduled`}
                   </p>
                 </div>
                 <Badge

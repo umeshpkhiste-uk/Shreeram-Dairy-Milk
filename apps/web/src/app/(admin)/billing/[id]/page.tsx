@@ -7,6 +7,9 @@ import {
   billAmountDue,
   formatBillingMonth,
   formatPaiseAsRupees,
+  formatQuantity,
+  formatQuantityTotal,
+  unitLabel,
 } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
@@ -48,7 +51,7 @@ export default async function BillDetailPage({ params }: PageProps) {
     getCustomer(supabase, bill.customer_id),
     listAllMilkTypes(supabase),
   ]);
-  const milkTypeNameById = new Map(milkTypes.map((m) => [m.id, m.name]));
+  const milkTypeById = new Map(milkTypes.map((m) => [m.id, m]));
 
   const totalPaid = payments.reduce((sum, p) => (p.voided_at ? sum : sum + p.amount_paise), 0);
   const { duePaise, settledElsewherePaise } = billAmountDue(
@@ -56,7 +59,14 @@ export default async function BillDetailPage({ params }: PageProps) {
     bill.total_payable_paise,
     totalPaid,
   );
-  const totalMl = items.reduce((sum, item) => sum + item.quantity_ml, 0);
+  const quantities = items.map((item) => ({
+    quantity: item.quantity_ml,
+    unit: milkTypeById.get(item.milk_type_id)?.unit,
+  }));
+  const oneUnit = new Set(quantities.map((q) => q.unit)).size === 1;
+  const averageQuantity = Math.round(
+    quantities.reduce((sum, q) => sum + q.quantity, 0) / quantities.length,
+  );
   const isDraft = bill.status === 'draft';
   const isVoided = bill.status === 'voided';
 
@@ -124,10 +134,10 @@ export default async function BillDetailPage({ params }: PageProps) {
         <h2 className="mb-3 text-lg font-semibold text-text">Delivery summary</h2>
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Stat label="Days delivered" value={String(items.length)} />
-          <Stat label="Total quantity" value={`${(totalMl / 1000).toFixed(2)} L`} />
+          <Stat label="Total quantity" value={formatQuantityTotal(quantities)} />
           <Stat
             label="Average per delivery"
-            value={`${items.length > 0 ? Math.round(totalMl / items.length) : 0} ml`}
+            value={oneUnit ? formatQuantity(averageQuantity, quantities[0].unit) : '—'}
           />
         </div>
 
@@ -137,7 +147,7 @@ export default async function BillDetailPage({ params }: PageProps) {
             <thead className="text-xs font-medium uppercase text-text-secondary">
               <tr>
                 <th className="py-2">Date</th>
-                <th className="py-2">Milk type</th>
+                <th className="py-2">Product type</th>
                 <th className="py-2 text-right">Quantity</th>
                 <th className="py-2 text-right">Rate</th>
                 <th className="py-2 text-right">Amount</th>
@@ -154,9 +164,14 @@ export default async function BillDetailPage({ params }: PageProps) {
                 items.map((item) => (
                   <tr key={item.id}>
                     <td className="py-2">{item.delivery_date}</td>
-                    <td className="py-2">{milkTypeNameById.get(item.milk_type_id) ?? 'Milk'}</td>
-                    <td className="py-2 text-right">{item.quantity_ml} ml</td>
-                    <td className="py-2 text-right">{formatPaiseAsRupees(item.price_paise)}/L</td>
+                    <td className="py-2">{milkTypeById.get(item.milk_type_id)?.name ?? 'Product'}</td>
+                    <td className="py-2 text-right">
+                      {formatQuantity(item.quantity_ml, milkTypeById.get(item.milk_type_id)?.unit)}
+                    </td>
+                    <td className="py-2 text-right">
+                      {formatPaiseAsRupees(item.price_paise)}/
+                      {unitLabel(milkTypeById.get(item.milk_type_id)?.unit)}
+                    </td>
                     <td className="py-2 text-right">{formatPaiseAsRupees(item.amount_paise)}</td>
                   </tr>
                 ))

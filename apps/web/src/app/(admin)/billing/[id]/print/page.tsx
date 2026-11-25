@@ -33,7 +33,7 @@ export default async function BillPrintPage({ params }: PageProps) {
     getBusinessSettings(supabase),
   ]);
   if (!customer) notFound();
-  const milkTypeNameById = new Map(milkTypes.map((m) => [m.id, m.name]));
+  const milkTypeById = new Map(milkTypes.map((m) => [m.id, m]));
 
   const data: BillPdfData = {
     business: {
@@ -59,8 +59,9 @@ export default async function BillPrintPage({ params }: PageProps) {
     },
     items: items.map((item) => ({
       deliveryDate: item.delivery_date,
-      milkTypeName: milkTypeNameById.get(item.milk_type_id) ?? 'Milk',
+      milkTypeName: milkTypeById.get(item.milk_type_id)?.name ?? 'Product',
       quantityMl: item.quantity_ml,
+      unit: milkTypeById.get(item.milk_type_id)?.unit,
       pricePaise: item.price_paise,
       amountPaise: item.amount_paise,
     })),

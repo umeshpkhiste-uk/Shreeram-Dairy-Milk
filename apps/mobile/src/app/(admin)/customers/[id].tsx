@@ -24,24 +24,31 @@ import {
   type CustomerRow,
 } from '@/lib/api/customers';
 import { BILL_STATUS_LABEL, BILL_STATUS_TONE } from '@/lib/billing/status';
+import { listAllMilkTypes, type MilkTypeRow } from '@/lib/api/milk-types';
 import { formatPaiseAsRupees, parseRupeesToPaise } from '@/lib/money';
+import { formatQuantity, unitLabel } from '@/lib/quantity';
 import { listOrdersForCustomer, type CustomerOrder } from '@/lib/api/orders';
 import { formatBillingMonth } from '@/lib/date';
 import { CustomerForm } from '@/screens/admin/customer-form';
 import type { CustomerFormValues } from '@/lib/validation/customer';
 import { Spacing } from '@/theme/tokens';
+import type { ProductUnit } from '@/types/database';
 
 export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [customer, setCustomer] = useState<CustomerRow | null>(null);
+  const [milkTypes, setMilkTypes] = useState<MilkTypeRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(false);
 
   const load = useCallback(() => {
     setError(null);
-    getCustomer(id)
-      .then(setCustomer)
+    Promise.all([getCustomer(id), listAllMilkTypes()])
+      .then(([customerRow, milkTypeRows]) => {
+        setCustomer(customerRow);
+        setMilkTypes(milkTypeRows);
+      })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load customer'));
   }, [id]);
 
@@ -97,6 +104,8 @@ export default function CustomerDetailScreen() {
     );
   }
 
+  const unit = milkTypes.find((m) => m.id === customer.milk_type_id)?.unit;
+
   if (editing) {
     return (
       <Screen scroll>
@@ -143,7 +152,7 @@ export default function CustomerDetailScreen() {
         {customer.email ? <Row label="Email" value={customer.email} /> : null}
         <Row label="Address" value={customer.address} />
         {customer.locality ? <Row label="Locality" value={customer.locality} /> : null}
-        <Row label="Daily quantity" value={`${customer.default_daily_quantity_ml} ml`} />
+        <Row label="Daily quantity" value={formatQuantity(customer.default_daily_quantity_ml, unit)} />
         <Row label="Delivery start" value={customer.delivery_start_date} />
         {customer.preferred_delivery_window ? (
           <Row label="Preferred window" value={customer.preferred_delivery_window} />
@@ -151,7 +160,11 @@ export default function CustomerDetailScreen() {
         {customer.notes ? <Row label="Notes" value={customer.notes} /> : null}
       </Card>
 
-      <CustomerPricingSection customerId={customer.id} milkTypeId={customer.milk_type_id} />
+      <CustomerPricingSection
+        customerId={customer.id}
+        milkTypeId={customer.milk_type_id}
+        unit={unit}
+      />
 
       <CustomerBillingSection customerId={customer.id} />
 
@@ -173,9 +186,11 @@ export default function CustomerDetailScreen() {
 function CustomerPricingSection({
   customerId,
   milkTypeId,
+  unit,
 }: {
   customerId: string;
   milkTypeId: string;
+  unit: ProductUnit | undefined;
 }) {
   const [rates, setRates] = useState<CustomerMilkRateRow[] | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -222,18 +237,18 @@ function CustomerPricingSection({
       {currentRate ? (
         <Row
           label="Current rate"
-          value={`${formatPaiseAsRupees(currentRate.price_paise)} / litre`}
+          value={`${formatPaiseAsRupees(currentRate.price_paise)} / ${unitLabel(unit)}`}
         />
       ) : (
         <Text variant="body" color="secondary">
-          No customer-specific rate set — billed at the milk type&rsquo;s default price.
+          No customer-specific rate set — billed at the product type&rsquo;s default price.
         </Text>
       )}
 
       {showForm ? (
         <View style={styles.rateForm}>
           <Input
-            label="New price per litre (₹)"
+            label={`New price per ${unitLabel(unit)} (₹)`}
             value={priceInput}
             onChangeText={setPriceInput}
             keyboardType="decimal-pad"

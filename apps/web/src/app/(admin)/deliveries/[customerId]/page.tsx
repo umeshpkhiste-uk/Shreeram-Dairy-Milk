@@ -6,11 +6,14 @@ import {
   BILL_STATUS_TONE,
   firstOfMonth,
   formatPaiseAsRupees,
+  formatQuantity,
+  formatQuantityTotal,
   lastOfMonth,
   shiftDate,
   shiftMonth,
   todayInBusinessTimezone,
   type DeliveryStatus,
+  type ProductUnit,
 } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
@@ -31,6 +34,7 @@ import {
   type DeliveryRow,
 } from '@/lib/data/deliveries';
 import { getCustomer } from '@/lib/data/customers';
+import { listAllMilkTypes } from '@/lib/data/milk-types';
 import { createClient } from '@/lib/supabase/server';
 
 import { createBillForMonthAction, markSkippedAction, resolveConflictAction } from './actions';
@@ -88,11 +92,13 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
   const day = sp.day ?? null;
 
   const supabase = await createClient();
-  const [customer, deliveries, bills] = await Promise.all([
+  const [customer, deliveries, bills, milkTypes] = await Promise.all([
     getCustomer(supabase, customerId),
     listDeliveriesForCustomerInRange(supabase, customerId, month, lastOfMonth(month)),
     listBillsForCustomer(supabase, customerId),
+    listAllMilkTypes(supabase),
   ]);
+  const unitById = new Map(milkTypes.map((m) => [m.id, m.unit]));
 
   if (!customer) notFound();
 
@@ -106,7 +112,8 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
   });
 
   const countedThrough = month <= firstOfMonth(today) ? (month === firstOfMonth(today) ? today : lastOfMonth(month)) : null;
-  const summary = { completed: 0, partial: 0, missed: 0, skipped: 0, noRecord: 0, totalMl: 0 };
+  const summary = { completed: 0, partial: 0, missed: 0, skipped: 0, noRecord: 0 };
+  const delivered: { quantity: number; unit: ProductUnit | undefined }[] = [];
   if (countedThrough) {
     for (let d = month; d <= countedThrough; d = shiftDate(d, 1)) {
       const entry = entriesByDate.get(d);
@@ -114,7 +121,10 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
         summary.noRecord += 1;
       } else {
         summary[entry.status as 'completed' | 'partial' | 'missed' | 'skipped'] += 1;
-        summary.totalMl += entry.delivered_quantity_ml;
+        delivered.push({
+          quantity: entry.delivered_quantity_ml,
+          unit: unitById.get(entry.milk_type_id),
+        });
       }
     }
   }
@@ -238,7 +248,10 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
                 <ConflictRecord
                   heading="Current record"
                   status={selectedEntry.status}
-                  quantityMl={selectedEntry.delivered_quantity_ml}
+                  quantity={formatQuantity(
+                    selectedEntry.delivered_quantity_ml,
+                    unitById.get(selectedEntry.milk_type_id),
+                  )}
                   reason={selectedEntry.reason}
                   recordedAt={selectedEntry.device_recorded_at}
                   action={resolveConflictAction.bind(null, customerId, day, month, selectedEntry.id, null)}
@@ -249,7 +262,10 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
                     key={event.id}
                     heading="Other record from the worker&rsquo;s phone"
                     status={event.payload.status as DeliveryStatus}
-                    quantityMl={Number(event.payload.delivered_quantity_ml)}
+                    quantity={formatQuantity(
+                      Number(event.payload.delivered_quantity_ml),
+                      unitById.get(selectedEntry.milk_type_id),
+                    )}
                     reason={event.payload.reason as string | null}
                     recordedAt={event.device_recorded_at}
                     action={resolveConflictAction.bind(null, customerId, day, month, selectedEntry.id, event.id)}
@@ -302,7 +318,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
         )}
         {countedThrough ? (
           <p className="mt-3 text-sm text-text-secondary">
-            Total delivered: {(summary.totalMl / 1000).toFixed(2)} L across{' '}
+            Total delivered: {formatQuantityTotal(delivered)} across{' '}
             {summary.completed + summary.partial} day{summary.completed + summary.partial === 1 ? '' : 's'}.
           </p>
         ) : null}
@@ -345,7 +361,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
 function ConflictRecord({
   heading,
   status,
-  quantityMl,
+  quantity,
   reason,
   recordedAt,
   action,
@@ -353,7 +369,7 @@ function ConflictRecord({
 }: {
   heading: string;
   status: DeliveryStatus;
-  quantityMl: number;
+  quantity: string;
   reason: string | null;
   recordedAt: string;
   action: () => Promise<{ error: string | null }>;
@@ -364,7 +380,7 @@ function ConflictRecord({
       <div>
         <p className="text-sm font-medium text-text">{heading}</p>
         <p className="mt-1 flex items-center gap-2 text-sm text-text-secondary">
-          <Badge label={STATUS_LABEL[status]} tone={STATUS_TONE[status]} /> {quantityMl} ml
+          <Badge label={STATUS_LABEL[status]} tone={STATUS_TONE[status]} /> {quantity}
         </p>
         <p className="mt-1 text-xs text-text-secondary">
           Recorded{' '}

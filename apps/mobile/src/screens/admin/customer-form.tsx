@@ -7,6 +7,7 @@ import { Input } from '@/components/input';
 import { Text } from '@/components/text';
 import { listActiveMilkTypes, type MilkTypeRow } from '@/lib/api/milk-types';
 import { listRoutes, listWorkers, type WorkerSummary } from '@/lib/api/workers';
+import { unitLabel } from '@/lib/quantity';
 import type { Database } from '@/types/database';
 import { customerFormSchema, type CustomerFormValues } from '@/lib/validation/customer';
 import { Spacing } from '@/theme/tokens';
@@ -185,8 +186,8 @@ export function CustomerForm({ initial, submitLabel, onSubmit }: CustomerFormPro
 
       <Text variant="subtitle">Delivery</Text>
       <ChipSelect
-        label="Milk type"
-        options={milkTypes.map((m) => ({ value: m.id, label: m.name }))}
+        label="Product type"
+        options={milkTypes.map((m) => ({ value: m.id, label: `${m.name} (${unitLabel(m.unit)})` }))}
         value={form.milkTypeId}
         onChange={(v) => setField('milkTypeId', v)}
       />
@@ -196,7 +197,7 @@ export function CustomerForm({ initial, submitLabel, onSubmit }: CustomerFormPro
         </Text>
       ) : null}
       <Input
-        label="Default daily quantity (ml)"
+        label="Daily quantity (ml, or grams for Kg products)"
         value={form.defaultDailyQuantityMl}
         onChangeText={(v) => setField('defaultDailyQuantityMl', v)}
         keyboardType="number-pad"

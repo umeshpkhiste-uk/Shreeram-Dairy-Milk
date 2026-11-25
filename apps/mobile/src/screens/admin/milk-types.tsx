@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
+import { ChipSelect } from '@/components/chip-select';
 import { ErrorState } from '@/components/error-state';
 import { Input } from '@/components/input';
 import { LoadingState } from '@/components/loading-state';
@@ -17,7 +18,14 @@ import {
   type MilkTypeRow,
 } from '@/lib/api/milk-types';
 import { formatPaiseAsRupees, parseRupeesToPaise } from '@/lib/money';
+import { unitLabel } from '@/lib/quantity';
 import { Spacing } from '@/theme/tokens';
+import type { ProductUnit } from '@/types/database';
+
+const UNIT_OPTIONS: { value: ProductUnit; label: string }[] = [
+  { value: 'litre', label: 'Litre' },
+  { value: 'kg', label: 'Kg' },
+];
 
 export function MilkTypesScreen() {
   const [milkTypes, setMilkTypes] = useState<MilkTypeRow[] | null>(null);
@@ -27,7 +35,7 @@ export function MilkTypesScreen() {
     setError(null);
     listAllMilkTypes()
       .then(setMilkTypes)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load milk types'));
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load product types'));
   }, []);
 
   useFocusEffect(
@@ -47,14 +55,14 @@ export function MilkTypesScreen() {
   if (milkTypes === null) {
     return (
       <Screen>
-        <LoadingState label="Loading milk types…" />
+        <LoadingState label="Loading product types…" />
       </Screen>
     );
   }
 
   return (
     <Screen scroll>
-      <Text variant="title">Milk Types</Text>
+      <Text variant="title">Product Types</Text>
       {milkTypes.map((m) => (
         <MilkTypeRowEditor key={m.id} milkType={m} onSaved={load} />
       ))}
@@ -112,7 +120,7 @@ function MilkTypeRowEditor({ milkType, onSaved }: { milkType: MilkTypeRow; onSav
       {editing ? (
         <>
           <Input
-            label="Default price per litre (₹)"
+            label={`Default price per ${unitLabel(milkType.unit)} (₹)`}
             value={priceText}
             onChangeText={setPriceText}
             keyboardType="decimal-pad"
@@ -130,7 +138,7 @@ function MilkTypeRowEditor({ milkType, onSaved }: { milkType: MilkTypeRow; onSav
       ) : (
         <>
           <Text variant="body" color="secondary">
-            {formatPaiseAsRupees(milkType.default_price_paise)} / litre
+            {formatPaiseAsRupees(milkType.default_price_paise)} / {unitLabel(milkType.unit)}
           </Text>
           <View style={styles.actions}>
             <Button label="Edit price" variant="secondary" onPress={() => setEditing(true)} />
@@ -150,6 +158,7 @@ function MilkTypeRowEditor({ milkType, onSaved }: { milkType: MilkTypeRow; onSav
 function NewMilkTypeForm({ onCreated }: { onCreated: () => void }) {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
+  const [unit, setUnit] = useState<ProductUnit>('litre');
   const [priceText, setPriceText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -157,7 +166,7 @@ function NewMilkTypeForm({ onCreated }: { onCreated: () => void }) {
   async function handleSave() {
     const paise = parseRupeesToPaise(priceText);
     if (name.trim().length < 2) {
-      setError('Enter a milk type name');
+      setError('Enter a product type name');
       return;
     }
     if (paise === null) {
@@ -167,27 +176,29 @@ function NewMilkTypeForm({ onCreated }: { onCreated: () => void }) {
     setError(null);
     setSaving(true);
     try {
-      await createMilkType({ name: name.trim(), defaultPricePaise: paise });
+      await createMilkType({ name: name.trim(), unit, defaultPricePaise: paise });
       setShowForm(false);
       setName('');
+      setUnit('litre');
       setPriceText('');
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create milk type');
+      setError(err instanceof Error ? err.message : 'Failed to create product type');
     } finally {
       setSaving(false);
     }
   }
 
   if (!showForm) {
-    return <Button label="Add milk type" variant="secondary" onPress={() => setShowForm(true)} />;
+    return <Button label="Add product type" variant="secondary" onPress={() => setShowForm(true)} />;
   }
 
   return (
     <Card style={styles.card}>
       <Input label="Name" value={name} onChangeText={setName} />
+      <ChipSelect label="Unit" options={UNIT_OPTIONS} value={unit} onChange={(v) => setUnit(v ?? 'litre')} />
       <Input
-        label="Default price per litre (₹)"
+        label={`Default price per ${unitLabel(unit)} (₹)`}
         value={priceText}
         onChangeText={setPriceText}
         keyboardType="decimal-pad"

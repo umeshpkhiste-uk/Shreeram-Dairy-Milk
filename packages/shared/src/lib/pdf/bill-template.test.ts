@@ -27,6 +27,7 @@ const BASE: BillPdfData = {
       deliveryDate: '2026-01-01',
       milkTypeName: 'Cow Milk',
       quantityMl: 500,
+      unit: 'litre',
       pricePaise: 5500,
       amountPaise: 2750,
     },
@@ -38,6 +39,16 @@ const BASE: BillPdfData = {
 };
 
 describe('renderBillHtml', () => {
+  it('shows a kg product in grams and per Kg', () => {
+    const html = renderBillHtml({
+      ...BASE,
+      items: [{ ...BASE.items[0], milkTypeName: 'Paneer', quantityMl: 500, unit: 'kg' }],
+    });
+    expect(html).toContain('500 g<');
+    expect(html).toContain('/Kg<');
+    expect(html).not.toContain('500 ml');
+  });
+
   it('includes the business name, customer name, and bill number', () => {
     const html = renderBillHtml(BASE);
     expect(html).toContain('Shreeram Daily Milk');

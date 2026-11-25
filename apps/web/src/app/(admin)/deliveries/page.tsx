@@ -1,9 +1,10 @@
 import Link from 'next/link';
 
-import { firstOfMonth, todayInBusinessTimezone } from '@shreeram/shared';
+import { firstOfMonth, formatQuantity, todayInBusinessTimezone } from '@shreeram/shared';
 
 import { Badge, Card, EmptyState, InfoButton, PageHeader, Table } from '@/components/ui';
 import { listDailyDeliveryReport } from '@/lib/data/deliveries';
+import { listAllMilkTypes } from '@/lib/data/milk-types';
 import { listRoutes, listWorkers } from '@/lib/data/workers';
 import { createClient } from '@/lib/supabase/server';
 
@@ -38,7 +39,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
   const date = sp.date ?? todayInBusinessTimezone();
   const supabase = await createClient();
 
-  const [rows, workers, routes] = await Promise.all([
+  const [rows, workers, routes, milkTypes] = await Promise.all([
     listDailyDeliveryReport(supabase, {
       date,
       workerId: sp.workerId,
@@ -48,7 +49,9 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
     }),
     listWorkers(supabase),
     listRoutes(supabase),
+    listAllMilkTypes(supabase),
   ]);
+  const milkTypeById = new Map(milkTypes.map((m) => [m.id, m]));
 
   return (
     <div>
@@ -136,6 +139,9 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
           </thead>
           <tbody className="divide-y divide-border">
             {rows.map((row) => {
+              const unit = milkTypeById.get(
+                row.delivery?.milk_type_id ?? row.customer.milk_type_id,
+              )?.unit;
               const statusKey = row.delivery?.status ?? 'no_record';
               return (
                 <tr key={row.customer.id} className="hover:bg-surface-muted">
@@ -149,8 +155,8 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
                   </td>
                   <td className="px-4 py-3 text-text-secondary">
                     {row.delivery
-                      ? `${row.delivery.delivered_quantity_ml} ml`
-                      : `${row.customer.default_daily_quantity_ml} ml scheduled`}
+                      ? formatQuantity(row.delivery.delivered_quantity_ml, unit)
+                      : `${formatQuantity(row.customer.default_daily_quantity_ml, unit)} scheduled`}
                   </td>
                   <td className="px-4 py-3">
                     <Badge label={STATUS_LABEL[statusKey]} tone={STATUS_TONE[statusKey]} />

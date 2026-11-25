@@ -31,7 +31,6 @@ export type DashboardMetrics = {
    * of a missed delivery — it may be genuinely pending, or completed offline
    * and not yet synced. See docs/admin-monitoring.md. */
   noRecordToday: number;
-  totalMlDeliveredToday: number;
   /** Per-delivery price × quantity, rounded to the nearest paise before
    * summing (no compounding drift). An estimate, not authoritative billing. */
   estimatedSalesPaiseToday: number;
@@ -50,7 +49,6 @@ export function computeDashboardMetrics(
   let completedToday = 0;
   let partialToday = 0;
   let missedToday = 0;
-  let totalMlDeliveredToday = 0;
   let estimatedSalesPaiseToday = 0;
 
   for (const delivery of deliveriesToday) {
@@ -58,7 +56,6 @@ export function computeDashboardMetrics(
     else if (delivery.status === 'partial') partialToday += 1;
     else if (delivery.status === 'missed') missedToday += 1;
 
-    totalMlDeliveredToday += delivery.delivered_quantity_ml;
     estimatedSalesPaiseToday += Math.round(
       (delivery.price_paise_snapshot * delivery.delivered_quantity_ml) / 1000,
     );
@@ -72,7 +69,6 @@ export function computeDashboardMetrics(
     partialToday,
     missedToday,
     noRecordToday,
-    totalMlDeliveredToday,
     estimatedSalesPaiseToday,
   };
 }

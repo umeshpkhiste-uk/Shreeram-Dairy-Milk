@@ -41,7 +41,7 @@ export default function PrivacyPolicyPage() {
         </p>
         <ul>
           <li>Name, mobile number, optional email, delivery address, locality and landmark.</li>
-          <li>Milk type, daily quantity, route, delivery start date, and any notes.</li>
+          <li>Product type, daily quantity, route, delivery start date, and any notes.</li>
           <li>
             Delivery records, one-time orders, monthly bills, adjustments and payments received
             (amount, method such as cash/UPI/bank transfer, and reference).

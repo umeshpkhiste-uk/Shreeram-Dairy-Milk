@@ -27,7 +27,9 @@ import {
   shiftMonth,
   todayInBusinessTimezone,
 } from '@/lib/date';
+import { listAllMilkTypes, type MilkTypeRow } from '@/lib/api/milk-types';
 import { formatPaiseAsRupees } from '@/lib/money';
+import { formatQuantityTotal } from '@/lib/quantity';
 import { Radius, Spacing } from '@/theme/tokens';
 import type { DeliveryStatus } from '@/types/database';
 
@@ -86,6 +88,7 @@ export function AdminCustomerDeliveryCalendarScreen() {
   const [month, setMonth] = useState(() => firstOfMonth(today));
   const [customer, setCustomer] = useState<CustomerRow | null>(null);
   const [entries, setEntries] = useState<Record<string, DeliveryRow>>({});
+  const [milkTypes, setMilkTypes] = useState<MilkTypeRow[]>([]);
   const [bills, setBills] = useState<MonthlyBillRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,11 +102,13 @@ export function AdminCustomerDeliveryCalendarScreen() {
       setLoading(true);
       setError(null);
       try {
-        const [customerRow, deliveryRows, billRows] = await Promise.all([
+        const [customerRow, deliveryRows, billRows, milkTypeRows] = await Promise.all([
           getCustomer(customerId),
           listDeliveriesForCustomerInRange(customerId, targetMonth, lastOfMonth(targetMonth)),
           listBillsForCustomer(customerId),
+          listAllMilkTypes(),
         ]);
+        setMilkTypes(milkTypeRows);
         setCustomer(customerRow);
         setEntries(Object.fromEntries(deliveryRows.map((d) => [d.delivery_date, d])));
         setBills(billRows);
@@ -181,7 +186,9 @@ export function AdminCustomerDeliveryCalendarScreen() {
         : lastOfMonth(month)
       : null;
   const summary = useMemo(() => {
-    const s = { delivered: 0, missed: 0, skipped: 0, noRecord: 0, totalMl: 0 };
+    const s = { delivered: 0, missed: 0, skipped: 0, noRecord: 0, quantity: '' };
+    const unitById = new Map(milkTypes.map((m) => [m.id, m.unit]));
+    const quantities: Parameters<typeof formatQuantityTotal>[0] = [];
     if (!countedThrough) return s;
     for (let d = month; d <= countedThrough; d = shiftDate(d, 1)) {
       const entry = entries[d];
@@ -189,15 +196,19 @@ export function AdminCustomerDeliveryCalendarScreen() {
         s.noRecord += 1;
       } else if (entry.status === 'completed' || entry.status === 'partial') {
         s.delivered += 1;
-        s.totalMl += entry.delivered_quantity_ml;
+        quantities.push({
+          quantity: entry.delivered_quantity_ml,
+          unit: unitById.get(entry.milk_type_id),
+        });
       } else if (entry.status === 'missed') {
         s.missed += 1;
       } else if (entry.status === 'skipped') {
         s.skipped += 1;
       }
     }
+    s.quantity = formatQuantityTotal(quantities);
     return s;
-  }, [entries, month, countedThrough]);
+  }, [entries, milkTypes, month, countedThrough]);
 
   if (loading && customer === null) {
     return (
@@ -349,7 +360,7 @@ export function AdminCustomerDeliveryCalendarScreen() {
               <Stat label="No record" value={summary.noRecord} />
             </View>
             <Text variant="body" color="secondary">
-              Total delivered: {(summary.totalMl / 1000).toFixed(2)} L across {summary.delivered}{' '}
+              Total delivered: {summary.quantity} across {summary.delivered}{' '}
               day
               {summary.delivered === 1 ? '' : 's'}.
             </Text>

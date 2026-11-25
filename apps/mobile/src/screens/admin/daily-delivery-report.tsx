@@ -15,10 +15,11 @@ import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Text } from '@/components/text';
 import { useTheme } from '@/hooks/use-theme';
 import { listDailyDeliveryReport } from '@/lib/api/deliveries';
-import { listActiveMilkTypes } from '@/lib/api/milk-types';
+import { listAllMilkTypes, type MilkTypeRow } from '@/lib/api/milk-types';
 import { listRoutes, listWorkers, type WorkerSummary } from '@/lib/api/workers';
 import { formatDateDDMMYYYY, shiftDate, todayInBusinessTimezone } from '@/lib/date';
 import type { DeliveryReportRow, DeliveryReportStatusFilter } from '@/lib/dashboard/metrics';
+import { formatQuantity } from '@/lib/quantity';
 import { subscribeToDeliveryChanges } from '@/lib/realtime/deliveries-channel';
 import { MinTouchTarget, Radius, Spacing } from '@/theme/tokens';
 import type { Database } from '@/types/database';
@@ -56,7 +57,7 @@ export function DailyDeliveryReportScreen() {
   const [rows, setRows] = useState<DeliveryReportRow[] | null>(null);
   const [workers, setWorkers] = useState<WorkerSummary[]>([]);
   const [routes, setRoutes] = useState<RouteRow[]>([]);
-  const [milkTypeNames, setMilkTypeNames] = useState<Record<string, string>>({});
+  const [milkTypeById, setMilkTypeById] = useState<Partial<Record<string, MilkTypeRow>>>({});
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -71,13 +72,13 @@ export function DailyDeliveryReportScreen() {
       }),
       listWorkers(),
       listRoutes(),
-      listActiveMilkTypes(),
+      listAllMilkTypes(),
     ])
       .then(([report, workerList, routeList, milkTypes]) => {
         setRows(report);
         setWorkers(workerList);
         setRoutes(routeList);
-        setMilkTypeNames(Object.fromEntries(milkTypes.map((m) => [m.id, m.name])));
+        setMilkTypeById(Object.fromEntries(milkTypes.map((m) => [m.id, m])));
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load report'));
   }, [date, workerId, routeId, search, status]);
@@ -153,7 +154,7 @@ export function DailyDeliveryReportScreen() {
         onRetry={load}
         workerNameById={workerNameById}
         routeNameById={routeNameById}
-        milkTypeNames={milkTypeNames}
+        milkTypes={milkTypeById}
       />
     </Screen>
   );
@@ -258,14 +259,14 @@ function ReportBody({
   onRetry,
   workerNameById,
   routeNameById,
-  milkTypeNames,
+  milkTypes,
 }: {
   rows: DeliveryReportRow[] | null;
   error: string | null;
   onRetry: () => void;
   workerNameById: Map<string, string>;
   routeNameById: Map<string, string>;
-  milkTypeNames: Record<string, string>;
+  milkTypes: Partial<Record<string, MilkTypeRow>>;
 }) {
   if (error) {
     return <ErrorState description={error} onRetry={onRetry} />;
@@ -300,7 +301,7 @@ function ReportBody({
           routeName={
             item.customer.route_id ? (routeNameById.get(item.customer.route_id) ?? '—') : '—'
           }
-          milkTypeNames={milkTypeNames}
+          milkTypes={milkTypes}
         />
       )}
     />
@@ -311,15 +312,15 @@ function ReportRow({
   row,
   workerName,
   routeName,
-  milkTypeNames,
+  milkTypes,
 }: {
   row: DeliveryReportRow;
   workerName: string;
   routeName: string;
-  milkTypeNames: Record<string, string>;
+  milkTypes: Partial<Record<string, MilkTypeRow>>;
 }) {
   const { customer, delivery } = row;
-  const milkTypeName = milkTypeNames[delivery?.milk_type_id ?? customer.milk_type_id] ?? 'Milk';
+  const product = milkTypes[delivery?.milk_type_id ?? customer.milk_type_id];
   const expectedMl = delivery?.scheduled_quantity_ml ?? customer.default_daily_quantity_ml;
 
   return (
@@ -338,11 +339,11 @@ function ReportRow({
             )}
           </View>
           <Text variant="body" color="secondary">
-            {workerName} · {routeName} · {milkTypeName}
+            {workerName} · {routeName} · {product?.name ?? 'Product'}
           </Text>
           <Text variant="body" color="secondary">
-            Expected {expectedMl} ml
-            {delivery ? ` · Delivered ${delivery.delivered_quantity_ml} ml` : ''}
+            Expected {formatQuantity(expectedMl, product?.unit)}
+            {delivery ? ` · Delivered ${formatQuantity(delivery.delivered_quantity_ml, product?.unit)}` : ''}
           </Text>
           {delivery ? (
             <Text variant="caption" color="secondary">

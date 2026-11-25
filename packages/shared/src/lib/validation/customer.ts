@@ -22,9 +22,9 @@ export const customerFormSchema = z.object({
   routeSequence: z.number().int().positive().nullable().optional(),
   defaultDailyQuantityMl: z
     .number({ message: 'Enter the daily quantity' })
-    .int('Quantity must be a whole number of millilitres')
+    .int('Quantity must be a whole number of ml or grams')
     .positive('Quantity must be greater than zero'),
-  milkTypeId: z.string().uuid('Select a milk type'),
+  milkTypeId: z.string().uuid('Select a product type'),
   preferredDeliveryWindow: z.string().trim().optional(),
   deliveryStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD'),
   notes: z.string().trim().optional(),

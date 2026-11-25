@@ -13,7 +13,7 @@ migrations gated by `PRAGMA user_version` (`schema.ts`):
 | Table | Purpose |
 |---|---|
 | `cached_customers` | The worker's assigned, active customers — refreshed from the server whenever online. |
-| `cached_milk_types` | Milk type names for display. Prices are never cached or shown to a worker (same rule as the server's RLS). |
+| `cached_milk_types` | Product type names and units for display. Prices are never cached or shown to a worker (same rule as the server's RLS). |
 | `local_deliveries` | One row per `(customer_id, delivery_date)` — the worker's own view of today's/recent status, including `sync_status` (`pending`/`syncing`/`synced`/`failed`/`conflict`) and the last sync error, if any. |
 | `sync_outbox` | The durable queue. One row per submitted event, never deleted until the server acknowledges it. |
 | `sync_meta` | Reserved key/value store for future sync bookkeeping. |

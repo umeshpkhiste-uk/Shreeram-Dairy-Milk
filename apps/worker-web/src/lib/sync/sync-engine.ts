@@ -217,7 +217,7 @@ async function pullLatestData(workerId: string): Promise<void> {
       preferred_delivery_window: c.preferred_delivery_window,
     })),
   );
-  await replaceCachedMilkTypes(milkTypes.map((m) => ({ id: m.id, name: m.name })));
+  await replaceCachedMilkTypes(milkTypes.map((m) => ({ id: m.id, name: m.name, unit: m.unit })));
 
   const sinceDate = new Date();
   sinceDate.setDate(sinceDate.getDate() - 14);

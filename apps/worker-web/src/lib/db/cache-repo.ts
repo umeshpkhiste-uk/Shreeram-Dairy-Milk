@@ -29,8 +29,8 @@ export async function getCachedCustomer(id: string): Promise<CachedCustomer | nu
   return (await db.cached_customers.get(id)) ?? null;
 }
 
-/** Milk type id → name. */
-export async function getCachedMilkTypeNames(): Promise<Record<string, string>> {
+/** Product type id → product type. */
+export async function getCachedMilkTypes(): Promise<Partial<Record<string, CachedMilkType>>> {
   const rows = await db.cached_milk_types.toArray();
-  return Object.fromEntries(rows.map((m) => [m.id, m.name]));
+  return Object.fromEntries(rows.map((m) => [m.id, m]));
 }

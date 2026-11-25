@@ -10,7 +10,7 @@ entirely version-controlled in `supabase/migrations/`; this file explains the *w
 | `profiles` | One row per Supabase Auth user (admin or worker). `role`, `is_active`, `full_name`, `phone`. Created automatically by the `handle_new_user` trigger. |
 | `workers` | Worker-only fields (`route_id`, `notes`). 1:1 extension of `profiles` — `workers.id = profiles.id = auth.uid()`. |
 | `routes` | Delivery routes (`name`, `description`, `is_active`). |
-| `milk_types` | Configurable milk types with a default price per litre (`default_price_paise`). |
+| `milk_types` | Product types a customer can receive daily (Cow Milk, Buffalo Milk, Curd, Paneer, Taak). `unit` is `litre` or `kg`; `default_price_paise` is per litre or per kg, and every `*_quantity_ml` / `quantity_ml` value is ml or grams to match. The table keeps its old name. |
 | `customers` | Customer record: contact/address, assignment (`assigned_worker_id`, `route_id`, `route_sequence`), delivery defaults, billing contact. Never hard-deleted — `status` (`active`/`inactive`) only. |
 | `customer_milk_rates` | Effective-dated customer-specific pricing. The authoritative source for what a delivery should be billed at (resolve by `customer_id` + `milk_type_id` + the delivery's date falling inside `[effective_from, effective_to)`). |
 | `business_settings` | Single-row (`id = true`) table: business name, contact details, currency, timezone (`Asia/Kolkata` by default). |

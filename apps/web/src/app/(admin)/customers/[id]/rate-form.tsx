@@ -1,5 +1,6 @@
 'use client';
 
+import { unitLabel } from '@shreeram/shared';
 import { useActionState } from 'react';
 
 import { ErrorText, PrimaryButton } from '@/components/ui';
@@ -19,7 +20,7 @@ export function RateForm({
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-3">
       <label className="flex flex-col gap-1 text-sm font-medium text-text">
-        Milk type
+        Product type
         <select
           name="milkTypeId"
           required
@@ -27,13 +28,13 @@ export function RateForm({
         >
           {milkTypes.map((m) => (
             <option key={m.id} value={m.id}>
-              {m.name}
+              {m.name} ({unitLabel(m.unit)})
             </option>
           ))}
         </select>
       </label>
       <label className="flex flex-col gap-1 text-sm font-medium text-text">
-        Price per litre (₹)
+        Price per L or Kg (₹)
         <input
           name="priceRupees"
           required

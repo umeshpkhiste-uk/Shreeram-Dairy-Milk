@@ -1,6 +1,7 @@
 import { formatPaiseAsRupees } from '../money';
+import { formatQuantity, unitLabel } from '../quantity';
 import { BILL_STATUS_LABEL, billAmountDue } from '../billing/status';
-import type { BillStatus } from '../../types/database';
+import type { BillStatus, ProductUnit } from '../../types/database';
 
 /**
  * Used by the website's print-to-PDF page (app/(admin)/billing/[id]/print).
@@ -38,6 +39,7 @@ export type BillPdfData = {
     deliveryDate: string;
     milkTypeName: string;
     quantityMl: number;
+    unit: ProductUnit | undefined;
     pricePaise: number;
     amountPaise: number;
   }[];
@@ -100,8 +102,8 @@ export function renderBillBodyHtml(data: BillPdfData): string {
         <tr>
           <td>${escapeHtml(item.deliveryDate)}</td>
           <td>${escapeHtml(item.milkTypeName)}</td>
-          <td class="num">${item.quantityMl} ml</td>
-          <td class="num">${formatPaiseAsRupees(item.pricePaise)}/L</td>
+          <td class="num">${formatQuantity(item.quantityMl, item.unit)}</td>
+          <td class="num">${formatPaiseAsRupees(item.pricePaise)}/${unitLabel(item.unit)}</td>
           <td class="num">${formatPaiseAsRupees(item.amountPaise)}</td>
         </tr>`,
     )
@@ -162,7 +164,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
 
   <h3>Delivery breakdown</h3>
   <table>
-    <thead><tr><th>Date</th><th>Milk type</th><th class="num">Quantity</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+    <thead><tr><th>Date</th><th>Product type</th><th class="num">Quantity</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
     <tbody>${itemRows || '<tr><td colspan="5">No billable deliveries this period.</td></tr>'}</tbody>
   </table>
 

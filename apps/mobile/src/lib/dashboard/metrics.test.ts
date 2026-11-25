@@ -123,7 +123,6 @@ describe('computeDashboardMetrics', () => {
       deliveries,
       today,
     );
-    expect(metrics.totalMlDeliveredToday).toBe(1500);
     // 5500 * 500 / 1000 = 2750, 6500 * 1000 / 1000 = 6500 -> 9250 paise
     expect(metrics.estimatedSalesPaiseToday).toBe(9250);
   });

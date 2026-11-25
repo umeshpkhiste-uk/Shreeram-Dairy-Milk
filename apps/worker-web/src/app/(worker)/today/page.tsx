@@ -1,5 +1,7 @@
 'use client';
 
+import { formatQuantity } from '@shreeram/shared';
+
 import {
   Badge,
   Button,
@@ -11,7 +13,7 @@ import {
   LoadingState,
   Title,
 } from '@/components/ui';
-import { getCachedMilkTypeNames, listCachedCustomers } from '@/lib/db/cache-repo';
+import { getCachedMilkTypes, listCachedCustomers } from '@/lib/db/cache-repo';
 import { listLocalDeliveriesForDate } from '@/lib/db/deliveries-repo';
 import { useLive } from '@/lib/db/use-live';
 import { runSync, useSyncStatus } from '@/lib/sync/sync-engine';
@@ -27,7 +29,7 @@ export default function TodayRoutePage() {
         ? undefined
         : {
             customers: await listCachedCustomers(),
-            milkTypeNames: await getCachedMilkTypeNames(),
+            milkTypes: await getCachedMilkTypes(),
             deliveries: new Map(
               (await listLocalDeliveriesForDate(today)).map((d) => [d.customer_id, d]),
             ),
@@ -79,8 +81,11 @@ export default function TodayRoutePage() {
                 </div>
                 <span className="text-text-secondary">{customer.address}</span>
                 <span className="text-sm text-text-secondary">
-                  {data.milkTypeNames[customer.milk_type_id] ?? 'Milk'} ·{' '}
-                  {customer.default_daily_quantity_ml} ml
+                  {data.milkTypes[customer.milk_type_id]?.name ?? 'Product'} ·{' '}
+                  {formatQuantity(
+                    customer.default_daily_quantity_ml,
+                    data.milkTypes[customer.milk_type_id]?.unit,
+                  )}
                 </span>
                 {delivery?.status === 'skipped' && delivery.reason ? (
                   <span className="text-sm text-text-secondary">Note: {delivery.reason}</span>

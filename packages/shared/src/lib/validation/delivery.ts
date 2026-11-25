@@ -13,7 +13,7 @@ export const deliveryEntrySchema = z
     status: z.enum(['completed', 'partial', 'missed']),
     deliveredQuantityMl: z
       .number({ message: 'Enter the quantity delivered' })
-      .int('Quantity must be a whole number of millilitres')
+      .int('Quantity must be a whole number of ml or grams')
       .min(0, 'Quantity cannot be negative'),
     reason: z.string().trim().optional(),
   })

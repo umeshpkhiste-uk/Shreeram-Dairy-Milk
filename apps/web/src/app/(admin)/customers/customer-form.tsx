@@ -1,5 +1,6 @@
 'use client';
 
+import { unitLabel } from '@shreeram/shared';
 import { useActionState } from 'react';
 
 import type { CustomerRow } from '@/lib/data/customers';
@@ -46,7 +47,7 @@ export function CustomerForm({ customer, milkTypes, workers, action, submitLabel
           <input name="email" type="email" defaultValue={customer?.email ?? ''} className={inputClass} />
         </label>
         <label className={labelClass}>
-          Milk type
+          Product type
           <select
             name="milkTypeId"
             required
@@ -54,11 +55,11 @@ export function CustomerForm({ customer, milkTypes, workers, action, submitLabel
             className={inputClass}
           >
             <option value="" disabled>
-              Select a milk type
+              Select a product type
             </option>
             {milkTypes.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.name}
+                {m.name} ({unitLabel(m.unit)})
               </option>
             ))}
           </select>
@@ -97,7 +98,7 @@ export function CustomerForm({ customer, milkTypes, workers, action, submitLabel
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <label className={labelClass}>
-          Daily quantity (ml)
+          Daily quantity (ml, or grams for Kg products)
           <input
             name="defaultDailyQuantityMl"
             type="number"

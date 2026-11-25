@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   firstOfMonth,
   formatBillingMonth,
+  formatQuantity,
   lastOfMonth,
   shiftMonth,
   todayInBusinessTimezone,
@@ -24,7 +25,7 @@ import {
   TONE_CLASSES,
 } from '@/components/ui';
 import { listDeliveriesForCustomerInRange } from '@/lib/api/deliveries';
-import { getCachedCustomer } from '@/lib/db/cache-repo';
+import { getCachedCustomer, getCachedMilkTypes } from '@/lib/db/cache-repo';
 import type { LocalDelivery } from '@/lib/db/db';
 import { listLocalDeliveriesForCustomerInRange, recordDelivery } from '@/lib/db/deliveries-repo';
 import { useLive } from '@/lib/db/use-live';
@@ -53,6 +54,7 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   const customer = useLive(() => getCachedCustomer(customerId), [customerId]);
+  const milkTypes = useLive(getCachedMilkTypes, []);
   const entries = useLive(
     async () =>
       new Map(
@@ -82,7 +84,7 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
     };
   }, [customerId, month, isOnline]);
 
-  if (customer === undefined || entries === undefined) {
+  if (customer === undefined || entries === undefined || milkTypes === undefined) {
     return <LoadingState label="Loading delivery history…" />;
   }
   if (customer === null) {
@@ -94,6 +96,7 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
     );
   }
 
+  const product = milkTypes[customer.milk_type_id];
   const selectedEntry = selectedDate ? entries.get(selectedDate) : undefined;
   const selectedIsToday = selectedDate === today;
 
@@ -229,10 +232,11 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
       >
         <div className="flex flex-col gap-3">
           <h2 id="mark-title" className="text-lg font-semibold">
-            Milk delivered today?
+            {product?.name ?? 'Product'} delivered today?
           </h2>
           <p className="text-text-secondary">
-            {customer.full_name} · {customer.default_daily_quantity_ml} ml
+            {customer.full_name} ·{' '}
+            {formatQuantity(customer.default_daily_quantity_ml, product?.unit)}
           </p>
           <Button onClick={() => handleMark('completed')} disabled={saving}>
             Yes, delivered

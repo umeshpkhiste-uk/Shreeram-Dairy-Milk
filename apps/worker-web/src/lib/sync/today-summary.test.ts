@@ -1,11 +1,6 @@
-import { formatMlAsLitres, summarizeTodayDeliveries } from './today-summary';
+import { summarizeTodayDeliveries } from './today-summary';
 
-const customers = [
-  { id: 'a', default_daily_quantity_ml: 1000, milk_type_id: 'cow' },
-  { id: 'b', default_daily_quantity_ml: 500, milk_type_id: 'buffalo' },
-  { id: 'c', default_daily_quantity_ml: 1500, milk_type_id: 'cow' },
-  { id: 'd', default_daily_quantity_ml: 1000, milk_type_id: 'cow' },
-];
+const customers = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
 
 describe('summarizeTodayDeliveries', () => {
   it('tallies statuses, quantities, and sync state', () => {
@@ -39,8 +34,6 @@ describe('summarizeTodayDeliveries', () => {
       missed: 1,
       skipped: 0,
       notRecorded: 1,
-      scheduledMl: 4000,
-      deliveredMl: 1250,
       deliveredMlByMilkType: { cow: 1000, buffalo: 250 },
       synced: 1,
       waitingToSync: 2,
@@ -58,7 +51,7 @@ describe('summarizeTodayDeliveries', () => {
       },
     ]);
     expect(s.delivered).toBe(0);
-    expect(s.deliveredMl).toBe(0);
+    expect(s.deliveredMlByMilkType).toEqual({});
     expect(s.notRecorded).toBe(1);
   });
 
@@ -66,16 +59,5 @@ describe('summarizeTodayDeliveries', () => {
     const s = summarizeTodayDeliveries([], []);
     expect(s.totalCustomers).toBe(0);
     expect(s.notRecorded).toBe(0);
-  });
-});
-
-describe('formatMlAsLitres', () => {
-  it.each([
-    [1000, '1 L'],
-    [12500, '12.5 L'],
-    [250, '0.25 L'],
-    [0, '0 L'],
-  ])('%d ml → %s', (ml, expected) => {
-    expect(formatMlAsLitres(ml)).toBe(expected);
   });
 });
