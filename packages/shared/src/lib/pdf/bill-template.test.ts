@@ -6,6 +6,7 @@ const BASE: BillPdfData = {
     contactPhone: '+919000000000',
     contactEmail: 'hello@shreeram.example',
     address: '1 Dairy Road',
+    upiId: 'dairy@upi',
   },
   customer: {
     fullName: 'Asha Patel',
@@ -85,6 +86,22 @@ describe('renderBillBodyHtml', () => {
     expect(renderBillBodyHtml(BASE)).not.toContain('till');
     const early = { ...BASE, bill: { ...BASE.bill, billedThrough: '2026-01-25' } };
     expect(renderBillBodyHtml(early)).toContain('January 2026 (till 25 Jan)');
+  });
+
+  it('labels the customer and says where to pay, when that is set', () => {
+    const html = renderBillBodyHtml(BASE);
+    for (const text of [
+      'Bill For: Asha Patel',
+      'Address: 2 Customer Lane',
+      'Contact: +919000000001',
+      'Payment method:',
+      'Pay to: +919000000000',
+      'UPI ID: dairy@upi',
+    ]) {
+      expect(html).toContain(text);
+    }
+    const unset = { ...BASE, business: { ...BASE.business, contactPhone: null, upiId: null } };
+    expect(renderBillBodyHtml(unset)).not.toContain('Payment method');
   });
 
   it('escapes HTML-significant characters in free-text fields', () => {

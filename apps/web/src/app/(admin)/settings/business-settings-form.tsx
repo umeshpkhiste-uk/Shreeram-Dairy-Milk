@@ -37,7 +37,7 @@ export function BusinessSettingsForm({
           />
         </label>
         <label className={labelClass}>
-          Contact phone
+          Contact phone (shown on bills as &ldquo;Pay to&rdquo;)
           <input name="contactPhone" defaultValue={settings.contact_phone ?? ''} className={inputClass} />
         </label>
         <label className={labelClass}>
@@ -49,7 +49,7 @@ export function BusinessSettingsForm({
           <input name="address" defaultValue={settings.address ?? ''} className={inputClass} />
         </label>
         <label className={labelClass}>
-          UPI ID (for order payment QR codes)
+          UPI ID (shown on bills and order payment QR codes)
           <input
             name="upiId"
             placeholder="yourname@okaxis"

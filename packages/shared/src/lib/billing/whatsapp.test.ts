@@ -2,7 +2,7 @@ import type { BillPdfData } from '../pdf/bill-template';
 import { billMessage, whatsappNumber } from './whatsapp';
 
 const DATA: BillPdfData = {
-  business: { businessName: 'Dairy', contactPhone: null, contactEmail: null, address: null },
+  business: { businessName: 'Dairy', contactPhone: null, contactEmail: null, address: null, upiId: null },
   customer: { fullName: 'Asha', address: 'x', mobileNumber: '9000000001', accountReference: null },
   bill: {
     billNumber: 'SDDS-1126-0002',

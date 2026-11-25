@@ -11,6 +11,7 @@ export type BillPdfData = {
     contactPhone: string | null;
     contactEmail: string | null;
     address: string | null;
+    upiId: string | null;
   };
   customer: {
     fullName: string;
@@ -100,10 +101,16 @@ export const BILL_STYLE = `
     .bill-doc .totals .label { color: #555; }
     .bill-doc .totals .grand { font-weight: bold; font-size: 15px; border-top: 2px solid #1a1a1a; }
     .bill-doc .doc-info { text-align: right; padding-right: 8px; white-space: nowrap; }
+    .bill-doc .party { display: flex; justify-content: space-between; gap: 24px; line-height: 1.6; }
+    .bill-doc .party .muted { line-height: 1.6; }
+    .bill-doc .party .pay { text-align: right; padding-right: 8px; white-space: nowrap; }
+    .bill-doc .section { margin-top: 24px; }
+    .bill-doc .totals .section-title { font-size: 16px; }
     .bill-doc .status { font-size: 12px; font-weight: bold; }
     @media (max-width: 480px) {
       .bill-doc .header { flex-direction: column; gap: 12px; }
-      .bill-doc .doc-info { text-align: left; }
+      .bill-doc .doc-info, .bill-doc .party .pay { text-align: left; }
+      .bill-doc .party { flex-direction: column; gap: 12px; }
       .bill-doc th, .bill-doc td { padding: 6px 4px; font-size: 12px; }
     }
 `;
@@ -134,7 +141,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     .map(
       (adj) => `
         <tr>
-          <td colspan="4">${escapeHtml(adj.reason)}</td>
+          <td class="label">${escapeHtml(adj.reason)}</td>
           <td class="num">${formatPaiseAsRupees(adj.amountPaise)}</td>
         </tr>`,
     )
@@ -167,7 +174,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
         <h1>${escapeHtml(business.businessName)}</h1>
         <div class="muted">
           ${business.address ? escapeHtml(business.address) + '<br/>' : ''}
-          ${business.contactPhone ? escapeHtml(business.contactPhone) + ' · ' : ''}${business.contactEmail ? escapeHtml(business.contactEmail) : ''}
+          ${[business.contactPhone, business.contactEmail].filter((v) => v !== null).map(escapeHtml).join(' · ')}
         </div>
       </div>
     </div>
@@ -178,12 +185,24 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     </div>
   </div>
 
-  <div>
-    <strong>${escapeHtml(customer.fullName)}</strong><br/>
-    <span class="muted">${escapeHtml(customer.address)}<br/>${escapeHtml(customer.mobileNumber)}${customer.accountReference ? ' · Ref: ' + escapeHtml(customer.accountReference) : ''}</span>
+  <div class="party">
+    <div>
+      <strong>Bill For: ${escapeHtml(customer.fullName)}</strong>
+      <div class="muted">Address: ${escapeHtml(customer.address)}</div>
+      <div class="muted">Contact: ${escapeHtml(customer.mobileNumber)}${customer.accountReference ? ' · Ref: ' + escapeHtml(customer.accountReference) : ''}</div>
+    </div>
+    ${
+      business.contactPhone || business.upiId
+        ? `<div class="pay">
+      <strong>Payment method:</strong>
+      ${business.contactPhone ? `<div class="muted">Pay to: ${escapeHtml(business.contactPhone)}</div>` : ''}
+      ${business.upiId ? `<div class="muted">UPI ID: ${escapeHtml(business.upiId)}</div>` : ''}
+    </div>`
+        : ''
+    }
   </div>
 
-  <h3>Delivery breakdown</h3>
+  <h3 class="section">Delivery breakdown</h3>
   <div class="muted">Days delivered: ${daysDelivered(items)} · Days customer informed, no delivery: ${data.noDeliveryDays}</div>
   <table>
     <thead><tr><th>Product type</th><th class="num">Total days delivery</th><th class="num">Quantity</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
@@ -191,14 +210,8 @@ export function renderBillBodyHtml(data: BillPdfData): string {
   </table>
 
   ${
-    adjustments.length > 0
-      ? `<h3>Adjustments</h3><table><tbody>${adjustmentRows}</tbody></table>`
-      : ''
-  }
-
-  ${
     payments.length > 0
-      ? `<h3>Payments received</h3>
+      ? `<h3 class="section">Payments received</h3>
          <table>
            <thead><tr><th>Date</th><th>Method</th><th>Reference</th><th class="num">Amount</th></tr></thead>
            <tbody>${paymentRows}</tbody>
@@ -206,7 +219,15 @@ export function renderBillBodyHtml(data: BillPdfData): string {
       : ''
   }
 
-  <table class="totals">
+  ${
+    adjustments.length > 0
+      ? `<table class="totals section">
+    <tr><td class="section-title" colspan="2">Adjustments</td></tr>${adjustmentRows}
+  </table>`
+      : ''
+  }
+
+  <table class="totals${adjustments.length > 0 ? ' section' : ''}">
     <tr><td class="label">Previous outstanding balance</td><td class="num">${formatPaiseAsRupees(bill.previousOutstandingBalancePaise)}</td></tr>
     <tr><td class="label">Delivery charges</td><td class="num">${formatPaiseAsRupees(bill.subtotalPaise)}</td></tr>
     <tr><td class="label">Adjustments</td><td class="num">${formatPaiseAsRupees(bill.adjustmentsTotalPaise)}</td></tr>

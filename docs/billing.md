@@ -30,6 +30,8 @@ why:
 - **A delivery can be billed at most once, ever.** `bill_items` has a unique index on
   `delivery_id` scoped to non-voided items (`bill_items.voided`, flipped by `void_bill`) — a
   mechanical guarantee against double-charging, not just a period-math assumption.
+- **Where to pay** on the bill ("Pay to", "UPI ID") is the contact phone and UPI ID from Settings;
+  the block is left out while both are empty.
 - **Payments are recorded against a specific bill**, never a general customer wallet. A
   customer's "previous outstanding balance" for their *next* bill is computed each
   time it is created or generated, as `sum over their prior non-voided bills of (own charges + adjustments
