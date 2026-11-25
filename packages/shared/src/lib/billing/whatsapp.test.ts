@@ -46,7 +46,7 @@ describe('billMessage', () => {
     expect(message).toContain('November 2026 (till 25 Nov)');
     expect(message).toContain('Cow Milk: 2 days, 2.00 L x ₹78.00/L = ₹156.00');
     expect(message).toContain('No delivery (you informed us): 1 day\n');
-    expect(message).toContain('*Amount due: ₹100.00*');
+    expect(message).toContain('*Total Amount to be Paid: ₹100.00*');
     expect(message).toContain('https://example.com/bill/1');
     expect(message).not.toContain('Previous balance');
     expect(message).not.toContain('Settled');

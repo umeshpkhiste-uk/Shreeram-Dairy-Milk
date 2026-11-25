@@ -1,4 +1,5 @@
 import { formatPaiseAsRupees } from '../money';
+import { upiPayUrl } from '../upi';
 import { formatBillPeriod } from '../date';
 import { formatQuantityTotal, unitLabel } from '../quantity';
 import { BILL_STATUS_LABEL, billAmountDue } from '../billing/status';
@@ -104,14 +105,26 @@ export const BILL_STYLE = `
     .bill-doc .party { display: flex; justify-content: space-between; gap: 24px; line-height: 1.6; }
     .bill-doc .party .muted { line-height: 1.6; }
     .bill-doc .party .pay { text-align: right; padding-right: 8px; white-space: nowrap; }
+    .bill-doc .party .pay a { color: #1d5fa8; text-decoration: underline; }
     .bill-doc .section { margin-top: 24px; }
-    .bill-doc .totals .section-title { font-size: 16px; }
+    .bill-doc .bill-totals { max-width: none; }
+    .bill-doc .bill-totals .label { width: 200px; }
+    .bill-doc .bill-totals .num { width: 120px; }
+    .bill-doc .bill-totals .heading { font-size: 16px; font-weight: bold; }
+    .bill-doc .bill-totals .grand { border-top: none; }
+    .bill-doc .bill-totals .grand td + td { border-top: 2px solid #1a1a1a; white-space: nowrap; }
     .bill-doc .status { font-size: 12px; font-weight: bold; }
     @media (max-width: 480px) {
       .bill-doc .header { flex-direction: column; gap: 12px; }
       .bill-doc .doc-info, .bill-doc .party .pay { text-align: left; }
       .bill-doc .party { flex-direction: column; gap: 12px; }
       .bill-doc th, .bill-doc td { padding: 6px 4px; font-size: 12px; }
+      .bill-doc .bill-totals .label { width: auto; }
+      .bill-doc .bill-totals td { padding: 3px 4px; }
+      .bill-doc .bill-totals .heading { font-size: 14px; }
+      .bill-doc .bill-totals .grand { font-size: 14px; }
+      .bill-doc .bill-totals .grand td + td { white-space: normal; }
+      .bill-doc .bill-totals .grand td.num, .bill-doc .bill-totals .num { width: 1%; white-space: nowrap; }
     }
 `;
 
@@ -139,8 +152,9 @@ export function renderBillBodyHtml(data: BillPdfData): string {
 
   const adjustmentRows = adjustments
     .map(
-      (adj) => `
-        <tr>
+      (adj, index) => `
+    <tr>
+          <td class="heading">${index === 0 ? 'Adjustments' : ''}</td>
           <td class="label">${escapeHtml(adj.reason)}</td>
           <td class="num">${formatPaiseAsRupees(adj.amountPaise)}</td>
         </tr>`,
@@ -166,6 +180,19 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     paymentsTotal,
   );
 
+  // A mobile number alone can't be a UPI link, so both open the UPI ID.
+  const upiLink = (text: string) =>
+    business.upiId
+      ? `<a href="${escapeHtml(
+          upiPayUrl({
+            upiId: business.upiId,
+            name: business.businessName,
+            amountPaise: duePaise,
+            note: `Bill ${bill.billNumber}`,
+          }),
+        )}">${escapeHtml(text)}</a>`
+      : escapeHtml(text);
+
   return `<div class="bill-doc">
   <div class="header">
     <div class="business">
@@ -189,14 +216,14 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     <div>
       <strong>Bill For: ${escapeHtml(customer.fullName)}</strong>
       <div class="muted">Address: ${escapeHtml(customer.address)}</div>
-      <div class="muted">Contact: ${escapeHtml(customer.mobileNumber)}${customer.accountReference ? ' · Ref: ' + escapeHtml(customer.accountReference) : ''}</div>
+      <div class="muted">Contact: ${escapeHtml(customer.mobileNumber)}</div>
     </div>
     ${
       business.contactPhone || business.upiId
         ? `<div class="pay">
       <strong>Payment method:</strong>
-      ${business.contactPhone ? `<div class="muted">Pay to: ${escapeHtml(business.contactPhone)}</div>` : ''}
-      ${business.upiId ? `<div class="muted">UPI ID: ${escapeHtml(business.upiId)}</div>` : ''}
+      ${business.contactPhone ? `<div class="muted">Pay to: ${upiLink(business.contactPhone)}</div>` : ''}
+      ${business.upiId ? `<div class="muted">UPI ID: ${upiLink(business.upiId)}</div>` : ''}
     </div>`
         : ''
     }
@@ -219,25 +246,16 @@ export function renderBillBodyHtml(data: BillPdfData): string {
       : ''
   }
 
-  ${
-    adjustments.length > 0
-      ? `<table class="totals section">
-    <tr><td class="section-title" colspan="2">Adjustments</td></tr>${adjustmentRows}
-  </table>`
-      : ''
-  }
-
-  <table class="totals${adjustments.length > 0 ? ' section' : ''}">
-    <tr><td class="label">Previous outstanding balance</td><td class="num">${formatPaiseAsRupees(bill.previousOutstandingBalancePaise)}</td></tr>
-    <tr><td class="label">Delivery charges</td><td class="num">${formatPaiseAsRupees(bill.subtotalPaise)}</td></tr>
-    <tr><td class="label">Adjustments</td><td class="num">${formatPaiseAsRupees(bill.adjustmentsTotalPaise)}</td></tr>
-    <tr><td class="label">Payments received</td><td class="num">-${formatPaiseAsRupees(paymentsTotal)}</td></tr>${
+  <table class="totals bill-totals">
+    <tr><td></td><td class="label">Previous outstanding balance</td><td class="num">${formatPaiseAsRupees(bill.previousOutstandingBalancePaise)}</td></tr>
+    <tr><td></td><td class="label">Current Month Charges</td><td class="num">${formatPaiseAsRupees(bill.subtotalPaise)}</td></tr>
+    <tr><td></td><td class="label">Payments received</td><td class="num">-${formatPaiseAsRupees(paymentsTotal)}</td></tr>${adjustmentRows}${
       settledElsewherePaise > 0
         ? `
-    <tr><td class="label">Settled on another bill</td><td class="num">-${formatPaiseAsRupees(settledElsewherePaise)}</td></tr>`
+    <tr><td></td><td class="label">Settled on another bill</td><td class="num">-${formatPaiseAsRupees(settledElsewherePaise)}</td></tr>`
         : ''
     }
-    <tr class="grand"><td>Amount due</td><td class="num">${formatPaiseAsRupees(duePaise)}</td></tr>
+    <tr class="grand"><td></td><td>Total Amount to be Paid</td><td class="num">${formatPaiseAsRupees(duePaise)}</td></tr>
   </table>
 </div>`;
 }

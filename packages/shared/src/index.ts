@@ -5,6 +5,7 @@
 
 export * from './types/database';
 export * from './lib/money';
+export * from './lib/upi';
 export * from './lib/quantity';
 export * from './lib/products';
 export * from './lib/date';

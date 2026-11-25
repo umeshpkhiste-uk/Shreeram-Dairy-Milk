@@ -1,6 +1,6 @@
 'use server';
 
-import { errorMessage, parseQuantityToBaseUnit, type PaymentMethod } from '@shreeram/shared';
+import { errorMessage, parseQuantityToBaseUnit, upiPayUrl, type PaymentMethod } from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -198,13 +198,12 @@ export async function generateOrderPaymentQrAction(
   if (!order) return { error: 'Order not found.' };
   if (!business.upi_id) return { error: 'No UPI ID configured — add one in Settings first.' };
 
-  const amountRupees = (order.totalAmountPaise / 100).toFixed(2);
-  const upiUri =
-    `upi://pay?pa=${encodeURIComponent(business.upi_id)}` +
-    `&pn=${encodeURIComponent(business.business_name)}` +
-    `&am=${encodeURIComponent(amountRupees)}` +
-    `&cu=INR` +
-    `&tn=${encodeURIComponent(`Order ${orderId.slice(0, 8)}`)}`;
+  const upiUri = upiPayUrl({
+    upiId: business.upi_id,
+    name: business.business_name,
+    amountPaise: order.totalAmountPaise,
+    note: `Order ${orderId.slice(0, 8)}`,
+  });
 
   try {
     const dataUrl = await QRCode.toDataURL(upiUri, { margin: 1, width: 240 });

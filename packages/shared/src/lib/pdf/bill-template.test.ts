@@ -95,13 +95,18 @@ describe('renderBillBodyHtml', () => {
       'Address: 2 Customer Lane',
       'Contact: +919000000001',
       'Payment method:',
-      'Pay to: +919000000000',
-      'UPI ID: dairy@upi',
+      'Pay to: <a href="upi://pay?pa=dairy@upi&amp;pn=Shreeram%20Daily%20Milk&amp;am=66.00&amp;cu=INR&amp;tn=Bill%20SDM-000042">+919000000000</a>',
+      '>dairy@upi</a>',
     ]) {
       expect(html).toContain(text);
     }
     const unset = { ...BASE, business: { ...BASE.business, contactPhone: null, upiId: null } };
     expect(renderBillBodyHtml(unset)).not.toContain('Payment method');
+    expect(html).not.toContain('ACC-001');
+    const noUpi = { ...BASE, business: { ...BASE.business, upiId: null } };
+    expect(renderBillBodyHtml(noUpi)).toContain('Pay to: +919000000000<');
+    const paid = { ...BASE, bill: { ...BASE.bill, status: 'paid' as const } };
+    expect(renderBillBodyHtml(paid)).not.toContain('&amp;am=');
   });
 
   it('escapes HTML-significant characters in free-text fields', () => {

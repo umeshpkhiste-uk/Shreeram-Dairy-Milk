@@ -142,13 +142,13 @@ export default async function BillDetailPage({ params }: PageProps) {
 
         <div className="mt-4 ml-auto max-w-xs text-sm">
           <Row label="Previous outstanding balance" value={bill.previous_outstanding_balance_paise} />
-          <Row label="Delivery charges" value={bill.subtotal_paise} />
+          <Row label="Current Month Charges" value={bill.subtotal_paise} />
           <Row label="Adjustments" value={bill.adjustments_total_paise} />
           <Row label="Payments received" value={-totalPaid} />
           {settledElsewherePaise > 0 ? (
             <Row label="Settled on another bill" value={-settledElsewherePaise} />
           ) : null}
-          <Row label="Amount due" value={duePaise} strong />
+          <Row label="Total Amount to be Paid" value={duePaise} strong />
         </div>
       </Card>
 

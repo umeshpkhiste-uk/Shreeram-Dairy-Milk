@@ -36,11 +36,11 @@ export function billMessage(data: BillPdfData, link: string): string {
     `No delivery (you informed us): ${noDeliveryDays} ${noDeliveryDays === 1 ? 'day' : 'days'}`,
     '',
     ...amount('Previous balance', bill.previousOutstandingBalancePaise),
-    ...amount('Delivery charges', bill.subtotalPaise),
+    ...amount('Current Month Charges', bill.subtotalPaise),
     ...amount('Adjustments', bill.adjustmentsTotalPaise),
     ...amount('Payments received', -paid),
     ...amount('Settled on another bill', -settledElsewherePaise),
-    `*Amount due: ${formatPaiseAsRupees(duePaise)}*`,
+    `*Total Amount to be Paid: ${formatPaiseAsRupees(duePaise)}*`,
     '',
     `See or save your bill: ${link}`,
   ].join('\n');
