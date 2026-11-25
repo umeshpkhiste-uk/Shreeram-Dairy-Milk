@@ -15,6 +15,8 @@ export async function GET() {
   const supabase = await createClient();
   await requireAdmin(supabase);
 
+  // Runs on every page, so a change that starts today shows up.
+  await supabase.rpc('apply_due_product_changes');
   const [inbox, notifications] = await Promise.all([
     listInboxItems(supabase),
     listNotificationItems(supabase, todayInBusinessTimezone()),

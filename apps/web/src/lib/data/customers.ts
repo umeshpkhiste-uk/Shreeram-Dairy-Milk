@@ -45,6 +45,14 @@ export async function getCustomer(
   return data;
 }
 
+function toExtraProducts(values: CustomerFormValues) {
+  return values.extraProducts.map((p) => ({
+    milk_type_id: p.milkTypeId,
+    quantity_ml: p.quantityMl,
+  }));
+}
+
+/** Everything but the products: those change from a date, see setCustomerProducts. */
 function toCustomerFields(values: CustomerFormValues) {
   return {
     full_name: values.fullName,
@@ -56,12 +64,6 @@ function toCustomerFields(values: CustomerFormValues) {
     assigned_worker_id: values.assignedWorkerId ?? null,
     route_id: values.routeId ?? null,
     route_sequence: values.routeSequence ?? null,
-    default_daily_quantity_ml: values.defaultDailyQuantityMl,
-    milk_type_id: values.milkTypeId,
-    extra_products: values.extraProducts.map((p) => ({
-      milk_type_id: p.milkTypeId,
-      quantity_ml: p.quantityMl,
-    })),
     preferred_delivery_window: values.preferredDeliveryWindow || null,
     delivery_start_date: values.deliveryStartDate,
     notes: values.notes || null,
@@ -91,7 +93,12 @@ export async function createCustomer(
 ): Promise<CustomerRow> {
   const { data, error } = await supabase
     .from('customers')
-    .insert(toCustomerFields(values))
+    .insert({
+      ...toCustomerFields(values),
+      default_daily_quantity_ml: values.defaultDailyQuantityMl,
+      milk_type_id: values.milkTypeId,
+      extra_products: toExtraProducts(values),
+    })
     .select('*')
     .single();
   if (error) throw error;
@@ -111,6 +118,40 @@ export async function updateCustomer(
     .single();
   if (error) throw error;
   return data;
+}
+
+export type CustomerProductsRow =
+  Database['public']['Tables']['customer_products_history']['Row'];
+
+/** What the customer takes daily from each date on, newest first. */
+export async function listCustomerProductsHistory(
+  supabase: SupabaseServerClient,
+  customerId: string,
+): Promise<CustomerProductsRow[]> {
+  const { data, error } = await supabase
+    .from('customer_products_history')
+    .select('*')
+    .eq('customer_id', customerId)
+    .order('effective_from', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Bills follow the new products from `effectiveFrom` on, in the past or the future. */
+export async function setCustomerProducts(
+  supabase: SupabaseServerClient,
+  customerId: string,
+  values: CustomerFormValues,
+  effectiveFrom: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('set_customer_products', {
+    p_customer_id: customerId,
+    p_effective_from: effectiveFrom,
+    p_milk_type_id: values.milkTypeId,
+    p_quantity_ml: values.defaultDailyQuantityMl,
+    p_extra_products: toExtraProducts(values),
+  });
+  if (error) throw error;
 }
 
 /** Customers are never hard-deleted — deactivation sets status only (audit-trailed by trigger). */

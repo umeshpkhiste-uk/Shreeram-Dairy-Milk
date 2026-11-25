@@ -1,6 +1,6 @@
 import { formatPaiseAsRupees } from '../money';
 import { upiPayUrl } from '../upi';
-import { formatBillPeriod } from '../date';
+import { formatBillPeriod, formatBillingMonth } from '../date';
 import { formatQuantityTotal, unitLabel } from '../quantity';
 import { BILL_STATUS_LABEL, billAmountDue } from '../billing/status';
 import type { BillStatus, ProductUnit } from '../../types/database';
@@ -68,21 +68,56 @@ export type BillLine = {
   days: number;
   quantityMl: number;
   amountPaise: number;
+  /** "1–14 Nov · 1.00 L a day", only when the product's rate or quantity changed in the month. */
+  detail: string | null;
 };
 
-/** One line per product and rate. */
+function dayRange([from, to]: [string, string]): string {
+  const month = formatBillingMonth(to).slice(0, 3);
+  const day = (date: string) => Number(date.slice(8));
+  return from === to ? `${day(to)} ${month}` : `${day(from)}–${day(to)} ${month}`;
+}
+
+/** One line per product, rate and daily quantity. A product's changes follow each other. */
 export function groupBillItems(items: BillPdfData['items']): BillLine[] {
-  const lines = new Map<string, BillLine & { dates: Set<string> }>();
-  for (const item of items) {
-    const key = `${item.milkTypeName}|${item.pricePaise}`;
-    const line = lines.get(key) ?? { ...item, days: 0, quantityMl: 0, amountPaise: 0, dates: new Set() };
-    line.dates.add(item.deliveryDate);
-    line.days = line.dates.size;
-    line.quantityMl += item.quantityMl;
-    line.amountPaise += item.amountPaise;
-    lines.set(key, line);
+  type Group = BillLine & { dailyQuantity: number; runs: [string, string][] };
+  const products = new Map<string, { groups: Map<string, Group>; last?: Group }>();
+
+  for (const item of [...items].sort((a, b) => a.deliveryDate.localeCompare(b.deliveryDate))) {
+    const product = products.get(item.milkTypeName) ?? { groups: new Map<string, Group>() };
+    products.set(item.milkTypeName, product);
+    const key = `${item.pricePaise}|${item.quantityMl}`;
+    const group: Group = product.groups.get(key) ?? {
+      milkTypeName: item.milkTypeName,
+      unit: item.unit,
+      pricePaise: item.pricePaise,
+      days: 0,
+      quantityMl: 0,
+      amountPaise: 0,
+      detail: null,
+      dailyQuantity: item.quantityMl,
+      runs: [],
+    };
+    product.groups.set(key, group);
+    group.days += 1; // one item per product and day
+    group.quantityMl += item.quantityMl;
+    group.amountPaise += item.amountPaise;
+    const run = group.runs.at(-1);
+    if (run && product.last === group) run[1] = item.deliveryDate;
+    else group.runs.push([item.deliveryDate, item.deliveryDate]);
+    product.last = group;
   }
-  return [...lines.values()];
+
+  return [...products.values()].flatMap(({ groups }) =>
+    [...groups.values()].map(({ dailyQuantity, runs, ...line }) => ({
+      ...line,
+      detail:
+        groups.size === 1
+          ? null
+          : `${runs.map(dayRange).join(', ')} · ` +
+            `${formatQuantityTotal([{ quantity: dailyQuantity, unit: line.unit }])} a day`,
+    })),
+  );
 }
 
 export function daysDelivered(items: BillPdfData['items']): number {
@@ -147,7 +182,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     .map(
       (line) => `
         <tr>
-          <td>${escapeHtml(line.milkTypeName)}</td>
+          <td>${escapeHtml(line.milkTypeName)}${line.detail ? `<div class="muted">${escapeHtml(line.detail)}</div>` : ''}</td>
           <td class="num">${line.days}</td>
           <td class="num">${formatQuantityTotal([{ quantity: line.quantityMl, unit: line.unit }])}</td>
           <td class="num">${formatPaiseAsRupees(line.pricePaise)}/${unitLabel(line.unit)}</td>

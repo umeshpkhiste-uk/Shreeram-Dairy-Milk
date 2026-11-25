@@ -185,8 +185,13 @@ export default async function BillDetailPage({ params }: PageProps) {
                 </tr>
               ) : (
                 groupBillItems(items).map((line) => (
-                  <tr key={`${line.milkTypeName}-${line.pricePaise}`}>
-                    <td className="py-2">{line.milkTypeName}</td>
+                  <tr key={`${line.milkTypeName}-${line.pricePaise}-${line.detail}`}>
+                    <td className="py-2">
+                      {line.milkTypeName}
+                      {line.detail ? (
+                        <span className="block text-xs text-text-secondary">{line.detail}</span>
+                      ) : null}
+                    </td>
                     <td className="py-2 text-right">{line.days}</td>
                     <td className="py-2 text-right">
                       {formatQuantityTotal([{ quantity: line.quantityMl, unit: line.unit }])}

@@ -4,6 +4,7 @@ import { listUnbilledMonths } from './bills';
 import { listDailyDeliveryReport } from './deliveries';
 import { listAllMilkTypes } from './milk-types';
 import { listPendingPaymentClaims } from './payments';
+import { listSyncFailures } from './sync';
 import type { SupabaseServerClient } from './types';
 
 export type AttentionItem = {
@@ -67,12 +68,13 @@ export async function listInboxItems(supabase: SupabaseServerClient): Promise<At
   ];
 }
 
-/** Notifications: delivery conflicts, flagged bills, months not billed, and today's missed or unrecorded deliveries. */
+/** Notifications: delivery conflicts, flagged bills, months not billed, records
+ * workers' phones could not save, and today's missed or unrecorded deliveries. */
 export async function listNotificationItems(
   supabase: SupabaseServerClient,
   today: string,
 ): Promise<AttentionItem[]> {
-  const [conflicts, flagged, report, milkTypes, unbilled] = await Promise.all([
+  const [conflicts, flagged, report, milkTypes, unbilled, failures] = await Promise.all([
     supabase
       .from('deliveries')
       .select('*')
@@ -83,6 +85,7 @@ export async function listNotificationItems(
     listAllMilkTypes(supabase),
     // shortcut: the last two finished months, because this runs on every page; the bill page checks all.
     listUnbilledMonths(supabase, shiftMonth(firstOfMonth(today), -2)),
+    listSyncFailures(supabase),
   ]);
   if (conflicts.error) throw conflicts.error;
   if (flagged.error) throw flagged.error;
@@ -118,6 +121,16 @@ export async function listNotificationItems(
         href: `/billing/${bill.id}`,
         label: 'Bill flagged',
         tone: 'warning',
+      }),
+    ),
+    ...failures.map(
+      (f): AttentionItem => ({
+        id: `sync-${f.event_id}`,
+        title: 'A worker’s record was not saved',
+        detail: f.error,
+        href: '/deliveries/sync',
+        label: 'Sync',
+        tone: 'danger',
       }),
     ),
     ...unbilled.map(

@@ -12,6 +12,9 @@ entirely version-controlled in `supabase/migrations/`; this file explains the *w
 | `routes` | Delivery routes (`name`, `description`, `is_active`). |
 | `milk_types` | Product types a customer can receive daily (Cow Milk, Buffalo Milk, Curd, Paneer, Taak). `unit` is `litre` or `kg`; `default_price_paise` is per litre or per kg, and every `*_quantity_ml` / `quantity_ml` value is ml or grams to match. The table keeps its old name. |
 | `customers` | Customer record: contact/address, assignment (`assigned_worker_id`, `route_id`, `route_sequence`), delivery defaults, billing contact. The first daily product is `milk_type_id` / `default_daily_quantity_ml`; any others are in `extra_products` (checked by a trigger), so older app versions keep working. Never hard-deleted — `status` (`active`/`inactive`) only. |
+| `customer_products_history` | What a customer takes daily from each date on; `customers` holds today's row. Written by `set_customer_products` and the customers trigger. A change that starts later is put on `customers` by `apply_due_product_changes`, which phones and the admin menu call. |
+| `sync_failures` | Records on workers' phones that the server refused, until they succeed or the admin dismisses them. |
+| `payment_claims` | "I have paid" details from a customer's bill page, until an admin checks them. |
 | `customer_milk_rates` | Effective-dated customer-specific pricing. The authoritative source for what a delivery should be billed at (resolve by `customer_id` + `milk_type_id` + the delivery's date falling inside `[effective_from, effective_to)`). |
 | `business_settings` | Single-row (`id = true`) table: business name, contact details, currency, timezone (`Asia/Kolkata` by default). |
 | `audit_logs` | Append-only. Populated automatically by triggers on `profiles`, `workers`, `customers`, `customer_milk_rates`, `milk_types` — never written directly by application code. |
@@ -82,8 +85,8 @@ Stage 6 security audit (what was tested, two defects fixed):
 
 `public.submit_delivery_event(...)` is the single write path for deliveries — see
 [`docs/offline-sync.md`](offline-sync.md) for the full client-side design. Per call, it:
-verifies the caller is an active worker; verifies the customer is currently assigned to them
-(never trusts a cached assignment); answers from `delivery_sync_receipts` without reprocessing
+verifies the caller is an active worker; verifies the customer is assigned to them now, or was
+on the delivery date (never trusts a cached assignment); answers from `delivery_sync_receipts` without reprocessing
 if the event id was already seen (idempotent); resolves and snapshots the price at the
 delivery's date via `resolve_milk_price_paise`; and applies a `created` event as an insert or a
 `corrected` event as a version-checked update — a version mismatch or a same-day duplicate
@@ -169,10 +172,8 @@ Run with the Supabase CLI against the live project (`supabase db advisors --link
   controllable from this CLI version's `config.toml`); worth enabling before go-live.
 - Milk-type default pricing is seeded (`Cow Milk` ₹55/L, `Buffalo Milk` ₹65/L) as a
   reasonable starting point — editable by an admin via the Milk Types screen (Stage 5).
-- A worker deactivated or reassigned while they have unsynced deliveries queued offline will
-  have those uploads rejected at sync time (by design — see `docs/offline-sync.md`, "Known
-  limitations"). The evidence stays on the device; admin-side review/reconciliation of such
-  cases isn't built yet.
+- A worker deactivated while they have unsynced deliveries queued offline can't upload them until
+  they are active again (see `docs/offline-sync.md`, "Known limitations").
 - Billing: bulk "generate bills for every customer" and dedicated email/WhatsApp API
   integrations are deferred (the native share sheet covers sharing a PDF) — see
   `docs/billing.md`, "Deferred."

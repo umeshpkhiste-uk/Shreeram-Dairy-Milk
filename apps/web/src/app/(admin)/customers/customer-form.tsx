@@ -65,6 +65,23 @@ export function CustomerForm({ customer, milkTypes, workers, action, submitLabel
         milkTypes={milkTypes}
       />
 
+      {customer ? (
+        <label className={`${labelClass} w-fit`}>
+          A change of product or quantity starts on
+          <input
+            name="productsFrom"
+            type="date"
+            required
+            defaultValue={todayInBusinessTimezone()}
+            className={inputClass}
+          />
+          <span className="max-w-xl font-normal text-text-secondary">
+            Used only when you change a product or quantity above. Bills charge the new quantity from
+            this date, in the past or the future. Changes already set for later dates are replaced.
+          </span>
+        </label>
+      ) : null}
+
       <label className={labelClass}>
         Address
         <textarea

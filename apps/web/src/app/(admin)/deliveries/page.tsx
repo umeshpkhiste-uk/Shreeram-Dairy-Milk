@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { firstOfMonth, formatQuantity, todayInBusinessTimezone } from '@shreeram/shared';
 
-import { Badge, Card, EmptyState, InfoButton, PageHeader, Table } from '@/components/ui';
+import { Badge, Card, EmptyState, InfoButton, PageHeader, Table, buttonClass } from '@/components/ui';
 import { listDailyDeliveryReport } from '@/lib/data/deliveries';
 import { listAllMilkTypes } from '@/lib/data/milk-types';
 import { listRoutes, listWorkers } from '@/lib/data/workers';
@@ -55,7 +55,15 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Daily deliveries" description={date} />
+      <PageHeader
+        title="Daily deliveries"
+        description={date}
+        actions={
+          <Link href="/deliveries/sync" className={buttonClass('info')}>
+            Worker sync
+          </Link>
+        }
+      />
 
       <Card className="mb-6">
         <form className="flex flex-wrap items-end gap-3" method="get">

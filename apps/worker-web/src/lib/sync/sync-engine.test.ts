@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 
 import { listCustomersForWorker } from '@/lib/api/customers';
-import { listDeliveriesForWorkerSince, submitDeliveryEvent } from '@/lib/api/deliveries';
+import { listDeliveriesForWorkerSince, reportSyncFailure, submitDeliveryEvent } from '@/lib/api/deliveries';
 import { getOwnProfile } from '@/lib/api/profile';
 import { clearAllLocalData } from '@/lib/db/clear-local-data';
 import { db, setProfile, type Profile } from '@/lib/db/db';
@@ -14,8 +14,12 @@ jest.mock('@/lib/supabase/client', () => ({ supabase: { auth: { getSession: jest
 jest.mock('@/lib/api/deliveries', () => ({
   submitDeliveryEvent: jest.fn(),
   listDeliveriesForWorkerSince: jest.fn(),
+  reportSyncFailure: jest.fn(),
 }));
-jest.mock('@/lib/api/customers', () => ({ listCustomersForWorker: jest.fn() }));
+jest.mock('@/lib/api/customers', () => ({
+  listCustomersForWorker: jest.fn(),
+  applyDueProductChanges: jest.fn(),
+}));
 jest.mock('@/lib/api/milk-types', () => ({ listActiveMilkTypes: jest.fn().mockResolvedValue([]) }));
 jest.mock('@/lib/api/profile', () => ({ getOwnProfile: jest.fn() }));
 
@@ -68,6 +72,7 @@ beforeEach(async () => {
   (listDeliveriesForWorkerSince as jest.Mock).mockResolvedValue([]);
   jest.requireMock('@/lib/api/milk-types').listActiveMilkTypes.mockResolvedValue([]);
   submit.mockResolvedValue(APPLIED);
+  (reportSyncFailure as jest.Mock).mockResolvedValue(undefined);
 });
 
 describe('recordDelivery', () => {
@@ -178,6 +183,52 @@ describe('runSync', () => {
     await runSync();
     expect(await only()).toMatchObject({ sync_status: 'conflict' });
     expect(await outbox()).toMatchObject([{ status: 'done' }]);
+  });
+
+  it('reports a refused record to the admin and sends it again hours later', async () => {
+    submit.mockRejectedValueOnce({ code: 'P0001', message: 'This customer was not assigned' });
+    await mark('completed');
+    await runSync();
+    const [item] = await outbox();
+    expect(item.status).toBe('failed');
+    expect(reportSyncFailure).toHaveBeenCalledWith(
+      item.event_id,
+      expect.objectContaining({ customerId: 'c1', deliveryDate: '2026-11-24' }),
+      'This customer was not assigned',
+    );
+
+    await runSync();
+    expect(submit).toHaveBeenCalledTimes(1);
+    await makeAllDue();
+    await runSync();
+    expect(submit).toHaveBeenCalledTimes(2);
+    expect(await outbox()).toMatchObject([{ status: 'done' }]);
+    expect(await only()).toMatchObject({ sync_status: 'synced' });
+  });
+
+  it('holds a correction behind a refused creation, but not behind a refused correction', async () => {
+    submit.mockRejectedValueOnce({ code: 'P0001', message: 'refused' });
+    await mark('completed');
+    await runSync();
+    await mark('missed');
+    await runSync();
+    expect(submit).toHaveBeenCalledTimes(1);
+
+    await makeAllDue();
+    submit.mockResolvedValueOnce(APPLIED).mockRejectedValueOnce({ code: 'P0001', message: 'refused' });
+    await runSync();
+    await mark('completed');
+    await runSync();
+    expect((await outbox()).map((e) => e.status)).toEqual(['done', 'failed', 'done']);
+  });
+
+  it('sends everything recorded offline over many days, oldest first', async () => {
+    online = false;
+    for (const customer of ['c1', 'c2', 'c3', 'c4', 'c5']) await mark('completed', customer);
+    online = true;
+    await runSync();
+    expect(submit.mock.calls.map(([e]) => e.customerId)).toEqual(['c1', 'c2', 'c3', 'c4', 'c5']);
+    expect((await outbox()).every((e) => e.status === 'done')).toBe(true);
   });
 
   it('stops retrying a permanent rejection', async () => {

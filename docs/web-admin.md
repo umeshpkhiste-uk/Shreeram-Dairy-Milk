@@ -73,6 +73,7 @@ All under `src/app/(admin)/*` except `/login` — the route group's `layout.tsx`
 | `/workers` | Worker accounts (create via the Edge Function), routes, route assignment, activate/deactivate — closes a gap neither app had before (no deactivate-worker UI existed anywhere). |
 | `/deliveries` | The daily delivery report — same left-join logic as the mobile app's admin screen, same "no record yet ≠ missed" rule, one row per customer and product. Each customer name links to `/deliveries/[customerId]`. |
 | `/deliveries/[customerId]` | Per-customer delivery calendar (added post-launch, admin-website-only, per owner feedback) — see "Per-customer delivery calendar" below. |
+| `/deliveries/sync` | Worker sync: what phones sent and when (late ones marked), each worker's last record, and records that could not be saved. |
 | `/orders` | One-time product orders (paneer, ghee, dahi, etc.) — see "One-time product orders" below. |
 | `/billing`, `/billing/[id]`, `/bill/[id]` | Month picker, create/view bills, full breakdown, adjustments, payments, "Generate and send Bill" (WhatsApp), cancel (drafts only), the flagged-for-review banner, a back button, a delivery summary (days delivered / total quantity / days customer informed, no delivery) and one breakdown row per product and rate. `/bill/[id]` is the customer's own page, public by link (see below and `docs/billing.md`). |
 | `/payments` | Cross-customer payments ledger. |

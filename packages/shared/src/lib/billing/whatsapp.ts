@@ -29,7 +29,7 @@ export function billMessage(data: BillPdfData, link: string): string {
     '',
     ...groupBillItems(items).map(
       (line) =>
-        `${line.milkTypeName}: ${line.days} ${line.days === 1 ? 'day' : 'days'}, ` +
+        `${line.milkTypeName}${line.detail ? ` (${line.detail})` : ''}: ${line.days} ${line.days === 1 ? 'day' : 'days'}, ` +
         `${formatQuantityTotal([{ quantity: line.quantityMl, unit: line.unit }])} x ` +
         `${formatPaiseAsRupees(line.pricePaise)}/${unitLabel(line.unit)} = ${formatPaiseAsRupees(line.amountPaise)}`,
     ),

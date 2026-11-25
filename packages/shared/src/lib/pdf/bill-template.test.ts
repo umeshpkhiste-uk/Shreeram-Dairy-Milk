@@ -68,19 +68,38 @@ describe('renderBillBodyHtml', () => {
     expect(html).toContain('₹27.50');
   });
 
-  it('has one line per product and rate, with its days', () => {
+  it('has one line per product while its rate and quantity stay the same', () => {
     const [item] = BASE.items;
     const lines = groupBillItems([
       item,
-      { ...item, deliveryDate: '2026-01-02' },
-      { ...item, deliveryDate: '2026-01-03', pricePaise: 6000, amountPaise: 3000 },
       { ...item, milkTypeName: 'Curd' },
+      { ...item, deliveryDate: '2026-01-04' },
     ]);
-    expect(lines.map((l) => [l.milkTypeName, l.days, l.quantityMl, l.amountPaise])).toEqual([
-      ['Cow Milk', 2, 1000, 5500],
-      ['Cow Milk', 1, 500, 3000],
-      ['Curd', 1, 500, 2750],
+    expect(lines.map((l) => [l.milkTypeName, l.days, l.quantityMl, l.amountPaise, l.detail])).toEqual([
+      ['Cow Milk', 2, 1000, 5500, null],
+      ['Curd', 1, 500, 2750, null],
     ]);
+  });
+
+  it('shows from which days a changed rate or quantity was charged', () => {
+    const [item] = BASE.items;
+    const on = (day: string, change = {}) => ({ ...item, deliveryDate: `2026-01-${day}`, ...change });
+    const lines = groupBillItems([
+      on('01'),
+      on('02'),
+      on('03', { quantityMl: 1000, amountPaise: 5500 }),
+      // The 4th was not delivered; the old quantity continues after one bigger day.
+      on('05'),
+      on('06', { pricePaise: 6000, amountPaise: 3000 }),
+      on('07', { pricePaise: 6000, amountPaise: 3000 }),
+    ]);
+    expect(lines.map((l) => [l.detail, l.days, l.quantityMl, l.amountPaise])).toEqual([
+      ['1–2 Jan, 5 Jan · 0.50 L a day', 3, 1500, 8250],
+      ['3 Jan · 1.00 L a day', 1, 1000, 5500],
+      ['6–7 Jan · 0.50 L a day', 2, 1000, 6000],
+    ]);
+    const html = renderBillBodyHtml({ ...BASE, items: [on('01'), on('02', { pricePaise: 6000 })] });
+    expect(html).toContain('1 Jan · 0.50 L a day');
   });
 
   it('shows the no-delivery days, and the date only when the month is not over', () => {

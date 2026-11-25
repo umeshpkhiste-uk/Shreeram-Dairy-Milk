@@ -15,3 +15,9 @@ export async function listCustomersForWorker(workerId: string): Promise<Customer
   if (error) throw error;
   return data ?? [];
 }
+
+/** Puts product and quantity changes that start today on the customers, before listing them. */
+export async function applyDueProductChanges(): Promise<void> {
+  const { error } = await supabase.rpc('apply_due_product_changes');
+  if (error) throw error;
+}

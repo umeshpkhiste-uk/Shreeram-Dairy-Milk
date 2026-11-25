@@ -91,7 +91,12 @@ export default async function OrdersPage() {
                       orderId={order.id}
                       paymentStatus={order.payment_status}
                       paymentMethod={order.payment_method}
-                      products={products}
+                      products={[
+                        ...products,
+                        ...items
+                          .filter((i) => !products.some((p) => p.id === i.productId))
+                          .map((i) => ({ id: i.productId, name: i.productName, unit: i.unit })),
+                      ]}
                       workers={workerOptions}
                       currentQuantitiesBaseUnit={quantitiesByProduct}
                     />

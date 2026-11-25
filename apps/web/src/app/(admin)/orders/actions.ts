@@ -94,8 +94,16 @@ export async function updateOrderItemsAction(
   formData: FormData,
 ): Promise<ActionState> {
   const supabase = await createClient();
-  const products = await listActiveProducts(supabase);
-  const items = parseItemsFromFormData(formData, products);
+  const [active, order] = await Promise.all([
+    listActiveProducts(supabase),
+    getOrder(supabase, orderId),
+  ]);
+  // What is already on the order stays editable after the item was turned off.
+  const products = new Map<string, { id: string; name: string }>(
+    (order?.items ?? []).map((i) => [i.productId, { id: i.productId, name: i.productName }]),
+  );
+  for (const product of active) products.set(product.id, product);
+  const items = parseItemsFromFormData(formData, [...products.values()]);
   if ('error' in items) return items;
 
   try {

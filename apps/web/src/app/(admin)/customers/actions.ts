@@ -1,10 +1,21 @@
 'use server';
 
-import { customerFormSchema, errorMessage, type CustomerFormValues } from '@shreeram/shared';
+import {
+  customerFormSchema,
+  customerProducts,
+  errorMessage,
+  type CustomerFormValues,
+} from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import { createCustomer, setCustomerStatus, updateCustomer } from '@/lib/data/customers';
+import {
+  createCustomer,
+  getCustomer,
+  setCustomerProducts,
+  setCustomerStatus,
+  updateCustomer,
+} from '@/lib/data/customers';
 import { createClient } from '@/lib/supabase/server';
 
 export type CustomerActionState = { error: string | null };
@@ -78,7 +89,21 @@ export async function updateCustomerAction(
 
   const supabase = await createClient();
   try {
-    await updateCustomer(supabase, customerId, parsed.data as CustomerFormValues);
+    const values = parsed.data as CustomerFormValues;
+    const current = await getCustomer(supabase, customerId);
+    if (!current) return { error: 'Customer not found.' };
+    const wanted = [
+      { milkTypeId: values.milkTypeId, quantity: values.defaultDailyQuantityMl },
+      ...values.extraProducts.map((p) => ({ milkTypeId: p.milkTypeId, quantity: p.quantityMl })),
+    ];
+    if (JSON.stringify(wanted) !== JSON.stringify(customerProducts(current))) {
+      const from = String(formData.get('productsFrom') ?? '');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(from)) {
+        return { error: 'Choose the date the product or quantity change starts on.' };
+      }
+      await setCustomerProducts(supabase, customerId, values, from);
+    }
+    await updateCustomer(supabase, customerId, values);
     revalidatePath('/customers');
     revalidatePath(`/customers/${customerId}`);
   } catch (err) {

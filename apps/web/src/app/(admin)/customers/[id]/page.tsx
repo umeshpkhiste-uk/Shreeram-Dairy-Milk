@@ -1,13 +1,20 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { formatBillingMonth, formatPaiseAsRupees, unitLabel } from '@shreeram/shared';
+import {
+  customerProducts,
+  formatBillingMonth,
+  formatPaiseAsRupees,
+  formatQuantity,
+  todayInBusinessTimezone,
+  unitLabel,
+} from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
 import { Badge, Card, EmptyState, PageHeader, PrimaryButton, WarningButton } from '@/components/ui';
 import { listBillsForCustomer } from '@/lib/data/bills';
 import { listRatesForCustomer } from '@/lib/data/customer-rates';
-import { getCustomer } from '@/lib/data/customers';
+import { getCustomer, listCustomerProductsHistory } from '@/lib/data/customers';
 import { listAllMilkTypes } from '@/lib/data/milk-types';
 import { listOrdersForCustomer } from '@/lib/data/orders';
 import { listWorkers } from '@/lib/data/workers';
@@ -24,13 +31,14 @@ export default async function CustomerDetailPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [customer, milkTypes, workers, bills, rates, orders] = await Promise.all([
+  const [customer, milkTypes, workers, bills, rates, orders, productChanges] = await Promise.all([
     getCustomer(supabase, id),
     listAllMilkTypes(supabase),
     listWorkers(supabase),
     listBillsForCustomer(supabase, id),
     listRatesForCustomer(supabase, id),
     listOrdersForCustomer(supabase, id),
+    listCustomerProductsHistory(supabase, id),
   ]);
   if (!customer) notFound();
 
@@ -66,6 +74,8 @@ export default async function CustomerDetailPage({ params }: PageProps) {
           />
         </div>
         <CustomerForm
+          // A new change resets the form: one set for later must not stay typed in as today's.
+          key={productChanges[0]?.set_at}
           customer={customer}
           milkTypes={milkTypes}
           workers={workers}
@@ -74,11 +84,31 @@ export default async function CustomerDetailPage({ params }: PageProps) {
         />
       </Card>
 
+      {productChanges.length > 1 ? (
+        <Card>
+          <h2 className="mb-3 text-lg font-semibold text-text">Product and quantity changes</h2>
+          <ul className="flex flex-col gap-1 text-sm text-text-secondary">
+            {productChanges.map((change) => (
+              <li key={change.effective_from}>
+                {change.effective_from === '2000-01-01' ? 'At the start' : `From ${change.effective_from}`}
+                {change.effective_from > todayInBusinessTimezone() ? ' (not started yet)' : ''}:{' '}
+                {customerProducts(change)
+                  .map((p) => {
+                    const product = milkTypeById.get(p.milkTypeId);
+                    return `${product?.name ?? 'Product'} ${formatQuantity(p.quantity, product?.unit)}`;
+                  })
+                  .join(', ')}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
+
       <Card>
         <h2 className="mb-3 text-lg font-semibold text-text">Pricing</h2>
         <p className="mb-4 text-sm text-text-secondary">
-          Customer-specific, effective-dated rates. Setting a new rate closes the current one and
-          never changes the price already recorded on past deliveries or bills.
+          The customer&rsquo;s own rates. A new rate is charged from its start date, also for days
+          already recorded; a bill it changes is marked to be generated again.
         </p>
         <RateForm milkTypes={milkTypes} action={boundSetRate} />
         {rates.length > 0 ? (

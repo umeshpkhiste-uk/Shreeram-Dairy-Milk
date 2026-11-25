@@ -52,6 +52,20 @@ export async function submitDeliveryEvent(
   return data as unknown as SubmitDeliveryEventResult;
 }
 
+/** Tells the admin about a record the server refused. */
+export async function reportSyncFailure(
+  eventId: string,
+  payload: Record<string, unknown>,
+  message: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('report_sync_failure', {
+    p_event_id: eventId,
+    p_payload: payload,
+    p_error: message,
+  });
+  if (error) throw error;
+}
+
 /** Pulls the worker's own deliveries since a given date, for local reconciliation. */
 export async function listDeliveriesForWorkerSince(
   workerId: string,

@@ -1,8 +1,11 @@
 import { db, type OutboxItem } from './db';
 
-/** Every not-yet-acknowledged outbox row, oldest first — never deleted until acknowledged. */
+/**
+ * Every not-yet-acknowledged outbox row, oldest first — never deleted until acknowledged.
+ * Includes failed ones, whose next_attempt_at is hours away: the server may accept them later.
+ */
 export async function listUnsentOutboxItems(): Promise<OutboxItem[]> {
-  return db.sync_outbox.where('status').anyOf('pending', 'in_flight').sortBy('created_at');
+  return db.sync_outbox.where('status').anyOf('pending', 'in_flight', 'failed').sortBy('created_at');
 }
 
 export async function countPendingOutboxItems(): Promise<number> {
@@ -44,9 +47,15 @@ export async function rescheduleOutboxItem(eventId: string, nextAttemptAt: strin
     });
 }
 
-/** A permanent rejection (e.g. unauthorized customer, invalid data) — stop retrying, surface for manual review. */
+const FAILED_RETRY_MS = 6 * 60 * 60 * 1000;
+
+/** The server refused it (e.g. unauthorized customer, invalid data) — surface for review, try again in hours. */
 export async function markOutboxFailed(eventId: string, error: string) {
-  await db.sync_outbox.update(eventId, { status: 'failed', last_error: error });
+  await db.sync_outbox.update(eventId, {
+    status: 'failed',
+    last_error: error,
+    next_attempt_at: new Date(Date.now() + FAILED_RETRY_MS).toISOString(),
+  });
 }
 
 /** Manual retry: move a failed item back to pending, due immediately. */

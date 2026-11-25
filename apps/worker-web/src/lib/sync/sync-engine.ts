@@ -3,8 +3,13 @@
 import { isAuthRetryableFetchError } from '@supabase/supabase-js';
 import { useSyncExternalStore } from 'react';
 
-import { listCustomersForWorker } from '@/lib/api/customers';
-import { listDeliveriesForWorkerSince, submitDeliveryEvent, type DeliveryRow } from '@/lib/api/deliveries';
+import { applyDueProductChanges, listCustomersForWorker } from '@/lib/api/customers';
+import {
+  listDeliveriesForWorkerSince,
+  reportSyncFailure,
+  submitDeliveryEvent,
+  type DeliveryRow,
+} from '@/lib/api/deliveries';
 import { listActiveMilkTypes } from '@/lib/api/milk-types';
 import { getOwnProfile } from '@/lib/api/profile';
 import { replaceCachedCustomers, replaceCachedMilkTypes } from '@/lib/db/cache-repo';
@@ -136,7 +141,8 @@ async function drainOutbox(): Promise<void> {
   for (const item of await listUnsentOutboxItems()) {
     if (waiting.has(item.delivery_id)) continue;
     if (item.next_attempt_at > new Date().toISOString()) {
-      waiting.add(item.delivery_id);
+      // A refused correction must not hold back a newer one; a refused creation must.
+      if (item.status !== 'failed' || item.event_type === 'created') waiting.add(item.delivery_id);
       continue;
     }
 
@@ -167,6 +173,8 @@ async function drainOutbox(): Promise<void> {
       if (isPermanentError(error)) {
         await markOutboxFailed(item.event_id, message);
         await updateLocalDeliverySyncStatus(item.delivery_id, 'failed', message);
+        // So the admin sees it; the record itself stays on the phone either way.
+        await reportSyncFailure(item.event_id, item.payload, message).catch(() => undefined);
       } else {
         waiting.add(item.delivery_id);
         await rescheduleOutboxItem(item.event_id, nextAttemptAt(item.attempt_count + 1), message);
@@ -199,6 +207,7 @@ async function pullLatestData(workerId: string): Promise<void> {
   // The layout signs a deactivated worker out when this row says so.
   await setProfile(await getOwnProfile(workerId));
 
+  await applyDueProductChanges();
   const [customers, milkTypes] = await Promise.all([
     listCustomersForWorker(workerId),
     listActiveMilkTypes(),

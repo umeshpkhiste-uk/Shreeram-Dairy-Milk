@@ -455,6 +455,32 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      customer_products_history: {
+        Row: {
+          customer_id: string;
+          effective_from: string;
+          milk_type_id: string;
+          default_daily_quantity_ml: number;
+          extra_products: ExtraProduct[];
+          set_at: string;
+        };
+        Insert: Record<string, never>; // written only by set_customer_products and the customers trigger
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      sync_failures: {
+        Row: {
+          event_id: string;
+          worker_id: string;
+          payload: Record<string, unknown>;
+          error: string;
+          reported_at: string;
+          dismissed_at: string | null;
+        };
+        Insert: Record<string, never>; // written only by report_/dismiss_sync_failure
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -521,6 +547,22 @@ export interface Database {
         Args: { p_bill_id: string; p_amount_paise: number; p_transaction_reference: string };
         Returns: undefined;
       };
+      set_customer_products: {
+        Args: {
+          p_customer_id: string;
+          p_effective_from: string;
+          p_milk_type_id: string;
+          p_quantity_ml: number;
+          p_extra_products: ExtraProduct[];
+        };
+        Returns: undefined;
+      };
+      apply_due_product_changes: { Args: Record<string, never>; Returns: undefined };
+      report_sync_failure: {
+        Args: { p_event_id: string; p_payload: Record<string, unknown>; p_error: string };
+        Returns: undefined;
+      };
+      dismiss_sync_failure: { Args: { p_event_id: string }; Returns: undefined };
       set_customer_rate: {
         Args: {
           p_customer_id: string;

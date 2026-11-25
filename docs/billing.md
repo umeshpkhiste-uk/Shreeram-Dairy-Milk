@@ -13,10 +13,11 @@ why:
   day from the customer's start date to today is charged at the fixed quantity of each product. A
   `completed`/`partial` record replaces the fixed quantity; a `missed` record is not charged; a
   `skipped` record (customer informed) clears the whole day, also for a product added later. Days
-  the customer was inactive are not charged. An unrecorded day uses the quantity, products, status
-  and default price that held on that day, read back from `audit_logs` (`_row_on`), so a later
-  change never reaches back. Correcting a wrong quantity therefore only counts from the day it is
-  corrected; use an adjustment for the days before.
+  the customer was inactive are not charged. An unrecorded day uses the products and
+  quantity from `customer_products_history` (a change has a start date, in the past or the future),
+  and the status and default price that held on that day, read back from `audit_logs` (`_row_on`).
+  A delivered day follows a quantity change that was entered after it was recorded. The bill shows
+  one line per product, rate and daily quantity, with its dates once any of them changed.
 - **One button: "Generate and send Bill".** `generate_bill` brings the bill up to today and
   finalizes it, then the browser opens WhatsApp with the bill as text and a link to it. It can be
   run again (e.g. on the 25th and at month end): same bill number, new numbers. Generating or

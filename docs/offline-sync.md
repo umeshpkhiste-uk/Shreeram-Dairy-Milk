@@ -84,12 +84,11 @@ trusted to the device:
 
 ## Known limitations / follow-ups
 
-- **A revoked worker's queued-but-unsynced work**: per the checklist, authorization is
-  re-checked at sync time, not trusted from the device's cache. If a worker is deactivated or
-  reassigned while they have unsynced deliveries queued, those uploads will be rejected
-  (`is_active`/assignment check fails) and marked `failed` locally — the evidence stays on the
-  device (nothing is deleted), but it does not reach the server automatically. Reviewing and
-  manually reconciling such cases is an admin task, not yet built (candidate for Stage 4).
+- **A revoked worker's queued-but-unsynced work**: a worker who was moved off a customer, or
+  whose customer was made inactive, can still send records for the days the customer was theirs. A
+  deactivated worker can't send anything; the records stay on the phone until they are active again.
+  What the server refuses is marked `failed`, reported to the admin (`sync_failures`,
+  `/deliveries/sync`) and sent again every six hours.
 - **Sync status / delivery history only show local data** — there's no Stage 4 admin-side view
   of conflicts yet; `deliveries.has_conflict` and `delivery_events.conflict` are there for that.
 - **The manual Android airplane-mode test procedure** (per the checklist) needs a physical
