@@ -18,13 +18,8 @@ export async function listRatesForCustomer(
 }
 
 /**
- * Sets a new customer-specific rate effective from `effectiveFrom`, closing
- * any currently-open rate for the same customer + milk type at that exact
- * date (an exclusive upper bound — see `resolve_milk_price_paise` in
- * supabase/migrations/20261028090002_stage3_submit_delivery_event_rpc.sql).
- * Historical rates already attached to past deliveries are never edited or
- * removed — see docs/billing.md for how the applicable historical rate is
- * resolved for a given delivery's date.
+ * Closes the open rate for the same customer and product at `effectiveFrom` (an
+ * exclusive upper bound) and opens the new one, together or not at all.
  */
 export async function setCustomerRate(
   supabase: SupabaseServerClient,
@@ -34,25 +29,12 @@ export async function setCustomerRate(
     pricePaise: number;
     effectiveFrom: string; // YYYY-MM-DD
   },
-): Promise<CustomerMilkRateRow> {
-  const { error: closeError } = await supabase
-    .from('customer_milk_rates')
-    .update({ effective_to: input.effectiveFrom })
-    .eq('customer_id', input.customerId)
-    .eq('milk_type_id', input.milkTypeId)
-    .is('effective_to', null);
-  if (closeError) throw closeError;
-
-  const { data, error } = await supabase
-    .from('customer_milk_rates')
-    .insert({
-      customer_id: input.customerId,
-      milk_type_id: input.milkTypeId,
-      price_paise: input.pricePaise,
-      effective_from: input.effectiveFrom,
-    })
-    .select('*')
-    .single();
+): Promise<void> {
+  const { error } = await supabase.rpc('set_customer_rate', {
+    p_customer_id: input.customerId,
+    p_milk_type_id: input.milkTypeId,
+    p_price_paise: input.pricePaise,
+    p_effective_from: input.effectiveFrom,
+  });
   if (error) throw error;
-  return data;
 }

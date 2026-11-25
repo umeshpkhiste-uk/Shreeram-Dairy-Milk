@@ -58,7 +58,8 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
       <Card className="mb-6">
         <p className="text-sm text-text-secondary">
-          Billed {formatPaiseAsRupees(totals.billed)} · Paid {formatPaiseAsRupees(totals.paid)} ·
+          Previous balance {formatPaiseAsRupees(totals.previous)} · Billed this month{' '}
+          {formatPaiseAsRupees(totals.billed)} · Paid {formatPaiseAsRupees(totals.paid)} ·
           Outstanding {formatPaiseAsRupees(totals.outstanding)}
         </p>
       </Card>
@@ -71,7 +72,8 @@ export default async function ReportsPage({ searchParams }: PageProps) {
             <tr>
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Bill</th>
-              <th className="px-4 py-3">Billed</th>
+              <th className="px-4 py-3">Previous balance</th>
+              <th className="px-4 py-3">Billed this month</th>
               <th className="px-4 py-3">Paid</th>
               <th className="px-4 py-3">Outstanding</th>
             </tr>
@@ -81,6 +83,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
               <tr key={r.billId} className="hover:bg-surface-muted">
                 <td className="px-4 py-3 font-medium text-text">{r.customerName}</td>
                 <td className="px-4 py-3 text-text-secondary">{r.billNumber}</td>
+                <td className="px-4 py-3">{formatPaiseAsRupees(r.previousPaise)}</td>
                 <td className="px-4 py-3">{formatPaiseAsRupees(r.billedPaise)}</td>
                 <td className="px-4 py-3">{formatPaiseAsRupees(r.paidPaise)}</td>
                 <td className="px-4 py-3">{formatPaiseAsRupees(r.outstandingPaise)}</td>

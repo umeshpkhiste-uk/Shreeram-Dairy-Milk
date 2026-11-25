@@ -492,16 +492,8 @@ export interface Database {
         Args: { p_customer_id: string; p_billing_month: string };
         Returns: Database['public']['Tables']['monthly_bills']['Row'];
       };
-      recalculate_draft_bill: {
-        Args: { p_bill_id: string };
-        Returns: Database['public']['Tables']['monthly_bills']['Row'];
-      };
       add_bill_adjustment: {
         Args: { p_bill_id: string; p_amount_paise: number; p_reason: string };
-        Returns: Database['public']['Tables']['monthly_bills']['Row'];
-      };
-      finalize_bill: {
-        Args: { p_bill_id: string };
         Returns: Database['public']['Tables']['monthly_bills']['Row'];
       };
       void_bill: {
@@ -525,13 +517,22 @@ export interface Database {
         /** BillPdfData (lib/pdf/bill-template), or null when there is no such bill to see. */
         Returns: Record<string, unknown> | null;
       };
-      mark_bill_sent: {
-        Args: { p_bill_id: string };
-        Returns: Database['public']['Tables']['monthly_bills']['Row'];
-      };
       submit_payment_claim: {
         Args: { p_bill_id: string; p_amount_paise: number; p_transaction_reference: string };
         Returns: undefined;
+      };
+      set_customer_rate: {
+        Args: {
+          p_customer_id: string;
+          p_milk_type_id: string;
+          p_price_paise: number;
+          p_effective_from: string;
+        };
+        Returns: undefined;
+      };
+      list_unbilled_months: {
+        Args: { p_from: string; p_customer_id?: string };
+        Returns: { customer_id: string; billing_month: string; amount_paise: number }[];
       };
       resolve_payment_claim: {
         Args: { p_claim_id: string; p_received: boolean };

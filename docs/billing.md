@@ -21,9 +21,17 @@ why:
   finalizes it, then the browser opens WhatsApp with the bill as text and a link to it. It can be
   run again (e.g. on the 25th and at month end): same bill number, new numbers. Generating or
   creating a bill first completes the customer's earlier bills, so days after a mid-month bill are
-  carried over, not lost. Once a later bill is generated, an earlier one keeps its numbers and the
-  button only sends it again. There are no Recalculate, Finalize, Mark as sent or Void buttons; the
-  old RPCs still exist in the database. Opening WhatsApp is not recorded as "sent".
+  carried over, not lost. An earlier
+  bill can be generated again as well. There are no Recalculate, Finalize, Mark as sent or Void
+  buttons; only `void_bill` still exists in the database. Opening WhatsApp is not recorded as "sent".
+- **The previous balance is never a snapshot (money audit, 2026-11-26).** After every payment, undo,
+  adjustment, generate, create, cancel or void, `_recompute_customer_bill_statuses` sets each bill's
+  previous balance to the earlier non-voided bills' charges less their payments. An unpaid earlier
+  bill says which newer bill already includes it and shows no UPI link.
+- **A finished month with charges and no bill** is in no balance: it shows on the bill page and in
+  Notifications (`list_unbilled_months`).
+- **A rate set with an earlier start date** also counts for recorded days; a generated bill that it,
+  a delivery record, a new start date or a product change makes wrong is flagged.
 - **The customer's link is `/bill/<bill id>`,** readable without signing in through
   `get_bill_document` (drafts and voided bills are not). The random id is the only key: anyone with
   the link can see that one bill.
@@ -63,17 +71,14 @@ write goes through one of these `SECURITY DEFINER` RPCs, each admin-checked inte
 | RPC | Purpose |
 |---|---|
 | `create_draft_bill(customer_id, billing_month)` | Computes previous balance, selects not-yet-billed billable deliveries, creates a `draft` bill. |
-| `recalculate_draft_bill(bill_id)` (no button) | Draft-only; re-derives line items from scratch (picks up deliveries that synced in late). |
 | `add_bill_adjustment(bill_id, amount_paise, reason)` | Signed amount — negative is a discount/credit. Allowed on draft or finalized bills, not voided. |
 | `generate_bill(bill_id)` | Brings the bill and the customer's earlier bills up to today; `draft` → `finalized`; clears the flag. Repeatable. |
 | `get_bill_document(bill_id)` | The whole bill as JSON for the bill page, the customer's link and the WhatsApp text. The only one callable without signing in. |
-| `finalize_bill(bill_id)` (no button) | `draft` → `finalized`. |
 | `void_bill(bill_id, reason)` (no button) | Any non-voided status → `voided`; frees its deliveries for a future bill. Refused while a later non-voided bill carries its balance. |
 | `cancel_draft_bill(bill_id)` | Draft-only; removes the bill row with its items and adjustments, keeping a copy in `audit_logs`. Refused only while a later non-voided bill really carries its balance (a bill with no charges of its own never blocks). The bill number is not reused. |
 | `acknowledge_bill_flag(bill_id)` | Clears `flagged_for_review` after admin review. |
 | `record_payment(payment_id, bill_id, amount_paise, method, …)` | Idempotent on the client-generated `payment_id` — a retry answers from the stored row, never double-records. Rejects a duplicate `(bill_id, transaction_reference)`. |
 | `void_payment(payment_id, reason)` | Recomputes the bill's status excluding the voided payment. |
-| `mark_bill_sent(bill_id)` (no button) | A deliberate admin confirmation — **never set automatically** just because the share sheet opened. |
 
 `resolve_milk_price_paise` (Stage 3) is not reused directly for billing — the price is read
 from each `deliveries.price_paise_snapshot`, already resolved and immutable at delivery time,

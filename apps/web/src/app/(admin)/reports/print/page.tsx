@@ -85,7 +85,8 @@ export default async function ReportsPrintPage({ searchParams }: PageProps) {
             <tr>
               <th>Customer</th>
               <th>Bill</th>
-              <th className="num">Billed</th>
+              <th className="num">Previous balance</th>
+              <th className="num">Billed this month</th>
               <th className="num">Paid</th>
               <th className="num">Outstanding</th>
             </tr>
@@ -93,13 +94,14 @@ export default async function ReportsPrintPage({ searchParams }: PageProps) {
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={5}>No bills for this month yet.</td>
+                <td colSpan={6}>No bills for this month yet.</td>
               </tr>
             ) : (
               rows.map((r) => (
                 <tr key={r.billId}>
                   <td>{r.customerName}</td>
                   <td>{r.billNumber}</td>
+                  <td className="num">{formatPaiseAsRupees(r.previousPaise)}</td>
                   <td className="num">{formatPaiseAsRupees(r.billedPaise)}</td>
                   <td className="num">{formatPaiseAsRupees(r.paidPaise)}</td>
                   <td className="num">{formatPaiseAsRupees(r.outstandingPaise)}</td>
@@ -112,7 +114,11 @@ export default async function ReportsPrintPage({ searchParams }: PageProps) {
         <table className="totals">
           <tbody>
             <tr>
-              <td className="label">Billed</td>
+              <td className="label">Previous balance</td>
+              <td className="num">{formatPaiseAsRupees(totals.previous)}</td>
+            </tr>
+            <tr>
+              <td className="label">Billed this month</td>
               <td className="num">{formatPaiseAsRupees(totals.billed)}</td>
             </tr>
             <tr>

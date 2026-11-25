@@ -30,6 +30,8 @@ export type BillPdfData = {
     adjustmentsTotalPaise: number;
     totalPayablePaise: number;
   };
+  /** The newest generated bill that already carries this one's balance, if it is not paid. */
+  includedIn: string | null;
   /** The customer sent payment details that no admin has checked yet. */
   paymentClaimed: boolean;
   /** Days the customer informed, so nothing was delivered. */
@@ -109,6 +111,7 @@ export const BILL_STYLE = `
     .bill-doc .party .pay { text-align: right; padding-right: 8px; white-space: nowrap; }
     .bill-doc .party .pay a { color: #1d5fa8; text-decoration: underline; }
     .bill-doc .section { margin-top: 24px; }
+    .bill-doc .note { margin-top: 16px; padding: 8px; border: 1px solid #b45309; font-size: 13px; }
     .bill-doc .bill-totals { max-width: none; }
     .bill-doc .bill-totals .label { width: 200px; }
     .bill-doc .bill-totals .num { width: 120px; }
@@ -185,7 +188,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
 
   // A mobile number alone can't be a UPI link, so both open the UPI ID.
   const upiLink = (text: string) =>
-    business.upiId
+    business.upiId && !data.includedIn
       ? `<a href="${escapeHtml(
           upiPayUrl({
             upiId: business.upiId,
@@ -231,6 +234,12 @@ export function renderBillBodyHtml(data: BillPdfData): string {
         : ''
     }
   </div>
+
+  ${
+    data.includedIn
+      ? `<div class="note">This amount is already included in bill ${escapeHtml(data.includedIn)}. Please pay that bill.</div>`
+      : ''
+  }
 
   <h3 class="section">Delivery breakdown</h3>
   <div class="muted">Days delivered: ${daysDelivered(items)} · Days customer informed, no delivery: ${data.noDeliveryDays}</div>

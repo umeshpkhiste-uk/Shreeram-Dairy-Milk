@@ -30,6 +30,11 @@ export function formatQuantity(quantity: number, unit: ProductUnit | undefined):
   return `${quantity} ${UNITS[unit ?? 'litre'].small}`;
 }
 
+/** A third decimal only when there is one, so quantity × rate is the amount on a bill. */
+function largeQuantity(base: number): string {
+  return (base / 1000).toFixed(base % 10 === 0 ? 2 : 3);
+}
+
 /** Totals in L and Kg, never added together: "12.50 L + 0.50 Kg". */
 export function formatQuantityTotal(
   items: { quantity: number; unit: ProductUnit | undefined }[],
@@ -40,6 +45,6 @@ export function formatQuantityTotal(
   }
   const parts = (['litre', 'kg'] as const)
     .filter((unit) => totals[unit])
-    .map((unit) => `${((totals[unit] ?? 0) / 1000).toFixed(2)} ${UNITS[unit].large}`);
+    .map((unit) => `${largeQuantity(totals[unit] ?? 0)} ${UNITS[unit].large}`);
   return parts.join(' + ') || '0.00 L';
 }

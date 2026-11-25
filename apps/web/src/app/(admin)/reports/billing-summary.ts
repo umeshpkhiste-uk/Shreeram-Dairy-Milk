@@ -8,6 +8,8 @@ export type BillingSummaryRow = {
   billId: string;
   customerName: string;
   billNumber: string;
+  previousPaise: number;
+  /** This month only; adding months up never counts a carried balance twice. */
   billedPaise: number;
   paidPaise: number;
   outstandingPaise: number;
@@ -30,7 +32,8 @@ export function buildBillingSummaryRows(
       billId: b.id,
       customerName: customerNameById.get(b.customer_id) ?? 'Unknown customer',
       billNumber: b.bill_number,
-      billedPaise: b.total_payable_paise,
+      previousPaise: b.previous_outstanding_balance_paise,
+      billedPaise: b.subtotal_paise + b.adjustments_total_paise,
       paidPaise: paid,
       outstandingPaise: billAmountDue(b.status, b.total_payable_paise, paid).duePaise,
     };
@@ -40,10 +43,11 @@ export function buildBillingSummaryRows(
 export function sumBillingSummaryTotals(rows: BillingSummaryRow[]) {
   return rows.reduce(
     (acc, r) => ({
+      previous: acc.previous + r.previousPaise,
       billed: acc.billed + r.billedPaise,
       paid: acc.paid + r.paidPaise,
       outstanding: acc.outstanding + r.outstandingPaise,
     }),
-    { billed: 0, paid: 0, outstanding: 0 },
+    { previous: 0, billed: 0, paid: 0, outstanding: 0 },
   );
 }

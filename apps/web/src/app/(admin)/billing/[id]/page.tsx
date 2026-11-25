@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
@@ -6,6 +7,7 @@ import {
   billAmountDue,
   daysDelivered,
   formatBillPeriod,
+  formatBillingMonth,
   formatPaiseAsRupees,
   formatQuantityTotal,
   groupBillItems,
@@ -16,7 +18,7 @@ import {
 
 import { ActionForm } from '@/components/action-form';
 import { Badge, Card, DangerButton, PrimaryButton } from '@/components/ui';
-import { getBillDocument, getBillWithDetails } from '@/lib/data/bills';
+import { getBillDocument, getBillWithDetails, listUnbilledMonths } from '@/lib/data/bills';
 import { listPendingPaymentClaims } from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/server';
 
@@ -49,6 +51,9 @@ export default async function BillDetailPage({ params }: PageProps) {
   if (!details || !document) notFound();
   const { bill, adjustments, payments } = details;
   const { items } = document;
+  const unbilled = (await listUnbilledMonths(supabase, '2000-01-01', bill.customer_id)).filter(
+    (u) => u.billing_month < bill.billing_month,
+  );
 
   const totalPaid = payments.reduce((sum, p) => (p.voided_at ? sum : sum + p.amount_paise), 0);
   const { duePaise, settledElsewherePaise } = billAmountDue(
@@ -100,13 +105,38 @@ export default async function BillDetailPage({ params }: PageProps) {
         </Card>
       ) : null}
 
+      {document.includedIn ? (
+        <Card className="border-warning bg-warning-bg">
+          <p className="text-sm text-text">
+            This balance is already included in bill {document.includedIn}. The customer should pay
+            that one.
+          </p>
+        </Card>
+      ) : null}
+
+      {unbilled.map((u) => (
+        <Card key={u.billing_month} className="border-warning bg-warning-bg">
+          <p className="text-sm text-text">
+            There is no bill for {formatBillingMonth(u.billing_month)}, so its{' '}
+            {formatPaiseAsRupees(u.amount_paise)} is not in this bill.{' '}
+            <Link
+              href={`/billing?month=${u.billing_month}`}
+              className="font-medium text-primary hover:underline"
+            >
+              Create it
+            </Link>
+          </p>
+        </Card>
+      ))}
+
       {claims.map((claim) => (
         <Card key={claim.id} className="border-warning bg-warning-bg">
           <p className="font-medium text-warning">
             The customer says {formatPaiseAsRupees(claim.amount_paise)} was paid by UPI
           </p>
           <p className="mt-1 text-sm text-text">
-            Transaction number {claim.transaction_reference}. Check it in your bank or UPI app before
+            Due on this bill: {formatPaiseAsRupees(duePaise)}. Transaction number{' '}
+            {claim.transaction_reference}. Check it in your bank or UPI app before
             you confirm.
           </p>
           <div className="mt-3 flex flex-wrap items-start gap-3">
@@ -208,7 +238,7 @@ export default async function BillDetailPage({ params }: PageProps) {
       {!isDraft && !isVoided ? (
         <Card>
           <h2 className="mb-3 text-lg font-semibold text-text">Payments</h2>
-          <PaymentForm action={boundRecordPayment} />
+          <PaymentForm key={payments.length} action={boundRecordPayment} duePaise={duePaise} />
           {payments.length > 0 ? (
             <ul className="mt-4 flex flex-col gap-2 text-sm">
               {payments.map((p) => (

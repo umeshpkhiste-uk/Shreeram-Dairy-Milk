@@ -14,6 +14,7 @@ const DATA: BillPdfData = {
     adjustmentsTotalPaise: 0,
     totalPayablePaise: 15600,
   },
+  includedIn: null,
   paymentClaimed: false,
   noDeliveryDays: 1,
   items: ['2026-11-01', '2026-11-02'].map((deliveryDate) => ({
@@ -49,6 +50,10 @@ describe('billMessage', () => {
     expect(message).toContain('No delivery (you informed us): 1 day\n');
     expect(message).toContain('*Total Amount to be Paid: ₹100.00*');
     expect(message).toContain('https://example.com/bill/1');
+    expect(message).not.toContain('included in');
+    expect(billMessage({ ...DATA, includedIn: 'SDDS-1226-0001' }, 'x')).toContain(
+      'included in bill SDDS-1226-0001',
+    );
     expect(message).not.toContain('Previous balance');
     expect(message).not.toContain('Settled');
   });

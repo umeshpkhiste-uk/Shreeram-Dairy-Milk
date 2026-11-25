@@ -28,11 +28,15 @@ export default async function BillingListPage({ searchParams }: PageProps) {
   const nextMonth = shiftMonth(month, 1);
 
   const supabase = await createClient();
-  const [customers, bills] = await Promise.all([
-    listCustomers(supabase, { status: 'active' }),
+  const [allCustomers, bills] = await Promise.all([
+    listCustomers(supabase, { status: 'all' }),
     listBillsForMonth(supabase, month),
   ]);
   const billByCustomerId = new Map(bills.map((b) => [b.customer_id, b]));
+  // An inactive customer may still owe for days before they stopped.
+  const customers = allCustomers.filter(
+    (c) => c.status === 'active' || billByCustomerId.has(c.id) || c.updated_at >= month,
+  );
 
   return (
     <div>
@@ -72,7 +76,10 @@ export default async function BillingListPage({ searchParams }: PageProps) {
             const bill = billByCustomerId.get(customer.id);
             return (
               <tr key={customer.id} className="hover:bg-surface-muted">
-                <td className="px-4 py-3 font-medium text-text">{customer.full_name}</td>
+                <td className="px-4 py-3 font-medium text-text">
+                  {customer.full_name}
+                  {customer.status === 'active' ? '' : ' (inactive)'}
+                </td>
                 <td className="px-4 py-3 text-text-secondary">{bill?.bill_number ?? '—'}</td>
                 <td className="px-4 py-3">
                   {bill ? (

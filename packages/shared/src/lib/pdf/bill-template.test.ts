@@ -24,6 +24,7 @@ const BASE: BillPdfData = {
     adjustmentsTotalPaise: -1000,
     totalPayablePaise: 16600,
   },
+  includedIn: null,
   paymentClaimed: false,
   noDeliveryDays: 2,
   items: [
@@ -108,6 +109,13 @@ describe('renderBillBodyHtml', () => {
     expect(renderBillBodyHtml(noUpi)).toContain('Pay to: +919000000000<');
     const paid = { ...BASE, bill: { ...BASE.bill, status: 'paid' as const } };
     expect(renderBillBodyHtml(paid)).not.toContain('&amp;am=');
+  });
+
+  it('sends the customer to the newer bill that already has this amount', () => {
+    const html = renderBillBodyHtml({ ...BASE, includedIn: 'SDM-000043' });
+    expect(html).toContain('already included in bill SDM-000043');
+    expect(html).not.toContain('upi://');
+    expect(renderBillBodyHtml(BASE)).not.toContain('already included');
   });
 
   it('escapes HTML-significant characters in free-text fields', () => {

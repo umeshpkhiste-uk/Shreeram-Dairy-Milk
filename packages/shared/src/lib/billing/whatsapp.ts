@@ -41,6 +41,9 @@ export function billMessage(data: BillPdfData, link: string): string {
     ...amount('Payments received', -paid),
     ...amount('Settled on another bill', -settledElsewherePaise),
     `*Total Amount to be Paid: ${formatPaiseAsRupees(duePaise)}*`,
+    ...(data.includedIn
+      ? [`This is already included in bill ${data.includedIn}. Please pay that bill.`]
+      : []),
     '',
     `See or save your bill: ${link}`,
   ].join('\n');

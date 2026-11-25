@@ -116,6 +116,20 @@ export async function cancelDraftBill(
   if (error) throw error;
 }
 
+/** Finished months from `from` on with something to charge and no bill. */
+export async function listUnbilledMonths(
+  supabase: SupabaseServerClient,
+  from: string,
+  customerId?: string,
+): Promise<{ customer_id: string; billing_month: string; amount_paise: number }[]> {
+  const { data, error } = await supabase.rpc('list_unbilled_months', {
+    p_from: from,
+    p_customer_id: customerId,
+  });
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function acknowledgeBillFlag(
   supabase: SupabaseServerClient,
   billId: string,
