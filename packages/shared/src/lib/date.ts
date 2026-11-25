@@ -35,6 +35,13 @@ export function formatBillingMonth(date: string): string {
   return `${MONTH_NAMES[Number(month) - 1]} ${year}`;
 }
 
+/** "November 2026", or "November 2026 (till 25 Nov)" for a bill made before the month ended. */
+export function formatBillPeriod(billingMonth: string, billedThrough: string): string {
+  const month = formatBillingMonth(billingMonth);
+  if (billedThrough < billingMonth || billedThrough >= lastOfMonth(billingMonth)) return month;
+  return `${month} (till ${Number(billedThrough.slice(8))} ${month.slice(0, 3)})`;
+}
+
 export function shiftMonth(firstOfMonthDate: string, deltaMonths: number): string {
   const d = new Date(`${firstOfMonthDate}T00:00:00Z`);
   d.setUTCMonth(d.getUTCMonth() + deltaMonths);

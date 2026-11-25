@@ -1,9 +1,11 @@
 'use server';
 
 import {
+  billMessage,
   errorMessage,
   parseRupeesToPaise,
   parseSignedRupeesToPaise,
+  whatsappNumber,
   type PaymentMethod,
 } from '@shreeram/shared';
 import { revalidatePath } from 'next/cache';
@@ -14,11 +16,10 @@ import {
   addBillAdjustment,
   cancelDraftBill,
   createDraftBill,
-  finalizeBill,
-  markBillSent,
-  recalculateDraftBill,
-  voidBill,
+  generateBill,
+  getBillDocument,
 } from '@/lib/data/bills';
+import { getCustomer } from '@/lib/data/customers';
 import { recordPayment, voidPayment } from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/server';
 
@@ -39,28 +40,6 @@ export async function createDraftBillAction(
   redirect(`/billing/${billId}`);
 }
 
-export async function recalculateBillAction(billId: string): Promise<ActionState> {
-  const supabase = await createClient();
-  try {
-    await recalculateDraftBill(supabase, billId);
-  } catch (err) {
-    return { error: errorMessage(err, 'Failed to recalculate the bill.') };
-  }
-  revalidatePath(`/billing/${billId}`);
-  return { error: null };
-}
-
-export async function finalizeBillAction(billId: string): Promise<ActionState> {
-  const supabase = await createClient();
-  try {
-    await finalizeBill(supabase, billId);
-  } catch (err) {
-    return { error: errorMessage(err, 'Failed to finalize the bill.') };
-  }
-  revalidatePath(`/billing/${billId}`);
-  return { error: null };
-}
-
 export async function acknowledgeBillFlagAction(billId: string): Promise<ActionState> {
   const supabase = await createClient();
   try {
@@ -72,33 +51,27 @@ export async function acknowledgeBillFlagAction(billId: string): Promise<ActionS
   return { error: null };
 }
 
-export async function markBillSentAction(billId: string): Promise<ActionState> {
-  const supabase = await createClient();
-  try {
-    await markBillSent(supabase, billId);
-  } catch (err) {
-    return { error: errorMessage(err, 'Failed to mark the bill as sent.') };
-  }
-  revalidatePath(`/billing/${billId}`);
-  return { error: null };
-}
-
-export async function voidBillAction(
+export async function generateBillAction(
   billId: string,
-  _prevState: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const reason = String(formData.get('reason') ?? '').trim();
-  if (!reason) return { error: 'Enter a reason for voiding this bill.' };
-
+  link: string,
+): Promise<{ error: string | null; phone: string; message: string }> {
   const supabase = await createClient();
   try {
-    await voidBill(supabase, billId, reason);
+    const bill = await generateBill(supabase, billId);
+    const [customer, document] = await Promise.all([
+      getCustomer(supabase, bill.customer_id),
+      getBillDocument(supabase, billId),
+    ]);
+    if (!customer || !document) throw new Error('The bill could not be loaded.');
+    revalidatePath(`/billing/${billId}`);
+    return {
+      error: null,
+      phone: whatsappNumber(customer.billing_contact_phone || customer.mobile_number),
+      message: billMessage(document, link),
+    };
   } catch (err) {
-    return { error: errorMessage(err, 'Failed to void the bill.') };
+    return { error: errorMessage(err, 'Failed to generate the bill.'), phone: '', message: '' };
   }
-  revalidatePath(`/billing/${billId}`);
-  return { error: null };
 }
 
 export async function cancelBillAction(billId: string, billingMonth: string): Promise<ActionState> {

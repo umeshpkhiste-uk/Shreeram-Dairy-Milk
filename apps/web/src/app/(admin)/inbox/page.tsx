@@ -8,7 +8,7 @@ export default async function InboxPage() {
 
   return (
     <div>
-      <PageHeader title="Inbox" description="Draft bills waiting to be finalized." />
+      <PageHeader title="Inbox" description="Draft bills waiting to be generated and sent." />
       {items.length === 0 ? (
         <EmptyState title="Nothing waiting" description="There are no draft bills." />
       ) : (

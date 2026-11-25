@@ -9,17 +9,30 @@
 The checklist leaves several decisions to the implementation. Here's what this app does, and
 why:
 
-- **Billable = `deliveries` rows with `status in ('completed', 'partial')` only.** `missed` is
-  excluded entirely, and a scheduled customer-day with **no `deliveries` row at all** (Stage
-  4's "no record yet") is never billed — the explicit rule is "do not charge a customer for
-  milk that was not delivered merely because it was scheduled." There is no `cancelled` status
-  in this schema (only `completed`/`partial`/`missed`), so that checklist term doesn't apply.
+- **Fixed daily delivery (owner decision, 2026-11-25; replaces "only recorded deliveries").** Every
+  day from the customer's start date to today is charged at the fixed quantity of each product. A
+  `completed`/`partial` record replaces the fixed quantity; a `missed` record is not charged; a
+  `skipped` record (customer informed) clears the whole day, also for a product added later. Days
+  the customer was inactive are not charged. An unrecorded day uses the quantity, products, status
+  and default price that held on that day, read back from `audit_logs` (`_row_on`), so a later
+  change never reaches back. Correcting a wrong quantity therefore only counts from the day it is
+  corrected; use an adjustment for the days before.
+- **One button: "Generate and send Bill".** `generate_bill` brings the bill up to today and
+  finalizes it, then the browser opens WhatsApp with the bill as text and a link to it. It can be
+  run again (e.g. on the 25th and at month end): same bill number, new numbers. Generating or
+  creating a bill first completes the customer's earlier bills, so days after a mid-month bill are
+  carried over, not lost. Once a later bill is generated, an earlier one keeps its numbers and the
+  button only sends it again. There are no Recalculate, Finalize, Mark as sent or Void buttons; the
+  old RPCs still exist in the database. Opening WhatsApp is not recorded as "sent".
+- **The customer's link is `/bill/<bill id>`,** readable without signing in through
+  `get_bill_document` (drafts and voided bills are not). The random id is the only key: anyone with
+  the link can see that one bill.
 - **A delivery can be billed at most once, ever.** `bill_items` has a unique index on
   `delivery_id` scoped to non-voided items (`bill_items.voided`, flipped by `void_bill`) — a
   mechanical guarantee against double-charging, not just a period-math assumption.
 - **Payments are recorded against a specific bill**, never a general customer wallet. A
-  customer's "previous outstanding balance" for their *next* bill is computed at
-  draft-creation time as `sum over their prior non-voided bills of (own charges + adjustments
+  customer's "previous outstanding balance" for their *next* bill is computed each
+  time it is created or generated, as `sum over their prior non-voided bills of (own charges + adjustments
   − payments received)` — own charges, not `total_payable`, which already carries the earlier
   balance and would count it twice. Simpler and more auditable than a separate running ledger.
 - **Bill status is derived**, except for the two explicit actions `finalize_bill`/`void_bill`:
@@ -28,12 +41,10 @@ why:
   `sum(payments) vs total_payable`; a bill is also `paid` once the customer owes nothing up to it
   or a later finalized bill (e.g. the latest bill, carrying the old balance, was paid in full)
   (see `public._recompute_customer_bill_statuses`).
-- **A late offline delivery never silently changes a finalized bill.** `submit_delivery_event`
-  (Stage 3) was extended to check, after applying an event, whether a `finalized`/
-  `partially_paid`/`paid` bill already exists for that customer's billing period — if so it
-  sets `monthly_bills.flagged_for_review = true` with a reason, and leaves the bill's numbers
-  untouched. An admin reviews the flag on the bill detail screen and either acknowledges it or
-  issues a `bill_adjustments` correction.
+- **A late delivery record never silently changes a generated bill.** The `flag_changed_bill`
+  trigger on `deliveries` sets `flagged_for_review` when a record differs from what the bill charged
+  for that day (confirming the fixed quantity, or a day after the bill, does not). The admin
+  generates the bill again, or, for an earlier bill, acknowledges the flag and adds an adjustment.
 
 ## Schema and RPCs
 
@@ -45,15 +56,17 @@ write goes through one of these `SECURITY DEFINER` RPCs, each admin-checked inte
 | RPC | Purpose |
 |---|---|
 | `create_draft_bill(customer_id, billing_month)` | Computes previous balance, selects not-yet-billed billable deliveries, creates a `draft` bill. |
-| `recalculate_draft_bill(bill_id)` | Draft-only; re-derives line items from scratch (picks up deliveries that synced in late). |
+| `recalculate_draft_bill(bill_id)` (no button) | Draft-only; re-derives line items from scratch (picks up deliveries that synced in late). |
 | `add_bill_adjustment(bill_id, amount_paise, reason)` | Signed amount — negative is a discount/credit. Allowed on draft or finalized bills, not voided. |
-| `finalize_bill(bill_id)` | `draft` → `finalized`. |
-| `void_bill(bill_id, reason)` | Any non-voided status → `voided`; frees its deliveries for a future bill. Refused while a later non-voided bill carries its balance. |
+| `generate_bill(bill_id)` | Brings the bill and the customer's earlier bills up to today; `draft` → `finalized`; clears the flag. Repeatable. |
+| `get_bill_document(bill_id)` | The whole bill as JSON for the bill page, the customer's link and the WhatsApp text. The only one callable without signing in. |
+| `finalize_bill(bill_id)` (no button) | `draft` → `finalized`. |
+| `void_bill(bill_id, reason)` (no button) | Any non-voided status → `voided`; frees its deliveries for a future bill. Refused while a later non-voided bill carries its balance. |
 | `cancel_draft_bill(bill_id)` | Draft-only; removes the bill row with its items and adjustments, keeping a copy in `audit_logs`. Refused only while a later non-voided bill really carries its balance (a bill with no charges of its own never blocks). The bill number is not reused. |
 | `acknowledge_bill_flag(bill_id)` | Clears `flagged_for_review` after admin review. |
 | `record_payment(payment_id, bill_id, amount_paise, method, …)` | Idempotent on the client-generated `payment_id` — a retry answers from the stored row, never double-records. Rejects a duplicate `(bill_id, transaction_reference)`. |
 | `void_payment(payment_id, reason)` | Recomputes the bill's status excluding the voided payment. |
-| `mark_bill_sent(bill_id)` | A deliberate admin confirmation — **never set automatically** just because the share sheet opened. |
+| `mark_bill_sent(bill_id)` (no button) | A deliberate admin confirmation — **never set automatically** just because the share sheet opened. |
 
 `resolve_milk_price_paise` (Stage 3) is not reused directly for billing — the price is read
 from each `deliveries.price_paise_snapshot`, already resolved and immutable at delivery time,

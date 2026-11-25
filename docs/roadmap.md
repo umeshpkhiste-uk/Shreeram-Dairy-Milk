@@ -335,7 +335,8 @@ Delivery validation copied into `packages/shared`.
 
 **Added since, in both web apps:** cancel/void rules and one-time previous balances on bills
 (`docs/billing.md`); product types with a unit (Curd and Paneer by the kg, Taak by the litre);
-several products per customer, each marked and billed on its own.
+several products per customer, each marked and billed on its own; bills from the fixed daily
+delivery, generated and sent on WhatsApp with one button.
 
 **Verified:** typecheck, lint, build, unit tests; offline mark → reload → reconnect → sync in
 desktop Chrome against a local stub of Supabase.

@@ -10,6 +10,7 @@ export * from './lib/products';
 export * from './lib/date';
 export * from './lib/errors';
 export * from './lib/billing/status';
+export * from './lib/billing/whatsapp';
 export * from './lib/validation/customer';
 export * from './lib/validation/bill';
 export * from './lib/validation/payment';

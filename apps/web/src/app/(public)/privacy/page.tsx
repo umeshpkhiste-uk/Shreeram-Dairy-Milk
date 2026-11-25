@@ -73,6 +73,10 @@ export default function PrivacyPolicyPage() {
           <li>
             <strong>Administrators</strong> see all business records.
           </li>
+          <li>
+            <strong>A customer&rsquo;s bill</strong> can be opened without signing in by anyone who
+            has the private link we send that customer on WhatsApp.
+          </li>
           <li>Access rules are enforced on the server, not just in the app.</li>
         </ul>
         <p className="mt-3">

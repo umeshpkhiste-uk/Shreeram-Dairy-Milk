@@ -394,7 +394,8 @@ export interface Database {
         Row: {
           id: string;
           bill_id: string;
-          delivery_id: string;
+          /** Null for a fixed day nobody recorded. */
+          delivery_id: string | null;
           delivery_date: string;
           milk_type_id: string;
           quantity_ml: number;
@@ -499,6 +500,15 @@ export interface Database {
       acknowledge_bill_flag: {
         Args: { p_bill_id: string };
         Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      generate_bill: {
+        Args: { p_bill_id: string };
+        Returns: Database['public']['Tables']['monthly_bills']['Row'];
+      };
+      get_bill_document: {
+        Args: { p_bill_id: string };
+        /** BillPdfData (lib/pdf/bill-template), or null when there is no such bill to see. */
+        Returns: Record<string, unknown> | null;
       };
       mark_bill_sent: {
         Args: { p_bill_id: string };

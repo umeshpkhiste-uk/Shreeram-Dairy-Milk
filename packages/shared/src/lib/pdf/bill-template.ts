@@ -1,9 +1,10 @@
 import { formatPaiseAsRupees } from '../money';
-import { formatQuantity, unitLabel } from '../quantity';
+import { formatBillPeriod } from '../date';
+import { formatQuantityTotal, unitLabel } from '../quantity';
 import { BILL_STATUS_LABEL, billAmountDue } from '../billing/status';
 import type { BillStatus, ProductUnit } from '../../types/database';
 
-/** Used by the website's print-to-PDF page (app/(admin)/billing/[id]/print). */
+/** What the `get_bill_document` RPC returns: the admin's bill page, the customer's link (app/bill/[id]) and the WhatsApp message. */
 export type BillPdfData = {
   business: {
     businessName: string;
@@ -20,12 +21,15 @@ export type BillPdfData = {
   bill: {
     billNumber: string;
     billingMonth: string; // YYYY-MM-01
+    billedThrough: string; // YYYY-MM-DD
     status: BillStatus;
     previousOutstandingBalancePaise: number;
     subtotalPaise: number;
     adjustmentsTotalPaise: number;
     totalPayablePaise: number;
   };
+  /** Days the customer informed, so nothing was delivered. */
+  noDeliveryDays: number;
   items: {
     deliveryDate: string;
     milkTypeName: string;
@@ -51,12 +55,32 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function billingMonthLabel(billingMonth: string): string {
-  const [year, month] = billingMonth.split('-').map(Number);
-  return new Date(year, month - 1, 1).toLocaleDateString('en-IN', {
-    month: 'long',
-    year: 'numeric',
-  });
+export type BillLine = {
+  milkTypeName: string;
+  unit: ProductUnit | undefined;
+  pricePaise: number;
+  days: number;
+  quantityMl: number;
+  amountPaise: number;
+};
+
+/** One line per product and rate. */
+export function groupBillItems(items: BillPdfData['items']): BillLine[] {
+  const lines = new Map<string, BillLine & { dates: Set<string> }>();
+  for (const item of items) {
+    const key = `${item.milkTypeName}|${item.pricePaise}`;
+    const line = lines.get(key) ?? { ...item, days: 0, quantityMl: 0, amountPaise: 0, dates: new Set() };
+    line.dates.add(item.deliveryDate);
+    line.days = line.dates.size;
+    line.quantityMl += item.quantityMl;
+    line.amountPaise += item.amountPaise;
+    lines.set(key, line);
+  }
+  return [...lines.values()];
+}
+
+export function daysDelivered(items: BillPdfData['items']): number {
+  return new Set(items.map((item) => item.deliveryDate)).size;
 }
 
 /** The inline styles for `renderBillBodyHtml` and the order receipt. */
@@ -77,6 +101,11 @@ export const BILL_STYLE = `
     .bill-doc .totals .grand { font-weight: bold; font-size: 15px; border-top: 2px solid #1a1a1a; }
     .bill-doc .doc-info { text-align: right; padding-right: 8px; white-space: nowrap; }
     .bill-doc .status { font-size: 12px; font-weight: bold; }
+    @media (max-width: 480px) {
+      .bill-doc .header { flex-direction: column; gap: 12px; }
+      .bill-doc .doc-info { text-align: left; }
+      .bill-doc th, .bill-doc td { padding: 6px 4px; font-size: 12px; }
+    }
 `;
 
 /**
@@ -88,15 +117,15 @@ export const BILL_STYLE = `
 export function renderBillBodyHtml(data: BillPdfData): string {
   const { business, customer, bill, items, adjustments, payments } = data;
 
-  const itemRows = items
+  const itemRows = groupBillItems(items)
     .map(
-      (item) => `
+      (line) => `
         <tr>
-          <td>${escapeHtml(item.deliveryDate)}</td>
-          <td>${escapeHtml(item.milkTypeName)}</td>
-          <td class="num">${formatQuantity(item.quantityMl, item.unit)}</td>
-          <td class="num">${formatPaiseAsRupees(item.pricePaise)}/${unitLabel(item.unit)}</td>
-          <td class="num">${formatPaiseAsRupees(item.amountPaise)}</td>
+          <td>${escapeHtml(line.milkTypeName)}</td>
+          <td class="num">${line.days}</td>
+          <td class="num">${formatQuantityTotal([{ quantity: line.quantityMl, unit: line.unit }])}</td>
+          <td class="num">${formatPaiseAsRupees(line.pricePaise)}/${unitLabel(line.unit)}</td>
+          <td class="num">${formatPaiseAsRupees(line.amountPaise)}</td>
         </tr>`,
     )
     .join('');
@@ -144,7 +173,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     </div>
     <div class="doc-info">
       <div><strong>Bill ${escapeHtml(bill.billNumber)}</strong></div>
-      <div class="muted">${billingMonthLabel(bill.billingMonth)}</div>
+      <div class="muted">${formatBillPeriod(bill.billingMonth, bill.billedThrough)}</div>
       <div class="status">${BILL_STATUS_LABEL[bill.status]}</div>
     </div>
   </div>
@@ -155,8 +184,9 @@ export function renderBillBodyHtml(data: BillPdfData): string {
   </div>
 
   <h3>Delivery breakdown</h3>
+  <div class="muted">Days delivered: ${daysDelivered(items)} · Days customer informed, no delivery: ${data.noDeliveryDays}</div>
   <table>
-    <thead><tr><th>Date</th><th>Product type</th><th class="num">Quantity</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+    <thead><tr><th>Product type</th><th class="num">Total days delivery</th><th class="num">Quantity</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
     <tbody>${itemRows || '<tr><td colspan="5">No billable deliveries this period.</td></tr>'}</tbody>
   </table>
 

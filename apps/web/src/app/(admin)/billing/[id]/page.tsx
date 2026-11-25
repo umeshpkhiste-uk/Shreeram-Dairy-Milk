@@ -1,40 +1,34 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
   BILL_STATUS_LABEL,
   BILL_STATUS_TONE,
   billAmountDue,
-  formatBillingMonth,
+  daysDelivered,
+  formatBillPeriod,
   formatPaiseAsRupees,
-  formatQuantity,
   formatQuantityTotal,
+  groupBillItems,
   unitLabel,
 } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
-import { Badge, Card, InfoButton, PrimaryButton, buttonClass } from '@/components/ui';
-import { getBillWithDetails } from '@/lib/data/bills';
-import { getCustomer } from '@/lib/data/customers';
-import { listAllMilkTypes } from '@/lib/data/milk-types';
+import { Badge, Card, PrimaryButton } from '@/components/ui';
+import { getBillDocument, getBillWithDetails } from '@/lib/data/bills';
 import { createClient } from '@/lib/supabase/server';
 
 import {
   acknowledgeBillFlagAction,
   addAdjustmentAction,
   cancelBillAction,
-  finalizeBillAction,
-  markBillSentAction,
-  recalculateBillAction,
   recordPaymentAction,
-  voidBillAction,
   voidPaymentAction,
 } from '../actions';
 import { AdjustmentForm } from './adjustment-form';
 import { BackButton } from './back-button';
 import { CancelBillForm } from './cancel-bill-form';
+import { GenerateBillButton } from './generate-bill-button';
 import { PaymentForm } from './payment-form';
-import { VoidBillForm } from './void-bill-form';
 import { VoidPaymentButton } from './void-payment-button';
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -43,15 +37,13 @@ export default async function BillDetailPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const details = await getBillWithDetails(supabase, id);
-  if (!details) notFound();
-  const { bill, items, adjustments, payments } = details;
-
-  const [customer, milkTypes] = await Promise.all([
-    getCustomer(supabase, bill.customer_id),
-    listAllMilkTypes(supabase),
+  const [details, document] = await Promise.all([
+    getBillWithDetails(supabase, id),
+    getBillDocument(supabase, id),
   ]);
-  const milkTypeById = new Map(milkTypes.map((m) => [m.id, m]));
+  if (!details || !document) notFound();
+  const { bill, adjustments, payments } = details;
+  const { items } = document;
 
   const totalPaid = payments.reduce((sum, p) => (p.voided_at ? sum : sum + p.amount_paise), 0);
   const { duePaise, settledElsewherePaise } = billAmountDue(
@@ -59,18 +51,9 @@ export default async function BillDetailPage({ params }: PageProps) {
     bill.total_payable_paise,
     totalPaid,
   );
-  const quantities = items.map((item) => ({
-    quantity: item.quantity_ml,
-    unit: milkTypeById.get(item.milk_type_id)?.unit,
-  }));
-  const oneUnit = new Set(quantities.map((q) => q.unit)).size === 1;
-  const averageQuantity = Math.round(
-    quantities.reduce((sum, q) => sum + q.quantity, 0) / quantities.length,
-  );
   const isDraft = bill.status === 'draft';
   const isVoided = bill.status === 'voided';
 
-  const boundVoid = voidBillAction.bind(null, id);
   const boundAddAdjustment = addAdjustmentAction.bind(null, id);
   const boundRecordPayment = recordPaymentAction.bind(null, id);
 
@@ -82,19 +65,15 @@ export default async function BillDetailPage({ params }: PageProps) {
           <div>
             <h1 className="text-2xl font-semibold text-text">Bill {bill.bill_number}</h1>
             <p className="mt-1 text-sm text-text-secondary">
-              {customer?.full_name ?? 'Customer'} · {formatBillingMonth(bill.billing_month)}
+              {document.customer.fullName} ·{' '}
+              {formatBillPeriod(bill.billing_month, document.bill.billedThrough)}
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
           {!isVoided ? (
-            <Link
-              href={`/billing/${id}/print`}
-              className={buttonClass('info')}
-            >
-              Print / Save as PDF
-            </Link>
+            <GenerateBillButton billId={id} />
           ) : null}
         </div>
       </div>
@@ -110,34 +89,16 @@ export default async function BillDetailPage({ params }: PageProps) {
       ) : null}
 
       <Card>
-        <div className="mb-4 flex flex-wrap items-start gap-2">
-          {isDraft ? (
-            <ActionForm action={recalculateBillAction.bind(null, id)}>
-              <InfoButton type="submit">Recalculate</InfoButton>
-            </ActionForm>
-          ) : null}
-          {isDraft ? (
-            <ActionForm action={finalizeBillAction.bind(null, id)}>
-              <PrimaryButton type="submit">Finalize</PrimaryButton>
-            </ActionForm>
-          ) : null}
-          {!isVoided ? (
-            <ActionForm action={markBillSentAction.bind(null, id)}>
-              <PrimaryButton type="submit" disabled={isDraft || !!bill.sent_at}>
-                {bill.sent_at ? `Sent ${bill.sent_at.slice(0, 10)}` : 'Mark as sent'}
-              </PrimaryButton>
-            </ActionForm>
-          ) : null}
-          {!isVoided ? <VoidBillForm action={boundVoid} /> : null}
-        </div>
-
         <h2 className="mb-3 text-lg font-semibold text-text">Delivery summary</h2>
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Stat label="Days delivered" value={String(new Set(items.map((item) => item.delivery_date)).size)} />
-          <Stat label="Total quantity" value={formatQuantityTotal(quantities)} />
+          <Stat label="Days delivered" value={String(daysDelivered(items))} />
           <Stat
-            label="Average per delivery"
-            value={oneUnit ? formatQuantity(averageQuantity, quantities[0].unit) : '—'}
+            label="Total quantity"
+            value={formatQuantityTotal(items.map((i) => ({ quantity: i.quantityMl, unit: i.unit })))}
+          />
+          <Stat
+            label="Days customer informed, no delivery"
+            value={String(document.noDeliveryDays)}
           />
         </div>
 
@@ -146,8 +107,8 @@ export default async function BillDetailPage({ params }: PageProps) {
           <table className="w-full text-left text-sm">
             <thead className="text-xs font-medium uppercase text-text-secondary">
               <tr>
-                <th className="py-2">Date</th>
                 <th className="py-2">Product type</th>
+                <th className="py-2 text-right">Total days delivery</th>
                 <th className="py-2 text-right">Quantity</th>
                 <th className="py-2 text-right">Rate</th>
                 <th className="py-2 text-right">Amount</th>
@@ -161,18 +122,17 @@ export default async function BillDetailPage({ params }: PageProps) {
                   </td>
                 </tr>
               ) : (
-                items.map((item) => (
-                  <tr key={item.id}>
-                    <td className="py-2">{item.delivery_date}</td>
-                    <td className="py-2">{milkTypeById.get(item.milk_type_id)?.name ?? 'Product'}</td>
+                groupBillItems(items).map((line) => (
+                  <tr key={`${line.milkTypeName}-${line.pricePaise}`}>
+                    <td className="py-2">{line.milkTypeName}</td>
+                    <td className="py-2 text-right">{line.days}</td>
                     <td className="py-2 text-right">
-                      {formatQuantity(item.quantity_ml, milkTypeById.get(item.milk_type_id)?.unit)}
+                      {formatQuantityTotal([{ quantity: line.quantityMl, unit: line.unit }])}
                     </td>
                     <td className="py-2 text-right">
-                      {formatPaiseAsRupees(item.price_paise)}/
-                      {unitLabel(milkTypeById.get(item.milk_type_id)?.unit)}
+                      {formatPaiseAsRupees(line.pricePaise)}/{unitLabel(line.unit)}
                     </td>
-                    <td className="py-2 text-right">{formatPaiseAsRupees(item.amount_paise)}</td>
+                    <td className="py-2 text-right">{formatPaiseAsRupees(line.amountPaise)}</td>
                   </tr>
                 ))
               )}

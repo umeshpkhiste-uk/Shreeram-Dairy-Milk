@@ -2,6 +2,7 @@ import { BILL_STYLE, formatPaiseAsRupees } from '@shreeram/shared';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { PrintButton } from '@/components/print-button';
 import { getBusinessSettings } from '@/lib/data/business-settings';
 import { listBillsForMonth } from '@/lib/data/bills';
 import { listCustomers } from '@/lib/data/customers';
@@ -9,7 +10,6 @@ import { listPaymentsForBillIds } from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/server';
 
 import { buildBillingSummaryRows, sumBillingSummaryTotals } from '../billing-summary';
-import { PrintButton } from '../../billing/[id]/print/print-button';
 
 type PageProps = { searchParams: Promise<{ month?: string }> };
 

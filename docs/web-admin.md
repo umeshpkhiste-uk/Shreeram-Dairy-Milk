@@ -74,7 +74,7 @@ All under `src/app/(admin)/*` except `/login` — the route group's `layout.tsx`
 | `/deliveries` | The daily delivery report — same left-join logic as the mobile app's admin screen, same "no record yet ≠ missed" rule, one row per customer and product. Each customer name links to `/deliveries/[customerId]`. |
 | `/deliveries/[customerId]` | Per-customer delivery calendar (added post-launch, admin-website-only, per owner feedback) — see "Per-customer delivery calendar" below. |
 | `/orders` | One-time product orders (paneer, ghee, dahi, etc.) — see "One-time product orders" below. |
-| `/billing`, `/billing/[id]`, `/billing/[id]/print` | Month picker, create/view bills, full breakdown, adjustments, payments, finalize/recalculate/void, cancel (drafts only), the flagged-for-review banner, a back button, a delivery summary (days delivered / total quantity / average per delivery), and the website's PDF path (see below). |
+| `/billing`, `/billing/[id]`, `/bill/[id]` | Month picker, create/view bills, full breakdown, adjustments, payments, "Generate and send Bill" (WhatsApp), cancel (drafts only), the flagged-for-review banner, a back button, a delivery summary (days delivered / total quantity / days customer informed, no delivery) and one breakdown row per product and rate. `/bill/[id]` is the customer's own page, public by link (see below and `docs/billing.md`). |
 | `/payments` | Cross-customer payments ledger. |
 | `/reports`, `/reports/print` | Billing-summary table + PDF export (`/reports/print`, the same browser-print-to-PDF mechanism as the bill/order PDFs — see "Report generation is PDF-only" below). |
 | `/settings` | Business settings + order items (New Order catalog) management. |
@@ -82,12 +82,9 @@ All under `src/app/(admin)/*` except `/login` — the route group's `layout.tsx`
 ## PDF bill generation
 
 No server-side PDF rendering dependency (no headless Chromium/Puppeteer, which is heavy for a
-Vercel serverless function and unnecessary complexity for this app's scale). `/billing/[id]/print`
-renders the bill via `renderBillBodyHtml` (shared with the mobile app's layout) inside the admin
-shell, with the sidebar hidden via `@media print` (`globals.css`'s `.no-print`), and a "Print /
-Save as PDF" button that calls the browser's own `window.print()`. Same rule as the mobile app:
-nothing here ever infers "the bill was sent" from printing/saving it — that's still the separate
-`mark_bill_sent` action.
+Vercel serverless function and unnecessary complexity for this app's scale). `/bill/[id]`
+renders the bill via `renderBillBodyHtml`, outside the admin shell, with a "Print / Save as PDF"
+button that calls the browser's own `window.print()`. The admin and the customer use the same page.
 
 **Logo and address everywhere the business name appears**: `apps/web/public/logo.png` (and
 `apps/mobile/assets/images/logo.png` on mobile, both resized down from the owner's original
@@ -122,7 +119,7 @@ clicking a day shows its detail and, unless that day already has a completed/par
 form to mark it yellow with a reason. Below the calendar: a numeric summary (delivered/missed/
 customer-informed/no-record day counts, total litres) for days up to today in the displayed
 month, and the month's bill if one exists (status, total payable, a link into the existing
-`/billing/[id]` page — which already has the Print/Save-as-PDF button, Stage 5 — satisfying "share
+`/billing/[id]` page — which has the "Generate and send Bill" button — satisfying "share
 a report with the customer" without building a second PDF path).
 
 **The 'skipped' status** (`supabase/migrations/20261028130000_stage7_skipped_delivery_status.sql`,
@@ -135,7 +132,7 @@ assigned worker (by design, for the offline sync path) — wrong for an admin ac
 customer. The new RPC: requires `is_admin()`, requires the customer to already have an assigned
 worker (`deliveries.worker_id` is `not null`), requires a reason, and refuses to overwrite a day
 that already has a `completed`/`partial` delivery. `skipped` is automatically excluded from
-billing (`create_draft_bill` already whitelists `completed`/`partial` only) and automatically
+billing (a skipped day is never charged) and automatically
 satisfies the existing `deliveries` reason-required-unless-completed check constraint — no other
 schema or RPC changed.
 

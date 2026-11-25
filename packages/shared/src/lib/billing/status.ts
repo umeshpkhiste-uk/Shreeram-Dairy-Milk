@@ -24,7 +24,7 @@ export const BILL_STATUS_TONE: Record<BillStatus, StatusTone> = {
  * paid once a later bill carrying its balance is settled — used for optimistic UI
  * right after a payment/adjustment RPC call returns, never as a substitute for the server's
  * own recomputation. `currentStatus` lets `draft`/`voided` pass through unchanged, since only
- * `finalize_bill`/`void_bill` ever set those.
+ * `generate_bill`/`void_bill` ever set those.
  */
 export function paymentOutcomeStatus(
   currentStatus: BillStatus,

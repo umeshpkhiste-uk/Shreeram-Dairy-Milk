@@ -2,12 +2,12 @@ import { notFound } from 'next/navigation';
 
 import { ORDER_RECEIPT_STYLE, renderOrderReceiptBodyHtml, type OrderReceiptPdfData } from '@shreeram/shared';
 
+import { PrintButton } from '@/components/print-button';
 import { getBusinessSettings } from '@/lib/data/business-settings';
 import { getOrder } from '@/lib/data/orders';
 import { createClient } from '@/lib/supabase/server';
 
 import { BackButton } from '../../../billing/[id]/back-button';
-import { PrintButton } from '../../../billing/[id]/print/print-button';
 
 type PageProps = { params: Promise<{ orderId: string }> };
 

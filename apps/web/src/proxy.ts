@@ -60,7 +60,10 @@ export async function proxy(request: NextRequest) {
 
   // Verified here with the project's public key; getUser() would call Supabase on every request.
   const { data } = await supabase.auth.getClaims();
-  const isPublicPath = PUBLIC_PATHS.includes(request.nextUrl.pathname);
+  // /bill/<id> is the link a customer gets; /billing is not under it.
+  const isPublicPath =
+    PUBLIC_PATHS.includes(request.nextUrl.pathname) ||
+    request.nextUrl.pathname.startsWith('/bill/');
 
   if (!data && !isPublicPath) {
     const loginUrl = new URL('/login', request.url);
