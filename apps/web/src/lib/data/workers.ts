@@ -13,7 +13,7 @@ export type WorkerSummary = {
   route: Pick<RouteRow, 'id' | 'name'> | null;
 };
 
-/** Joined client-side (workers + profiles + routes) — same approach as the mobile app's listWorkers. */
+/** Joined client-side (workers + profiles + routes). */
 export async function listWorkers(supabase: SupabaseServerClient): Promise<WorkerSummary[]> {
   const [{ data: workers, error: workersError }, { data: profiles, error: profilesError }] =
     await Promise.all([

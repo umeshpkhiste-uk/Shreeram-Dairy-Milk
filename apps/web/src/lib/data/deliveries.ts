@@ -102,12 +102,7 @@ export type DeliveryReportFilters = {
   status?: DeliveryReportStatusFilter;
 };
 
-/**
- * The admin daily delivery report — identical logic to the mobile app's
- * `listDailyDeliveryReport` (apps/mobile/src/lib/api/deliveries.ts), reusing
- * the same shared `mergeDeliveryReport` so both apps show exactly the same
- * rows for the same date/filters.
- */
+/** The admin daily delivery report. */
 export async function listDailyDeliveryReport(
   supabase: SupabaseServerClient,
   filters: DeliveryReportFilters,

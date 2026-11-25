@@ -25,8 +25,8 @@ entirely version-controlled in `supabase/migrations/`; this file explains the *w
 
 Full design, the sync engine, and conflict-handling rules: [`docs/offline-sync.md`](offline-sync.md).
 Full billing policy, RPC contracts, and the late-delivery flagging flow: [`docs/billing.md`](billing.md).
-Stage 6 security audit (what was tested, two defects fixed) and the Android release
-procedure: [`docs/security-review.md`](security-review.md), [`docs/android-release.md`](android-release.md).
+Stage 6 security audit (what was tested, two defects fixed):
+[`docs/security-review.md`](security-review.md).
 
 ## Conventions
 

@@ -1,5 +1,9 @@
 # Admin delivery monitoring (Stage 4)
 
+> The mobile app was removed on 2026-11-25. Where this page describes mobile screens, files or
+> commands, it is a record of how that stage was built; the rules still hold on the admin website
+> ([`web-admin.md`](web-admin.md)).
+
 Real dashboard numbers and a daily delivery report, computed from actual `deliveries` records
 — never hardcoded — with the one distinction the checklist is explicit about: a missing
 delivery record is never treated as proof of a missed delivery.

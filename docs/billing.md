@@ -1,5 +1,9 @@
 # Monthly billing, payments and PDF reports (Stage 5)
 
+> The mobile app was removed on 2026-11-25. Where this page describes mobile screens, files or
+> commands, it is a record of how that stage was built; the billing policy and RPCs still hold
+> on the admin website.
+
 ## Billing policy
 
 The checklist leaves several decisions to the implementation. Here's what this app does, and

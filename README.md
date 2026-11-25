@@ -1,76 +1,51 @@
 # Shreeram Daily Milk
 
-A dairy business management system for daily doorstep milk delivery: customer and worker
-management, offline-first delivery recording by delivery workers, monthly billing, and
-customer payment tracking — a mobile app for admins/workers and an admin website, sharing one
-Supabase backend.
+A dairy business management system for daily doorstep delivery: customer and worker management,
+offline-first delivery recording by delivery workers, monthly billing, and customer payment
+tracking — an admin website and a worker web app, sharing one Supabase backend.
 
 ## Repository layout
 
 ```
 apps/
-  mobile/            Expo (React Native + TypeScript + Expo Router) app — admin and worker roles
-  web/               Next.js (App Router) admin website — added in Stage 7
-  worker-web/        Next.js offline-first worker PWA — added in Stage 8 (see docs/worker-web.md)
+  web/               Next.js admin website
+  worker-web/        Next.js offline-first worker web app, for Chrome on Android
 packages/
-  shared/            Framework-agnostic types/validation/logic used by apps/web (see docs/web-admin.md)
+  shared/            types, validation and business logic used by both apps
 supabase/
   migrations/        version-controlled SQL schema migrations
   functions/         server-side Edge Functions for sensitive operations
 docs/                architecture, environment variables, roadmap, and other project docs
-tests/               cross-cutting integration/E2E tests that span more than one app
-.github/workflows/   CI (lint, typecheck, test) for the mobile app
 ```
 
 ## Getting started
 
-### Mobile app
-
 ```bash
-cd apps/mobile
-npm install
-cp .env.example .env.local   # fill in from the Supabase dashboard
-npm start
+npm install                  # repo root, installs everything
+npm run dev -w web           # admin website, http://localhost:3000
+npm run dev -w worker-web    # worker app, http://localhost:3001
 ```
 
-Then press `a` for Android, `i` for iOS, or `w` for web in the Expo CLI, or scan the QR
-code with Expo Go / a development build on a physical device.
+Each app needs a `.env.local` first — see [`docs/getting-started.md`](docs/getting-started.md).
 
-See [`apps/mobile/README.md`](apps/mobile/README.md) for the full Expo-generated
-getting-started guide, and [`docs/getting-started.md`](docs/getting-started.md) for
-project-specific setup (environment variables, linting, testing).
-
-### Admin website
-
-Live at <https://shreeram-dairy-milk.vercel.app>.
-
-```bash
-cd apps/web
-npm install
-cp .env.example .env.local   # same Supabase project URL/anon key as the mobile app
-npm run dev
-```
-
-See [`docs/web-admin.md`](docs/web-admin.md) for the design, and
-[`docs/android-release.md`](docs/android-release.md) for the Android build/release
-procedure (mobile) — the website deploys to Vercel instead (see `docs/web-admin.md`,
-"Deployment").
+Live: admin <https://shreeram-dairy-milk.vercel.app>, worker <https://shreeram-worker.vercel.app>.
+Both deploy from `main`.
 
 ## Project status
 
-All 7 planned stages are complete — see [`docs/roadmap.md`](docs/roadmap.md) for what each
-stage delivered, what was verified, and what's explicitly deferred.
+Stages 1–7 are complete. Stage 8, the worker web app, is live and waiting for its test on a real
+Android phone — see [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Documentation
 
-- [`docs/roadmap.md`](docs/roadmap.md) — the 7-stage implementation plan and current status
+- [`docs/roadmap.md`](docs/roadmap.md) — the implementation plan and current status
 - [`docs/architecture.md`](docs/architecture.md) — technology stack and architectural rules
-- [`docs/getting-started.md`](docs/getting-started.md) — local development setup (mobile)
+- [`docs/getting-started.md`](docs/getting-started.md) — local development setup
 - [`docs/environment-variables.md`](docs/environment-variables.md) — required env vars per app
 - [`docs/database-schema.md`](docs/database-schema.md) — schema, RLS, auth bootstrap
-- [`docs/offline-sync.md`](docs/offline-sync.md) — the mobile offline sync engine
+- [`docs/web-admin.md`](docs/web-admin.md) — the admin website's design and Vercel deployment
+- [`docs/worker-web.md`](docs/worker-web.md) — the worker web app and its Android test
+- [`docs/offline-sync.md`](docs/offline-sync.md) — the delivery sync protocol
 - [`docs/billing.md`](docs/billing.md) — monthly billing/payments policy and RPCs
 - [`docs/security-review.md`](docs/security-review.md) — Stage 6 security/reliability audit
-- [`docs/android-release.md`](docs/android-release.md) — Android build and Play Store prep
-- [`docs/web-admin.md`](docs/web-admin.md) — the admin website's design and Vercel deployment
 - [`docs/reference/`](docs/reference/) — original Master Prompt and Implementation Checklist

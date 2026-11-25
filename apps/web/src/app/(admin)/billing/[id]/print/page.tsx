@@ -14,8 +14,8 @@ import { PrintButton } from './print-button';
 type PageProps = { params: Promise<{ id: string }> };
 
 /**
- * The website's "PDF bill generation" — renders the exact same bill layout
- * as the mobile app's expo-print PDF (packages/shared/src/lib/pdf/bill-template.ts)
+ * The website's "PDF bill generation" — renders the bill layout
+ * (packages/shared/src/lib/pdf/bill-template.ts)
  * and lets the admin use the browser's own Print dialog to save it as a PDF
  * or send it to a printer. No server-side PDF rendering dependency needed.
  */

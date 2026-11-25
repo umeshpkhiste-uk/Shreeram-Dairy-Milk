@@ -4,6 +4,12 @@ Shreeram Daily Milk is built in 8 stages, each with its own acceptance criteria.
 move to the next stage until the current one's criteria are verified. This file is updated
 as each stage completes.
 
+**The mobile app (`apps/mobile`) was removed on 2026-11-25.** Admins use `apps/web` and workers
+use `apps/worker-web`. Stages 1–6 below are the record of what was built and verified at the
+time: their mobile screens, Expo commands and Android release steps no longer apply, but their
+database work (schema, RLS, RPCs) is what both web apps run on. The last version of the mobile
+code is in git at `bce7dda`.
+
 | Stage | Name | Status |
 |---|---|---|
 | 1 | Project Foundation | ✅ Complete |
@@ -11,8 +17,8 @@ as each stage completes.
 | 3 | Offline Delivery Recording and Synchronization | ✅ Complete |
 | 4 | Admin Delivery Monitoring | ✅ Complete |
 | 5 | Monthly Billing, Payments and PDF Reports | ✅ Complete |
-| 6 | Security, Testing and Android Release | ✅ Complete |
-| 7 | Future Website and Vercel Deployment | ✅ Complete |
+| 6 | Security, Testing and Android Release | ✅ Complete (Android release dropped with the mobile app) |
+| 7 | Admin Website and Vercel Deployment | ✅ Complete |
 | 8 | Worker Web App (PWA) | 🚧 Built — live and Android verification pending |
 
 ## Stage 1 — Project Foundation ✅
@@ -224,7 +230,7 @@ Full billing policy, RPC contracts, and verification: [`docs/billing.md`](billin
 ## Stage 6 — Security, Testing and Android Release ✅
 
 Full audit, fixes, manual Android checklist, and release procedure:
-[`docs/security-review.md`](security-review.md), [`docs/android-release.md`](android-release.md).
+[`docs/security-review.md`](security-review.md).
 
 **Delivered:**
 - Two real defects found and fixed: a deactivated worker could keep reading their former
@@ -264,7 +270,7 @@ Full audit, fixes, manual Android checklist, and release procedure:
 - Leaked-password protection remains disabled (dashboard-only toggle, flagged since Stage 2).
 - No automated end-to-end UI test suite (Detox/Maestro) — unit + live API/DB tests only.
 
-## Stage 7 — Future Website and Vercel Deployment ✅
+## Stage 7 — Admin Website and Vercel Deployment ✅
 
 A Next.js admin website on the same Supabase project — no second database, no duplicated
 business logic. Full design and verification: [`docs/web-admin.md`](web-admin.md).
@@ -318,8 +324,8 @@ business logic. Full design and verification: [`docs/web-admin.md`](web-admin.md
 
 ## Stage 8 — Worker Web App (PWA) 🚧
 
-An offline-first web app for delivery workers on Android Chrome, replacing `apps/mobile`'s worker
-role (superseded, **not deleted**). Design, deviations from the plan, and the manual Android
+An offline-first web app for delivery workers on Android Chrome, replacing the mobile app's worker
+role. Design, deviations from the plan, and the manual Android
 procedure: [`docs/worker-web.md`](worker-web.md). Unrelated to the `stage8*` migrations, which are
 the one-time orders feature.
 
@@ -327,7 +333,11 @@ the one-time orders feature.
 profile; Dexie cache + outbox, ported sync engine, Serwist precache, installable manifest.
 Delivery validation copied into `packages/shared`.
 
-**Verified:** typecheck, lint, build, 28/28 unit tests; offline mark → reload → reconnect → sync in
+**Added since, in both web apps:** cancel/void rules and one-time previous balances on bills
+(`docs/billing.md`); product types with a unit (Curd and Paneer by the kg, Taak by the litre);
+several products per customer, each marked and billed on its own.
+
+**Verified:** typecheck, lint, build, unit tests; offline mark → reload → reconnect → sync in
 desktop Chrome against a local stub of Supabase.
 
 **Not verified — this stage is not done until these are:**
@@ -335,5 +345,3 @@ desktop Chrome against a local stub of Supabase.
 - The manual airplane-mode pass on a real Android phone.
 
 Deployed at <https://shreeram-worker.vercel.app>.
-
-Also fixed in `apps/mobile`: missed deliveries were sent without the reason the server requires.

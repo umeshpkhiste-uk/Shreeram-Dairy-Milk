@@ -10,8 +10,7 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
  * The real authorization boundary for this app's "admin-only" pages. The
  * proxy (src/proxy.ts) only checks "is there a session" as a UX convenience
  * — this checks the actual `profiles.role`/`is_active` via a query that is
- * itself subject to RLS, the same way `RouteGuard` + RLS work together in
- * the mobile app (apps/mobile/src/lib/auth/route-guard.tsx). Called from
+ * itself subject to RLS. Called from
  * `app/(admin)/layout.tsx` so every admin page is covered by one check.
  *
  * Takes an existing client (rather than creating its own) so the caller can

@@ -2,13 +2,8 @@ import type { Database, DeliveryStatus } from '../../types/database';
 import { dayProducts } from '../products';
 
 /**
- * Pure aggregation — no Supabase calls — shared by the mobile dashboard and
- * the website dashboard/delivery report so both compute the exact same
- * numbers from the exact same rows. Copied from apps/mobile/src/lib/dashboard/metrics.ts
- * (Stage 4) into this shared package in Stage 7 — behavior is unchanged,
- * only the `CustomerRow`/`DeliveryRow`/`WorkerSummary` types now come
- * directly from the shared `Database` type instead of each app's own API
- * layer.
+ * Pure aggregation — no Supabase calls — shared by the
+ * dashboard and the delivery report.
  */
 
 export type CustomerRow = Database['public']['Tables']['customers']['Row'];

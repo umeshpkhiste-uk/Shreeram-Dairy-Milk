@@ -1,7 +1,7 @@
 /**
  * Only NEXT_PUBLIC_* vars reach the browser bundle. Fail fast and loudly if
  * they're missing rather than letting the app silently try to talk to
- * `undefined` — mirrors apps/mobile/src/lib/env.ts.
+ * `undefined`.
  */
 function requireEnv(name: string, value: string | undefined): string {
   if (!value) {

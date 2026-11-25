@@ -1,6 +1,5 @@
 import type { BillStatus } from '../../types/database';
 
-/** Mirrors the mobile app's `StatusTone` (apps/mobile/src/components/status-badge.tsx) without depending on its UI component. */
 export type StatusTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
 
 export const BILL_STATUS_LABEL: Record<BillStatus, string> = {

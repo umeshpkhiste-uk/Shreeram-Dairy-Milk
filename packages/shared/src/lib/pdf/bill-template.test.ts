@@ -1,4 +1,4 @@
-import { renderBillBodyHtml, renderBillHtml, type BillPdfData } from './bill-template';
+import { renderBillBodyHtml, type BillPdfData } from './bill-template';
 
 const BASE: BillPdfData = {
   business: {
@@ -38,9 +38,9 @@ const BASE: BillPdfData = {
   ],
 };
 
-describe('renderBillHtml', () => {
+describe('renderBillBodyHtml', () => {
   it('shows a kg product in grams and per Kg', () => {
-    const html = renderBillHtml({
+    const html = renderBillBodyHtml({
       ...BASE,
       items: [{ ...BASE.items[0], milkTypeName: 'Paneer', quantityMl: 500, unit: 'kg' }],
     });
@@ -50,21 +50,21 @@ describe('renderBillHtml', () => {
   });
 
   it('includes the business name, customer name, and bill number', () => {
-    const html = renderBillHtml(BASE);
+    const html = renderBillBodyHtml(BASE);
     expect(html).toContain('Shreeram Daily Milk');
     expect(html).toContain('Asha Patel');
     expect(html).toContain('SDM-000042');
   });
 
   it('includes each delivery line item and the total payable', () => {
-    const html = renderBillHtml(BASE);
+    const html = renderBillBodyHtml(BASE);
     expect(html).toContain('Cow Milk');
     expect(html).toContain('500 ml');
     expect(html).toContain('₹27.50');
   });
 
   it('escapes HTML-significant characters in free-text fields', () => {
-    const html = renderBillHtml({
+    const html = renderBillBodyHtml({
       ...BASE,
       customer: { ...BASE.customer, fullName: '<script>alert(1)</script>' },
     });
@@ -73,17 +73,7 @@ describe('renderBillHtml', () => {
   });
 
   it('shows a fallback row when there are no billable deliveries', () => {
-    const html = renderBillHtml({ ...BASE, items: [] });
+    const html = renderBillBodyHtml({ ...BASE, items: [] });
     expect(html).toContain('No billable deliveries this period.');
-  });
-});
-
-describe('renderBillBodyHtml', () => {
-  it('renders the same content as renderBillHtml but without a surrounding <html> document', () => {
-    const body = renderBillBodyHtml(BASE);
-    expect(body).not.toContain('<html>');
-    expect(body).not.toContain('<head>');
-    expect(body).toContain('SDM-000042');
-    expect(body).toContain('Asha Patel');
   });
 });

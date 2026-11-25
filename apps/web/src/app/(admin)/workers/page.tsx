@@ -18,7 +18,7 @@ export default async function WorkersPage() {
       <Card>
         <h2 className="mb-3 text-lg font-semibold text-text">Add a worker</h2>
         <p className="mb-4 text-sm text-text-secondary">
-          Worker accounts can only be created here or from the mobile app by an admin — there is
+          Worker accounts can only be created here by an admin — there is
           no public sign-up.
         </p>
         <NewWorkerForm routes={routes} action={createWorkerAction} />

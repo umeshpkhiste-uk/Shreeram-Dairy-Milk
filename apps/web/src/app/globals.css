@@ -5,7 +5,7 @@
 @custom-variant shorter (@media (min-width: 48rem) and (max-height: 680px));
 
 /*
- * Same visual identity as the mobile app (apps/mobile/src/theme/tokens.ts):
+ * Same visual identity as apps/worker-web/src/app/globals.css:
  * white/light-neutral background, dark-green primary, restrained status
  * colours. Kept in sync by hand — both are small, hand-written token sets.
  */

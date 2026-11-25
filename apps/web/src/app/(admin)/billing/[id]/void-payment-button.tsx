@@ -15,9 +15,7 @@ type Props = {
 
 /**
  * Voiding a real payment is a destructive financial action — it must never
- * happen from a single click with a hardcoded generic reason (that exact
- * mistake was caught and fixed in the mobile app's bill-detail screen, see
- * docs/billing.md). An explicit reason is required every time.
+ * happen from a single click with a hardcoded generic reason. An explicit reason is required every time.
  */
 export function VoidPaymentButton({ billId, paymentId, action }: Props) {
   const [open, setOpen] = useState(false);

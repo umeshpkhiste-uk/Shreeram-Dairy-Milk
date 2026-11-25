@@ -16,8 +16,7 @@ export default function DeleteAccountPage() {
       <div>
         <h1>Delete your account</h1>
         <p className="text-text-secondary">
-          For the <strong>Shreeram Doodh Dairy &amp; Sweets</strong> Android app, by Shreeram Doodh
-          Dairy &amp; Sweets.
+          For staff accounts of the <strong>Shreeram Doodh Dairy &amp; Sweets</strong> web apps.
         </p>
       </div>
 
@@ -48,8 +47,8 @@ export default function DeleteAccountPage() {
           <li>Your sign-in account (email and password) — you can no longer sign in.</li>
           <li>Your name, email address and phone number on your staff profile.</li>
           <li>
-            Any data stored on your phone by the app — this is also removed as soon as you sign out
-            or uninstall the app.
+            Any data the worker web app stored on your phone — this is also removed as soon as you
+            sign out or clear the site&rsquo;s data in the browser.
           </li>
         </ul>
       </section>

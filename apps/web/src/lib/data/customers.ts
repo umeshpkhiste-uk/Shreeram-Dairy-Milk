@@ -71,7 +71,7 @@ function toCustomerFields(values: CustomerFormValues) {
   };
 }
 
-/** Surfaced as a confirmation prompt rather than a hard block — same policy as the mobile app. */
+/** Surfaced as a confirmation prompt rather than a hard block. */
 export async function findActiveCustomersByMobileNumber(
   supabase: SupabaseServerClient,
   mobileNumber: string,

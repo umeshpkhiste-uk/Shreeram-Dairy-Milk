@@ -17,8 +17,7 @@ export type CreateWorkerResult = {
 };
 
 /**
- * Calls the admin-create-worker Edge Function (supabase/functions/admin-create-worker) —
- * the same one the mobile app calls (apps/mobile/src/lib/api/admin-create-worker.ts).
+ * Calls the admin-create-worker Edge Function (supabase/functions/admin-create-worker).
  * supabase-js attaches the caller's own session JWT automatically; the function
  * itself verifies the caller is an active admin before doing anything
  * privileged. The service-role key never reaches this app.

@@ -1,6 +1,6 @@
 /**
  * Bounded exponential backoff for retrying a failed outbox upload.
- * Pure function — unit-testable without SQLite or a network.
+ * Pure function — unit-testable without a database or a network.
  */
 
 const BASE_DELAY_MS = 5_000;

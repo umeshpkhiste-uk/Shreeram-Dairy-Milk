@@ -19,7 +19,7 @@ const TABS = [
 ];
 
 /**
- * The client-side guard (mobile's RouteGuard). It trusts the profile stored on
+ * The client-side guard. It trusts the profile stored on
  * the phone at sign-in, so the app opens with no network; every sync refreshes
  * that profile, and RLS is still the actual security boundary.
  */

@@ -4,8 +4,7 @@ import type { Database, DeliveryStatus, ExtraProduct, ProductUnit } from '@shree
 
 /**
  * Local IndexedDB — a cache + durable outbox, never a second source of truth
- * (docs/architecture.md, rule 3). Same tables as
- * apps/mobile/src/lib/sqlite/schema.ts; `sync_meta` holds the signed-in
+ * (docs/architecture.md, rule 3). `sync_meta` holds the signed-in
  * worker's profile and the last sync time, so the app opens with no network.
  */
 

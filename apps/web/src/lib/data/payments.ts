@@ -8,8 +8,7 @@ export type RecordPaymentInput = {
    * Generated once by the caller (`crypto.randomUUID()`) when the admin
    * starts this payment attempt, and reused unchanged if a retry is needed
    * after a network failure — generating a fresh id per call here would
-   * defeat the RPC's idempotency. Same rule as the mobile app's
-   * `recordPayment` (apps/mobile/src/lib/api/payments.ts).
+   * defeat the RPC's idempotency.
    */
   paymentId: string;
   billId: string;

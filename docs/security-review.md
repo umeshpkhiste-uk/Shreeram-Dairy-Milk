@@ -1,5 +1,9 @@
 # Stage 6 — Security review, data-integrity tests, and mobile reliability
 
+> The mobile app was removed on 2026-11-25. Where this page describes mobile screens, files or
+> commands, it is a record of how that stage was built; the server-side findings and rules
+> still hold.
+
 A production-readiness pass over the whole app: every RLS policy, the offline sync engine,
 billing/payments, and local data handling. Two real defects were found and fixed (not just
 written up) — see "Findings fixed" below. Everything in this document was either live-tested

@@ -1,6 +1,6 @@
-// Shared, framework-agnostic types and pure logic used by both apps/mobile and
-// apps/web — see docs/architecture.md and docs/web-admin.md. Everything here
-// is plain TypeScript with no React Native or Next.js dependency, so it can
+// Shared, framework-agnostic types and pure logic used by both apps/web and
+// apps/worker-web — see docs/architecture.md and docs/web-admin.md. Everything here
+// is plain TypeScript with no Next.js dependency, so it can
 // be imported directly from either app without a build step.
 
 export * from './types/database';

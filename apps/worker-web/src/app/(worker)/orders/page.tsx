@@ -11,7 +11,7 @@ import { useIsOnline } from '@/lib/sync/connectivity';
 /**
  * Read-only — one-time orders (paneer, ghee, etc.) an admin assigned to this
  * worker to deliver. No fulfilment action and no pricing shown (per owner
- * decision). Online only, like the mobile screen.
+ * decision). Online only.
  */
 export default function OrdersPage() {
   const isOnline = useIsOnline();

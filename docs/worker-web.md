@@ -1,8 +1,8 @@
 # Stage 8 — Worker web app (PWA)
 
 `apps/worker-web` is a Next.js app a delivery worker opens in **Chrome on Android** and adds to
-the home screen. It is meant to replace the worker role of `apps/mobile`. It uses the same
-Supabase project, RLS policies and `submit_delivery_event` RPC; no migration was needed. Other
+the home screen. It replaced the worker role of the mobile app, removed on 2026-11-25, and uses the
+same Supabase project, RLS policies and `submit_delivery_event` RPC. Other
 browsers and iOS are out of scope.
 
 A worker must be able to mark a delivery with zero network wait, and the mark must survive the
@@ -10,7 +10,7 @@ app closing before it syncs.
 
 ## Architecture
 
-- **Local data** (`src/lib/db`): Dexie (IndexedDB), same tables as the mobile SQLite schema —
+- **Local data** (`src/lib/db`): Dexie (IndexedDB):
   `cached_customers`, `cached_milk_types`, `local_deliveries` (unique on customer + date + product),
   `sync_outbox`, `sync_meta` (the signed-in worker's profile and last sync time). Opened with
   strict durability, so a committed mark survives the phone dying. `navigator.storage.persist()`
@@ -33,9 +33,9 @@ app closing before it syncs.
 | `requireWorker()` in the layout | At sign-in, plus a check on every sync | A server-checked layout makes every screen dynamic, so it couldn't open offline. |
 | Links between screens | Plain `<a>` | `<Link>` fetches from the server on tap, which fails or hangs with no signal. |
 | Serwist via the webpack plugin | `@serwist/next/config` + `@serwist/cli` | Keeps Turbopack, same as `apps/web`. |
-| Move delivery validation to `packages/shared` | Copied | `apps/mobile` can't import `packages/shared` — see `docs/web-admin.md`. |
+| Move delivery validation to `packages/shared` | Copied | The mobile app could not import `packages/shared`. |
 
-## Where this differs from the mobile app, and why
+## Where this differed from the mobile app, and why
 
 Each is a way the ported code could lose or misfile a delivery, covered by
 `src/lib/sync/sync-engine.test.ts` unless noted:
@@ -57,8 +57,7 @@ Each is a way the ported code could lose or misfile a delivery, covered by
 
 ## Not included
 
-- Orders offline: `/orders` (added after the plan, read-only) needs a connection, as on mobile.
-- `apps/mobile`'s worker role is superseded but not deleted.
+- Orders offline: `/orders` (added after the plan, read-only) needs a connection.
 
 ## Running and deploying
 

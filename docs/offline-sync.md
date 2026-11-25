@@ -1,5 +1,9 @@
 # Offline delivery recording and synchronization (Stage 3)
 
+> The mobile app was removed on 2026-11-25. Where this page describes mobile screens, files or
+> commands, it is a record of how that stage was built; the protocol still holds, and the worker
+> web app that now implements it is in [`worker-web.md`](worker-web.md).
+
 The highest-priority feature per the Master Prompt: a worker must be able to record a
 delivery entirely offline, see it saved instantly, and have it reach Supabase exactly once
 — idempotent, bounded-retried, and never silently overwritten — once connectivity returns.

@@ -1,7 +1,7 @@
 {
   "name": "shreeram-daily-milk",
   "private": true,
-  "description": "Monorepo root. apps/mobile is deliberately NOT a workspace member — see docs/web-admin.md ('Deliberately not shared') for why it stays on its own independent install, decoupled from Expo/Metro's expectations. This root exists only so apps/web and packages/shared share hoisted node_modules (so packages/shared's own dependencies, e.g. zod, resolve when apps/web's bundler pulls in packages/shared/src/**) — never run `npm install` here expecting it to touch apps/mobile.",
+  "description": "Monorepo root for the admin website, the worker web app and their shared package.",
   "workspaces": [
     "apps/web",
     "apps/worker-web",

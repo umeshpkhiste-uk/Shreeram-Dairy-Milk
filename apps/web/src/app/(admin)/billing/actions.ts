@@ -149,8 +149,7 @@ export async function recordPaymentAction(
   // Generated once by the client when the payment form was opened (a hidden
   // field, see payment-form.tsx) and reused unchanged on any retry — NOT
   // generated here, which would mint a new id on every submit and defeat
-  // record_payment's idempotency. Same rule as the mobile app's
-  // RecordPaymentInput.paymentId.
+  // record_payment's idempotency.
   const paymentId = String(formData.get('paymentId') ?? '');
 
   const amountPaise = parseRupeesToPaise(amountRupees);

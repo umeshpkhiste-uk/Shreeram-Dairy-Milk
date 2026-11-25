@@ -3,16 +3,7 @@ import { formatQuantity, unitLabel } from '../quantity';
 import { BILL_STATUS_LABEL, billAmountDue } from '../billing/status';
 import type { BillStatus, ProductUnit } from '../../types/database';
 
-/**
- * Used by the website's print-to-PDF page (app/(admin)/billing/[id]/print).
- * Modeled directly on apps/mobile/src/lib/pdf/bill-template.ts (Stage 5) so
- * both apps render the same bill layout — kept as a deliberate duplicate
- * rather than a shared import from the mobile app's side: repointing
- * apps/mobile at this package would need Metro monorepo configuration
- * changes (watchFolders / resolver changes) in an already-shipped, fully
- * tested app, for a cosmetic-only win. See docs/web-admin.md. If either
- * copy's layout changes, update both.
- */
+/** Used by the website's print-to-PDF page (app/(admin)/billing/[id]/print). */
 export type BillPdfData = {
   business: {
     businessName: string;
@@ -68,7 +59,7 @@ function billingMonthLabel(billingMonth: string): string {
   });
 }
 
-/** The shared inline style block both renderers use (for the full document and the embedded-body page). */
+/** The inline styles for `renderBillBodyHtml` and the order receipt. */
 export const BILL_STYLE = `
     .bill-doc { font-family: Helvetica, Arial, sans-serif; color: #1a1a1a; }
     .bill-doc h1 { font-size: 20px; margin-bottom: 0; }
@@ -198,18 +189,4 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     <tr class="grand"><td>Amount due</td><td class="num">${formatPaiseAsRupees(duePaise)}</td></tr>
   </table>
 </div>`;
-}
-
-/** Pure HTML builder for a full standalone document — used by expo-print on mobile. */
-export function renderBillHtml(data: BillPdfData): string {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <style>body { margin: 0; padding: 24px; }${BILL_STYLE}</style>
-</head>
-<body>
-  ${renderBillBodyHtml(data)}
-</body>
-</html>`;
 }
