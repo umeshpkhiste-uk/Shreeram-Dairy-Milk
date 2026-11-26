@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { formatQuantity } from '@shreeram/shared';
+import { formatDate, formatDateTime, formatQuantity } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
 import { Badge, buttonClass, Card, EmptyState, PageHeader, SecondaryButton, Table, WarningButton } from '@/components/ui';
@@ -18,14 +18,6 @@ const STATUS_LABEL: Record<string, string> = {
   missed: 'Missed',
   skipped: 'Customer informed',
 };
-
-function dateTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
-}
 
 function dateInIndia(iso: string): string {
   return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
@@ -77,13 +69,13 @@ export default async function WorkerSyncPage() {
                 <li key={f.event_id} className="flex flex-wrap items-start justify-between gap-3 text-sm">
                   <div>
                     <p className="font-medium text-text">
-                      {customerName.get(String(p.customerId)) ?? 'Customer'} · {String(p.deliveryDate)} ·{' '}
+                      {customerName.get(String(p.customerId)) ?? 'Customer'} · {formatDate(String(p.deliveryDate))} ·{' '}
                       {product?.name ?? 'Product'} ·{' '}
                       {STATUS_LABEL[String(p.status)] ?? String(p.status)}{' '}
                       {formatQuantity(Number(p.deliveredQuantityMl ?? 0), product?.unit)}
                     </p>
                     <p className="text-text-secondary">
-                      {workerName.get(f.worker_id) ?? 'Worker'}, reported {dateTime(f.reported_at)}
+                      {workerName.get(f.worker_id) ?? 'Worker'}, reported {formatDateTime(f.reported_at)}
                     </p>
                     <p className="text-danger">{f.error}</p>
                   </div>
@@ -105,7 +97,7 @@ export default async function WorkerSyncPage() {
             return (
               <li key={w.id}>
                 {w.fullName}
-                {w.isActive ? '' : ' (inactive)'}: {last ? dateTime(last) : 'none in the list below'}
+                {w.isActive ? '' : ' (inactive)'}: {last ? formatDateTime(last) : 'none in the list below'}
               </li>
             );
           })}
@@ -138,7 +130,7 @@ export default async function WorkerSyncPage() {
                       href={`/deliveries/${r.customer_id}?month=${date.slice(0, 7)}-01&day=${date}`}
                       className={`inline-block ${buttonClass('secondary')}`}
                     >
-                      {date}
+                      {formatDate(date)}
                     </Link>
                   </td>
                   <td className="px-4 py-3">{customerName.get(r.customer_id) ?? 'Customer'}</td>
@@ -149,9 +141,9 @@ export default async function WorkerSyncPage() {
                     {r.event_type === 'corrected' ? ' (correction)' : ''}
                   </td>
                   <td className="px-4 py-3">{workerName.get(r.worker_id) ?? 'Worker'}</td>
-                  <td className="px-4 py-3">{dateTime(r.device_recorded_at)}</td>
+                  <td className="px-4 py-3">{formatDateTime(r.device_recorded_at)}</td>
                   <td className="px-4 py-3">
-                    {dateTime(r.server_received_at)}{' '}
+                    {formatDateTime(r.server_received_at)}{' '}
                     {r.conflict ? (
                       <Badge label="Conflict" tone="danger" />
                     ) : dateInIndia(r.server_received_at) > date ? (

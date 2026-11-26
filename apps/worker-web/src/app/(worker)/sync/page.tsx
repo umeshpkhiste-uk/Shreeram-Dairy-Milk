@@ -1,6 +1,12 @@
 'use client';
 
-import { dayProducts, formatQuantity, formatQuantityTotal, type StatusTone } from '@shreeram/shared';
+import {
+  dayProducts,
+  formatDateTime,
+  formatQuantity,
+  formatQuantityTotal,
+  type StatusTone,
+} from '@shreeram/shared';
 
 import {
   Badge,
@@ -145,7 +151,7 @@ export default function SyncStatusPage() {
         <Row label="Failed" value={status.failedCount} />
         <Row
           label="Last synced"
-          value={status.lastSyncedAt ? new Date(status.lastSyncedAt).toLocaleString() : 'Never'}
+          value={status.lastSyncedAt ? formatDateTime(status.lastSyncedAt) : 'Never'}
         />
         {status.lastError ? <Row label="Last error" value={status.lastError} /> : null}
         <Button onClick={() => runSync()} disabled={!isOnline || status.phase === 'syncing'}>
@@ -172,7 +178,7 @@ export default function SyncStatusPage() {
             </div>
             <p className="text-sm text-text-secondary">
               Attempt {item.attempt_count + 1} · recorded{' '}
-              {new Date(item.created_at).toLocaleString()}
+              {formatDateTime(item.created_at)}
             </p>
             {item.last_error ? <p className="text-sm text-danger">{item.last_error}</p> : null}
             {item.status === 'failed' ? (

@@ -1,6 +1,6 @@
 import { formatPaiseAsRupees } from '../money';
 import { upiPayUrl } from '../upi';
-import { formatBillPeriod, formatBillingMonth } from '../date';
+import { formatBillingMonth, formatBillPeriod, formatDate } from '../date';
 import { formatQuantityTotal, unitLabel } from '../quantity';
 import { BILL_STATUS_LABEL, billAmountDue } from '../billing/status';
 import type { BillStatus, ProductUnit } from '../../types/database';
@@ -218,7 +218,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     .map(
       (p) => `
         <tr>
-          <td>${escapeHtml(p.paymentDate)}</td>
+          <td>${formatDate(p.paymentDate)}</td>
           <td>${escapeHtml(p.method)}</td>
           <td>${p.transactionReference ? escapeHtml(p.transactionReference) : '—'}</td>
           <td class="num">${formatPaiseAsRupees(p.amountPaise)}</td>

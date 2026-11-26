@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { firstOfMonth, formatQuantity, todayInBusinessTimezone } from '@shreeram/shared';
+import { firstOfMonth, formatDate, formatQuantity, todayInBusinessTimezone } from '@shreeram/shared';
 
 import { Badge, Card, EmptyState, InfoButton, PageHeader, Table, buttonClass } from '@/components/ui';
 import { listDailyDeliveryReport } from '@/lib/data/deliveries';
@@ -57,7 +57,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
     <div>
       <PageHeader
         title="Daily deliveries"
-        description={date}
+        description={formatDate(date)}
         actions={
           <Link href="/deliveries/sync" className={buttonClass('info')}>
             Worker sync

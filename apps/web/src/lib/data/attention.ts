@@ -1,4 +1,10 @@
-import { firstOfMonth, formatBillingMonth, formatPaiseAsRupees, shiftMonth } from '@shreeram/shared';
+import {
+  firstOfMonth,
+  formatBillingMonth,
+  formatDate,
+  formatPaiseAsRupees,
+  shiftMonth,
+} from '@shreeram/shared';
 
 import { listUnbilledMonths } from './bills';
 import { listDailyDeliveryReport } from './deliveries';
@@ -107,7 +113,7 @@ export async function listNotificationItems(
       (d): AttentionItem => ({
         id: `conflict-${d.id}`,
         title: names.get(d.customer_id) ?? 'Customer',
-        detail: `${productName(d.milk_type_id)}: two different records for ${d.delivery_date}. Check which one is right.`,
+        detail: `${productName(d.milk_type_id)}: two different records for ${formatDate(d.delivery_date)}. Check which one is right.`,
         href: calendarHref(d.customer_id, d.delivery_date),
         label: 'Conflict',
         tone: 'danger',

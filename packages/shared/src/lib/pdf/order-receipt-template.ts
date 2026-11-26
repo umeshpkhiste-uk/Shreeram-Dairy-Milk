@@ -1,3 +1,4 @@
+import { formatDate } from '../date';
 import { formatPaiseAsRupees } from '../money';
 import { BILL_STYLE } from './bill-template';
 import type { OrderPaymentStatus, PaymentMethod, ProductUnit } from '../../types/database';
@@ -69,7 +70,7 @@ export function renderOrderReceiptBodyHtml(data: OrderReceiptPdfData): string {
     </div>
     <div class="doc-info">
       <div><strong>Order Receipt</strong></div>
-      <div class="muted">${escapeHtml(orderDate)}</div>
+      <div class="muted">${formatDate(orderDate)}</div>
       <div class="status">${paymentStatus === 'paid' ? 'Paid' + (paymentMethod ? ' · ' + PAYMENT_METHOD_LABEL[paymentMethod] : '') : 'Unpaid'}</div>
     </div>
   </div>

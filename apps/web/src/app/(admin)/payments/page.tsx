@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { formatPaiseAsRupees } from '@shreeram/shared';
+import { formatDate, formatPaiseAsRupees } from '@shreeram/shared';
 
 import { buttonClass, EmptyState, PageHeader, Table } from '@/components/ui';
 import { listRecentPayments } from '@/lib/data/payments';
@@ -29,7 +29,7 @@ export default async function PaymentsPage() {
           <tbody className="divide-y divide-border">
             {payments.map((p) => (
               <tr key={p.id} className="hover:bg-surface-muted">
-                <td className="px-4 py-3">{p.payment_date}</td>
+                <td className="px-4 py-3">{formatDate(p.payment_date)}</td>
                 <td className="px-4 py-3 text-text-secondary">{p.method}</td>
                 <td className="px-4 py-3 text-text-secondary">{p.transaction_reference ?? '—'}</td>
                 <td className="px-4 py-3">{formatPaiseAsRupees(p.amount_paise)}</td>

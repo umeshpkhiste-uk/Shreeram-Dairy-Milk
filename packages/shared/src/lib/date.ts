@@ -35,11 +35,11 @@ export function formatBillingMonth(date: string): string {
   return `${MONTH_NAMES[Number(month) - 1]} ${year}`;
 }
 
-/** "November 2026", or "November 2026 (till 25 Nov)" for a bill made before the month ended. */
+/** "November 2026", or "November 2026 (till 25/11/2026)" for a bill made before the month ended. */
 export function formatBillPeriod(billingMonth: string, billedThrough: string): string {
   const month = formatBillingMonth(billingMonth);
   if (billedThrough < billingMonth || billedThrough >= lastOfMonth(billingMonth)) return month;
-  return `${month} (till ${Number(billedThrough.slice(8))} ${month.slice(0, 3)})`;
+  return `${month} (till ${formatDate(billedThrough)})`;
 }
 
 export function shiftMonth(firstOfMonthDate: string, deltaMonths: number): string {
@@ -53,4 +53,31 @@ export function lastOfMonth(firstOfMonthDate: string): string {
   const d = new Date(`${firstOfMonth(firstOfMonthDate)}T00:00:00Z`);
   const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
   return last.toISOString().slice(0, 10);
+}
+
+/** The one way a single date is shown: DD/MM/YYYY, from a YYYY-MM-DD date. */
+export function formatDate(date: string): string {
+  const [y, m, d] = date.slice(0, 10).split('-');
+  return `${d}/${m}/${y}`;
+}
+
+/** A day heading, e.g. "Friday, 27/11/2026". */
+export function formatDateWithWeekday(date: string): string {
+  const weekday = new Date(`${date.slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-IN', {
+    weekday: 'long',
+    timeZone: 'UTC',
+  });
+  return `${weekday}, ${formatDate(date)}`;
+}
+
+/** A moment in India time, e.g. "27/11/2026, 10:30 am". */
+export function formatDateTime(iso: string): string {
+  const at = new Date(iso);
+  const date = at.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const time = at.toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  return `${formatDate(date)}, ${time}`;
 }

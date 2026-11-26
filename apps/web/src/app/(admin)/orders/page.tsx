@@ -1,4 +1,4 @@
-import { formatPaiseAsRupees } from '@shreeram/shared';
+import { formatDate, formatPaiseAsRupees } from '@shreeram/shared';
 
 import { Card, EmptyState, PageHeader } from '@/components/ui';
 import { listCustomers } from '@/lib/data/customers';
@@ -61,7 +61,7 @@ export default async function OrdersPage() {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="font-medium text-text">
-                        {customerName} <span className="text-text-secondary">· {order.order_date}</span>
+                        {customerName} <span className="text-text-secondary">· {formatDate(order.order_date)}</span>
                         {order.status === 'cancelled' ? (
                           <span className="ml-2 text-xs font-normal text-danger">(Cancelled)</span>
                         ) : null}

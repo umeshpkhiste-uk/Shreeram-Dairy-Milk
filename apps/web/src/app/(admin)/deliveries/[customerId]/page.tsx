@@ -6,16 +6,18 @@ import {
   BILL_STATUS_TONE,
   dayProducts,
   dayStatus,
+  type DeliveryStatus,
   firstOfMonth,
+  formatDateTime,
+  formatDateWithWeekday,
   formatPaiseAsRupees,
   formatQuantity,
   formatQuantityTotal,
   lastOfMonth,
+  type ProductUnit,
   shiftDate,
   shiftMonth,
   todayInBusinessTimezone,
-  type DeliveryStatus,
-  type ProductUnit,
 } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
@@ -234,12 +236,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
         <Card key={day}>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-text">
-              {new Date(`${day}T00:00:00Z`).toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-                timeZone: 'UTC',
-              })}
+              {formatDateWithWeekday(day)}
             </h2>
             {selectedProducts.length === 0 ? <Badge label="No record" tone="neutral" /> : null}
           </div>
@@ -428,11 +425,7 @@ function ConflictRecord({
         </p>
         <p className="mt-1 text-xs text-text-secondary">
           Recorded{' '}
-          {new Date(recordedAt).toLocaleString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-            dateStyle: 'medium',
-            timeStyle: 'short',
-          })}
+          {formatDateTime(recordedAt)}
           {reason ? ` · ${reason}` : ''}
         </p>
       </div>

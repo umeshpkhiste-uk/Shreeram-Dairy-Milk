@@ -6,8 +6,9 @@ import {
   BILL_STATUS_TONE,
   billAmountDue,
   daysDelivered,
-  formatBillPeriod,
   formatBillingMonth,
+  formatBillPeriod,
+  formatDate,
   formatPaiseAsRupees,
   formatQuantityTotal,
   groupBillItems,
@@ -258,7 +259,7 @@ export default async function BillDetailPage({ params }: PageProps) {
               {payments.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-3">
                   <span className="text-text-secondary">
-                    {p.payment_date} · {p.method}
+                    {formatDate(p.payment_date)} · {p.method}
                     {p.transaction_reference ? ` · ${p.transaction_reference}` : ''} ·{' '}
                     {formatPaiseAsRupees(p.amount_paise)}
                     {p.voided_at ? ' (undone)' : ''}

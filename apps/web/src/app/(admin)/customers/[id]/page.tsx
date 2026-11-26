@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import {
   customerProducts,
   formatBillingMonth,
+  formatDate,
   formatPaiseAsRupees,
   formatQuantity,
   todayInBusinessTimezone,
@@ -90,7 +91,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
           <ul className="flex flex-col gap-1 text-sm text-text-secondary">
             {productChanges.map((change) => (
               <li key={change.effective_from}>
-                {change.effective_from === '2000-01-01' ? 'At the start' : `From ${change.effective_from}`}
+                {change.effective_from === '2000-01-01' ? 'At the start' : `From ${formatDate(change.effective_from)}`}
                 {change.effective_from > todayInBusinessTimezone() ? ' (not started yet)' : ''}:{' '}
                 {customerProducts(change)
                   .map((p) => {
@@ -117,7 +118,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
               <li key={r.id}>
                 {milkTypeById.get(r.milk_type_id)?.name ?? 'Product'}: {formatPaiseAsRupees(r.price_paise)}/
                 {unitLabel(milkTypeById.get(r.milk_type_id)?.unit)}{' '}
-                from {r.effective_from}
+                from {formatDate(r.effective_from)}
                 {r.effective_to ? ` to ${r.effective_to}` : ' (current)'}
               </li>
             ))}
@@ -161,7 +162,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                   {items.map((i) => i.productName).join(', ') || 'Order'}
                 </Link>
                 <span className="ml-2 text-sm text-text-secondary">
-                  {order.order_date} · {formatPaiseAsRupees(totalAmountPaise)} ·{' '}
+                  {formatDate(order.order_date)} · {formatPaiseAsRupees(totalAmountPaise)} ·{' '}
                   {order.status === 'cancelled' ? 'cancelled' : order.payment_status}
                 </span>
               </li>

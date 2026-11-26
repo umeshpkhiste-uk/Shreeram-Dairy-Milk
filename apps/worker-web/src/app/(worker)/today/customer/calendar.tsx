@@ -6,13 +6,14 @@ import { useEffect, useRef, useState } from 'react';
 import {
   dayProducts,
   dayStatus,
+  type DeliveryStatus,
   firstOfMonth,
   formatBillingMonth,
+  formatDateWithWeekday,
   formatQuantity,
   lastOfMonth,
   shiftMonth,
   todayInBusinessTimezone,
-  type DeliveryStatus,
 } from '@shreeram/shared';
 
 import {
@@ -211,12 +212,7 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
         <Card className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <span className="font-medium">
-              {new Date(`${selectedDate}T00:00:00Z`).toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-                timeZone: 'UTC',
-              })}
+              {formatDateWithWeekday(selectedDate)}
             </span>
             {selectedProducts.length === 0 ? <Badge label="No record" /> : null}
           </div>

@@ -107,7 +107,7 @@ describe('renderBillBodyHtml', () => {
     expect(renderBillBodyHtml(BASE)).toContain('no delivery: 2');
     expect(renderBillBodyHtml(BASE)).not.toContain('till');
     const early = { ...BASE, bill: { ...BASE.bill, billedThrough: '2026-01-25' } };
-    expect(renderBillBodyHtml(early)).toContain('January 2026 (till 25 Jan)');
+    expect(renderBillBodyHtml(early)).toContain('January 2026 (till 25/01/2026)');
   });
 
   it('labels the customer and says where to pay, when that is set', () => {
