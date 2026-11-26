@@ -43,7 +43,7 @@ export function WorkerRowActions({ worker, routes }: { worker: WorkerSummary; ro
             setError((await setWorkerActiveAction(worker.id, !worker.isActive)).error);
           })
         }
-        className="!px-3 !py-1"
+        className="ml-auto"
       >
         {worker.isActive ? 'Deactivate' : 'Reactivate'}
       </ToggleButton>
