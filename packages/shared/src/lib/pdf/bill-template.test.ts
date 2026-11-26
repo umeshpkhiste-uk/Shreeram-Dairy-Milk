@@ -95,12 +95,12 @@ describe('renderBillBodyHtml', () => {
       on('07', { pricePaise: 6000, amountPaise: 3000 }),
     ]);
     expect(lines.map((l) => [l.detail, l.days, l.quantityMl, l.amountPaise])).toEqual([
-      ['1–2 Jan, 5 Jan · 0.50 L a day', 3, 1500, 8250],
-      ['3 Jan · 1.00 L a day', 1, 1000, 5500],
-      ['6–7 Jan · 0.50 L a day', 2, 1000, 6000],
+      ['01/01/2026–02/01/2026, 05/01/2026 · 0.50 L a day', 3, 1500, 8250],
+      ['03/01/2026 · 1.00 L a day', 1, 1000, 5500],
+      ['06/01/2026–07/01/2026 · 0.50 L a day', 2, 1000, 6000],
     ]);
     const html = renderBillBodyHtml({ ...BASE, items: [on('01'), on('02', { pricePaise: 6000 })] });
-    expect(html).toContain('1 Jan · 0.50 L a day');
+    expect(html).toContain('01/01/2026 · 0.50 L a day');
   });
 
   it('shows the no-delivery days, and the date only when the month is not over', () => {

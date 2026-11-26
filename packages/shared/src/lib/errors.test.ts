@@ -28,3 +28,11 @@ describe('errorMessage', () => {
     );
   });
 });
+
+describe('errorMessage dates', () => {
+  it('shows database dates as DD/MM/YYYY', () => {
+    expect(
+      errorMessage({ code: 'P0001', message: 'The present rate starts on 2026-11-01. Choose that date or a later one.' }, 'x'),
+    ).toBe('The present rate starts on 01/11/2026. Choose that date or a later one.');
+  });
+});

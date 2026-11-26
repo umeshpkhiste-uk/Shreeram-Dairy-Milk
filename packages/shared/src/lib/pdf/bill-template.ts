@@ -1,6 +1,6 @@
 import { formatPaiseAsRupees } from '../money';
 import { upiPayUrl } from '../upi';
-import { formatBillingMonth, formatBillPeriod, formatDate } from '../date';
+import { formatBillPeriod, formatDate } from '../date';
 import { formatQuantityTotal, unitLabel } from '../quantity';
 import { BILL_STATUS_LABEL, billAmountDue } from '../billing/status';
 import type { BillStatus, ProductUnit } from '../../types/database';
@@ -75,9 +75,7 @@ export type BillLine = {
 };
 
 function dayRange([from, to]: [string, string]): string {
-  const month = formatBillingMonth(to).slice(0, 3);
-  const day = (date: string) => Number(date.slice(8));
-  return from === to ? `${day(to)} ${month}` : `${day(from)}–${day(to)} ${month}`;
+  return from === to ? formatDate(to) : `${formatDate(from)}–${formatDate(to)}`;
 }
 
 /** One line per product, rate and daily quantity. A product's changes follow each other. */
