@@ -86,10 +86,12 @@ export default async function BillDetailPage({ params }: PageProps) {
             {!isVoided ? <GenerateBillButton billId={id} paid={isPaid} /> : null}
           </div>
         </div>
-        <div className="text-2xl font-semibold text-text">
-          <h1>{document.customer.fullName}</h1>
-          <p>Bill Number: {bill.bill_number}</p>
-          <p>{formatBillPeriod(bill.billing_month, document.bill.billedThrough)}</p>
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold text-text">{document.customer.fullName}</h1>
+          <p className="mt-1 text-sm text-text-secondary">
+            Bill Number: {bill.bill_number} ·{' '}
+            {formatBillPeriod(bill.billing_month, document.bill.billedThrough)}
+          </p>
         </div>
       </div>
 

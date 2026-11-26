@@ -259,7 +259,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     <div class="doc-info">
       <div><strong>Bill ${escapeHtml(bill.billNumber)}</strong></div>
       <div class="muted">${formatBillPeriod(bill.billingMonth, bill.billedThrough)}</div>
-      <div class="status">${BILL_STATUS_LABEL[bill.status]}</div>
+      ${bill.status !== 'finalized' ? `<div class="status">${BILL_STATUS_LABEL[bill.status]}</div>` : ''}
     </div>
   </div>
 

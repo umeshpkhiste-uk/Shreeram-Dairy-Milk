@@ -128,6 +128,8 @@ describe('renderBillBodyHtml', () => {
     expect(renderBillBodyHtml(noUpi)).toContain('Pay to: +919000000000<');
     const paid = { ...BASE, bill: { ...BASE.bill, status: 'paid' as const } };
     expect(renderBillBodyHtml(paid)).not.toContain('&amp;am=');
+    expect(renderBillBodyHtml(BASE)).not.toContain('Finalized');
+    expect(renderBillBodyHtml(paid)).toContain('<div class="status">Paid</div>');
   });
 
   it('asks the UPI app only for what is left after payments the customer already sent', () => {
