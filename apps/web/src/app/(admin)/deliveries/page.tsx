@@ -122,8 +122,8 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
             </select>
           </label>
           {/* Apply sits under the search box, right-aligned with it. */}
-          <div className="flex flex-col items-end gap-3">
-            <label className="flex flex-col gap-1 text-sm font-medium text-text">
+          <div className="flex flex-1 flex-col items-end gap-3">
+            <label className="flex w-full flex-col gap-1 text-sm font-medium text-text">
               Customer search
               <input
                 name="search"
