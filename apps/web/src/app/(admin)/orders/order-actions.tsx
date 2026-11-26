@@ -29,7 +29,6 @@ type SelectOption = { id: string; label: string };
 
 type Panel = 'payment' | 'worker' | 'reschedule' | 'update' | 'cancel' | null;
 
-const smallButtonClass = '!px-3 !py-1.5 text-xs';
 
 export function OrderActions({
   orderId,
@@ -51,44 +50,39 @@ export function OrderActions({
 
   return (
     <div className="mt-3 border-t border-border pt-3">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <PrimaryButton
           type="button"
-          className={smallButtonClass}
           onClick={() => setPanel(panel === 'payment' ? null : 'payment')}
         >
           Proceed for payment
         </PrimaryButton>
         <InfoButton
           type="button"
-          className={smallButtonClass}
           onClick={() => setPanel(panel === 'worker' ? null : 'worker')}
         >
           Change the worker
         </InfoButton>
         <InfoButton
           type="button"
-          className={smallButtonClass}
           onClick={() => setPanel(panel === 'reschedule' ? null : 'reschedule')}
         >
           Reschedule the delivery
         </InfoButton>
         <InfoButton
           type="button"
-          className={smallButtonClass}
           onClick={() => setPanel(panel === 'update' ? null : 'update')}
         >
           Update the order
         </InfoButton>
         <DangerButton
           type="button"
-          className={smallButtonClass}
           onClick={() => setPanel(panel === 'cancel' ? null : 'cancel')}
         >
           Cancel the order
         </DangerButton>
         {panel ? (
-          <SecondaryButton type="button" className={smallButtonClass} onClick={close}>
+          <SecondaryButton type="button" onClick={close}>
             Close
           </SecondaryButton>
         ) : null}
