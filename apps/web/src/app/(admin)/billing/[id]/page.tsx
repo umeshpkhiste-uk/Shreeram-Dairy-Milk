@@ -254,23 +254,27 @@ export default async function BillDetailPage({ params }: PageProps) {
         <Card>
           <h2 className="mb-3 text-lg font-semibold text-text">Payments</h2>
           <PaymentForm key={payments.length} action={boundRecordPayment} duePaise={duePaise} />
-          {payments.length > 0 ? (
-            <ul className="mt-4 flex flex-col gap-2 text-sm">
-              {payments.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-3">
-                  <span className="text-text-secondary">
-                    {formatDate(p.payment_date)} · {p.method}
-                    {p.transaction_reference ? ` · ${p.transaction_reference}` : ''} ·{' '}
-                    {formatPaiseAsRupees(p.amount_paise)}
-                    {p.voided_at ? ' (undone)' : ''}
-                  </span>
-                  {!p.voided_at ? (
-                    <VoidPaymentButton billId={id} paymentId={p.id} action={voidPaymentAction} />
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+        </Card>
+      ) : null}
+
+      {!isDraft && !isVoided && payments.length > 0 ? (
+        <Card>
+          <h2 className="mb-3 text-lg font-semibold text-text">Payment records</h2>
+          <ul className="flex flex-col gap-2 text-sm">
+            {payments.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-3">
+                <span className="text-text-secondary">
+                  {formatDate(p.payment_date)} · {p.method}
+                  {p.transaction_reference ? ` · ${p.transaction_reference}` : ''} ·{' '}
+                  {formatPaiseAsRupees(p.amount_paise)}
+                  {p.voided_at ? ' (undone)' : ''}
+                </span>
+                {!p.voided_at ? (
+                  <VoidPaymentButton billId={id} paymentId={p.id} action={voidPaymentAction} />
+                ) : null}
+              </li>
+            ))}
+          </ul>
         </Card>
       ) : null}
     </div>
