@@ -1,4 +1,4 @@
-import { groupBillItems, renderBillBodyHtml, type BillPdfData } from './bill-template';
+import { amountToPay, groupBillItems, renderBillBodyHtml, type BillPdfData } from './bill-template';
 
 const BASE: BillPdfData = {
   business: {
@@ -25,7 +25,7 @@ const BASE: BillPdfData = {
     totalPayablePaise: 16600,
   },
   includedIn: null,
-  paymentClaimed: false,
+  pendingClaims: [],
   noDeliveryDays: 2,
   items: [
     {
@@ -128,6 +128,16 @@ describe('renderBillBodyHtml', () => {
     expect(renderBillBodyHtml(noUpi)).toContain('Pay to: +919000000000<');
     const paid = { ...BASE, bill: { ...BASE.bill, status: 'paid' as const } };
     expect(renderBillBodyHtml(paid)).not.toContain('&amp;am=');
+  });
+
+  it('asks the UPI app only for what is left after payments the customer already sent', () => {
+    const claimed = { ...BASE, pendingClaims: [{ amountPaise: 2600, transactionReference: '123456789012' }] };
+    expect(amountToPay(BASE)).toBe(6600);
+    expect(amountToPay(claimed)).toBe(4000);
+    expect(renderBillBodyHtml(claimed)).toContain('&amp;am=40.00&amp;');
+    const allClaimed = { ...BASE, pendingClaims: [{ amountPaise: 6600, transactionReference: '123456789012' }] };
+    expect(amountToPay(allClaimed)).toBe(0);
+    expect(renderBillBodyHtml(allClaimed)).not.toContain('&amp;am=');
   });
 
   it('sends the customer to the newer bill that already has this amount', () => {

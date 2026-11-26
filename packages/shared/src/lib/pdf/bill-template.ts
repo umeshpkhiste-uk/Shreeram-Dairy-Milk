@@ -32,8 +32,8 @@ export type BillPdfData = {
   };
   /** The newest generated bill that already carries this one's balance, if it is not paid. */
   includedIn: string | null;
-  /** The customer sent payment details that no admin has checked yet. */
-  paymentClaimed: boolean;
+  /** Payment details the customer sent that no admin has checked yet. */
+  pendingClaims: { amountPaise: number; transactionReference: string }[];
   /** Days the customer informed, so nothing was delivered. */
   noDeliveryDays: number;
   items: {
@@ -118,6 +118,16 @@ export function groupBillItems(items: BillPdfData['items']): BillLine[] {
             `${formatQuantityTotal([{ quantity: dailyQuantity, unit: line.unit }])} a day`,
     })),
   );
+}
+
+/** What the customer still has to send: the amount due less the payments they told us about. */
+export function amountToPay(data: BillPdfData): number {
+  const { duePaise } = billAmountDue(
+    data.bill.status,
+    data.bill.totalPayablePaise,
+    data.payments.reduce((sum, p) => sum + p.amountPaise, 0),
+  );
+  return Math.max(0, duePaise - data.pendingClaims.reduce((sum, c) => sum + c.amountPaise, 0));
 }
 
 export function daysDelivered(items: BillPdfData['items']): number {
@@ -228,7 +238,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
           upiPayUrl({
             upiId: business.upiId,
             name: business.businessName,
-            amountPaise: duePaise,
+            amountPaise: amountToPay(data),
             note: `Bill ${bill.billNumber}`,
           }),
         )}">${escapeHtml(text)}</a>`

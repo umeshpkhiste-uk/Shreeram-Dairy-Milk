@@ -15,7 +15,7 @@ const DATA: BillPdfData = {
     totalPayablePaise: 15600,
   },
   includedIn: null,
-  paymentClaimed: false,
+  pendingClaims: [],
   noDeliveryDays: 1,
   items: ['2026-11-01', '2026-11-02'].map((deliveryDate) => ({
     deliveryDate,

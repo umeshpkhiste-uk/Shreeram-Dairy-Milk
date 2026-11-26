@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { BILL_STYLE, billAmountDue, renderBillBodyHtml } from '@shreeram/shared';
+import { BILL_STYLE, amountToPay, formatPaiseAsRupees, renderBillBodyHtml } from '@shreeram/shared';
 
 import { PrintButton } from '@/components/print-button';
 import { Card } from '@/components/ui';
@@ -27,11 +27,7 @@ export default async function PublicBillPage({ params }: PageProps) {
   if (!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) notFound();
   const data = await getBillDocument(await createClient(), id);
   if (!data) notFound();
-  const { duePaise } = billAmountDue(
-    data.bill.status,
-    data.bill.totalPayablePaise,
-    data.payments.reduce((sum, p) => sum + p.amountPaise, 0),
-  );
+  const toPayPaise = amountToPay(data);
 
   return (
     <div className="mx-auto w-full max-w-3xl p-4 sm:p-6">
@@ -46,15 +42,31 @@ export default async function PublicBillPage({ params }: PageProps) {
         // (packages/shared/src/lib/pdf/bill-template.ts).
         dangerouslySetInnerHTML={{ __html: renderBillBodyHtml(data) }}
       />
-      {duePaise > 0 ? (
-        <Card className="no-print mt-4">
-          {data.paymentClaimed ? (
-            <p role="status" className="text-sm text-text">
-              Thank you. We have your payment details and will check them soon.
-            </p>
-          ) : (
-            <ClaimForm action={claimPaymentAction.bind(null, id)} duePaise={duePaise} />
-          )}
+      {data.pendingClaims.length > 0 || toPayPaise > 0 ? (
+        <Card className="no-print mt-4 flex flex-col gap-3">
+          {data.pendingClaims.length > 0 ? (
+            <div role="status" className="text-sm text-text">
+              <p>Thank you. We will check these payments soon:</p>
+              <ul className="mt-1 list-disc pl-5">
+                {data.pendingClaims.map((c) => (
+                  <li key={c.transactionReference}>
+                    {formatPaiseAsRupees(c.amountPaise)}, transaction {c.transactionReference}
+                  </li>
+                ))}
+              </ul>
+              {toPayPaise > 0 ? (
+                <p className="mt-1">Still to pay: {formatPaiseAsRupees(toPayPaise)}</p>
+              ) : null}
+            </div>
+          ) : null}
+          {toPayPaise > 0 ? (
+            <ClaimForm
+              // Remounts empty after each send, with the new remaining amount.
+              key={data.pendingClaims.length}
+              action={claimPaymentAction.bind(null, id)}
+              duePaise={toPayPaise}
+            />
+          ) : null}
         </Card>
       ) : null}
     </div>

@@ -65,8 +65,8 @@ export function ClaimForm({
         </label>
       </div>
       <p className="text-sm text-text-secondary">
-        You can find it in your UPI app, in the details of this payment. Your bill is marked paid
-        after we check it.
+        You can find it in your UPI app, in the details of this payment. Paid in more than one
+        transaction? Send each one separately. Your bill is marked paid after we check it.
       </p>
       {state.error ? <ErrorText message={state.error} /> : null}
       <PrimaryButton type="submit" disabled={pending}>
