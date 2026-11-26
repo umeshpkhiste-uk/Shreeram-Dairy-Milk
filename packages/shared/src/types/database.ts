@@ -576,6 +576,10 @@ export interface Database {
         Args: { p_from: string; p_customer_id?: string };
         Returns: { customer_id: string; billing_month: string; amount_paise: number }[];
       };
+      renew_payment_link: {
+        Args: { p_bill_id: string };
+        Returns: undefined;
+      };
       resolve_payment_claim: {
         Args: { p_claim_id: string; p_received: boolean };
         Returns: undefined;

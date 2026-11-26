@@ -25,6 +25,7 @@ const BASE: BillPdfData = {
     totalPayablePaise: 16600,
   },
   includedIn: null,
+  paymentLinkExpiresAt: null,
   pendingClaims: [],
   noDeliveryDays: 2,
   items: [
@@ -129,7 +130,9 @@ describe('renderBillBodyHtml', () => {
     const paid = { ...BASE, bill: { ...BASE.bill, status: 'paid' as const } };
     expect(renderBillBodyHtml(paid)).not.toContain('&amp;am=');
     expect(renderBillBodyHtml(BASE)).not.toContain('Finalized');
-    expect(renderBillBodyHtml(paid)).toContain('<div class="status">Paid</div>');
+    expect(renderBillBodyHtml(paid)).not.toContain('class="status"');
+    const part = { ...BASE, bill: { ...BASE.bill, status: 'partially_paid' as const } };
+    expect(renderBillBodyHtml(part)).toContain('<div class="status">Partially Paid</div>');
   });
 
   it('asks the UPI app only for what is left after payments the customer already sent', () => {

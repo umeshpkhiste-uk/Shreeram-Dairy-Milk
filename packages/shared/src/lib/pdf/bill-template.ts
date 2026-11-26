@@ -32,6 +32,8 @@ export type BillPdfData = {
   };
   /** The newest generated bill that already carries this one's balance, if it is not paid. */
   includedIn: string | null;
+  /** When the UPI pay link on the customer's bill stops working; null for a bill never sent. */
+  paymentLinkExpiresAt: string | null;
   /** Payment details the customer sent that no admin has checked yet. */
   pendingClaims: { amountPaise: number; transactionReference: string }[];
   /** Days the customer informed, so nothing was delivered. */
@@ -259,7 +261,7 @@ export function renderBillBodyHtml(data: BillPdfData): string {
     <div class="doc-info">
       <div><strong>Bill ${escapeHtml(bill.billNumber)}</strong></div>
       <div class="muted">${formatBillPeriod(bill.billingMonth, bill.billedThrough)}</div>
-      ${bill.status !== 'finalized' ? `<div class="status">${BILL_STATUS_LABEL[bill.status]}</div>` : ''}
+      ${bill.status !== 'finalized' && bill.status !== 'paid' ? `<div class="status">${BILL_STATUS_LABEL[bill.status]}</div>` : ''}
     </div>
   </div>
 

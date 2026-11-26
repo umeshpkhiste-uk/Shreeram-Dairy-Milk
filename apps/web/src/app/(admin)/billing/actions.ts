@@ -18,9 +18,15 @@ import {
   createDraftBill,
   generateBill,
   getBillDocument,
+  getBillWithDetails,
 } from '@/lib/data/bills';
 import { getCustomer } from '@/lib/data/customers';
-import { recordPayment, resolvePaymentClaim, voidPayment } from '@/lib/data/payments';
+import {
+  recordPayment,
+  renewPaymentLink,
+  resolvePaymentClaim,
+  voidPayment,
+} from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/server';
 
 export type ActionState = { error: string | null };
@@ -71,6 +77,30 @@ export async function generateBillAction(
     };
   } catch (err) {
     return { error: errorMessage(err, 'Failed to generate the bill.'), phone: '', message: '' };
+  }
+}
+
+export async function renewPaymentLinkAction(
+  billId: string,
+  link: string,
+): Promise<{ error: string | null; phone: string; message: string }> {
+  const supabase = await createClient();
+  try {
+    await renewPaymentLink(supabase, billId);
+    const [details, document] = await Promise.all([
+      getBillWithDetails(supabase, billId),
+      getBillDocument(supabase, billId),
+    ]);
+    const customer = details && (await getCustomer(supabase, details.bill.customer_id));
+    if (!customer || !document) throw new Error('The bill could not be loaded.');
+    revalidatePath(`/billing/${billId}`);
+    return {
+      error: null,
+      phone: whatsappNumber(customer.billing_contact_phone || customer.mobile_number),
+      message: billMessage(document, link),
+    };
+  } catch (err) {
+    return { error: errorMessage(err, 'Failed to make a new payment link.'), phone: '', message: '' };
   }
 }
 

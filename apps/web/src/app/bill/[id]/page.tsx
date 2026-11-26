@@ -9,6 +9,7 @@ import { getBillDocument } from '@/lib/data/bills';
 import { createClient } from '@/lib/supabase/server';
 
 import { claimPaymentAction } from './actions';
+import { BillBody } from './bill-body';
 import { ClaimForm } from './claim-form';
 import { CloseButton } from './close-button';
 
@@ -36,12 +37,7 @@ export default async function PublicBillPage({ params }: PageProps) {
         <CloseButton />
         <PrintButton />
       </div>
-      <div
-        className="overflow-x-auto rounded-lg border border-border bg-white p-4 sm:p-8"
-        // Content is built entirely from this app's own escaping renderer
-        // (packages/shared/src/lib/pdf/bill-template.ts).
-        dangerouslySetInnerHTML={{ __html: renderBillBodyHtml(data) }}
-      />
+      <BillBody html={renderBillBodyHtml(data)} expiresAt={data.paymentLinkExpiresAt} />
       {data.pendingClaims.length > 0 || toPayPaise > 0 ? (
         <Card className="no-print mt-4 flex flex-col gap-3">
           {data.pendingClaims.length > 0 ? (

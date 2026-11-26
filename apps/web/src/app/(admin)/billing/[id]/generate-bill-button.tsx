@@ -7,7 +7,7 @@ import { ErrorText, PrimaryButton } from '@/components/ui';
 import { generateBillAction } from '../actions';
 
 /** WhatsApp Web on a computer; on a phone the link opens the WhatsApp app. */
-function whatsappUrl(phone: string, message: string) {
+export function whatsappUrl(phone: string, message: string) {
   const base = /Android|iPhone|iPad/i.test(navigator.userAgent)
     ? `https://wa.me/${phone}?`
     : `https://web.whatsapp.com/send?phone=${phone}&`;

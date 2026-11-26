@@ -34,6 +34,7 @@ import { AdjustmentForm } from './adjustment-form';
 import { BackButton } from './back-button';
 import { CancelBillForm } from './cancel-bill-form';
 import { GenerateBillButton } from './generate-bill-button';
+import { NewPaymentLinkButton } from './new-payment-link-button';
 import { PaymentForm } from './payment-form';
 import { VoidPaymentButton } from './void-payment-button';
 
@@ -71,6 +72,12 @@ export default async function BillDetailPage({ params }: PageProps) {
     !bill.flagged_for_review &&
     document.bill.billedThrough >= (today < monthEnd ? today : monthEnd);
 
+  const canPay = (bill.status === 'finalized' || bill.status === 'partially_paid') && duePaise > 0;
+  const linkExpiresAt = document.paymentLinkExpiresAt;
+  // Server component: rendered once per request, so reading the clock here is safe.
+  // eslint-disable-next-line react-hooks/purity
+  const linkExpired = linkExpiresAt !== null && new Date(linkExpiresAt).getTime() <= Date.now();
+
   const boundAddAdjustment = addAdjustmentAction.bind(null, id);
   const boundRecordPayment = recordPaymentAction.bind(null, id);
 
@@ -83,6 +90,7 @@ export default async function BillDetailPage({ params }: PageProps) {
             {bill.status !== 'finalized' ? (
               <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
             ) : null}
+            {canPay ? <NewPaymentLinkButton billId={id} expired={linkExpired} /> : null}
             {!isVoided ? <GenerateBillButton billId={id} paid={isPaid} /> : null}
           </div>
         </div>

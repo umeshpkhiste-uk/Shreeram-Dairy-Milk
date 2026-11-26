@@ -122,3 +122,9 @@ export async function listPaymentsForBillIds(
   if (error) throw error;
   return data ?? [];
 }
+
+/** Makes the UPI pay link on the customer's bill work for 1 more day; only once it has expired. */
+export async function renewPaymentLink(supabase: SupabaseServerClient, billId: string): Promise<void> {
+  const { error } = await supabase.rpc('renew_payment_link', { p_bill_id: billId });
+  if (error) throw error;
+}
