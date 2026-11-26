@@ -2,8 +2,7 @@
 
 import { useState, useTransition } from 'react';
 
-import { ErrorText } from '@/components/ui';
-import { useClickGuard } from '@/lib/use-click-guard';
+import { DangerButton, ErrorText, SecondaryButton } from '@/components/ui';
 
 import type { ActionState } from '../actions';
 
@@ -22,21 +21,17 @@ export function VoidPaymentButton({ billId, paymentId, action }: Props) {
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const guardedConfirm = useClickGuard(() =>
+  // DangerButton already ignores repeat clicks.
+  const confirm = () =>
     startTransition(async () => {
       setError((await action(billId, paymentId, reason.trim())).error);
-    }),
-  );
+    });
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="text-sm font-medium text-danger hover:underline"
-      >
+      <DangerButton type="button" onClick={() => setOpen(true)}>
         Undo payment
-      </button>
+      </DangerButton>
     );
   }
 
@@ -46,23 +41,18 @@ export function VoidPaymentButton({ billId, paymentId, action }: Props) {
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         placeholder="Why was this payment wrong?"
-        className="rounded-md border border-border bg-surface px-2 py-1 text-sm text-text outline-none focus:border-primary"
+        className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
       />
-      <button
+      <DangerButton
         type="button"
         disabled={pending || reason.trim().length === 0}
-        onClick={guardedConfirm}
-        className="text-sm font-medium text-danger hover:underline disabled:opacity-50"
+        onClick={confirm}
       >
         {pending ? 'Undoing…' : 'Confirm'}
-      </button>
-      <button
-        type="button"
-        onClick={() => setOpen(false)}
-        className="text-sm font-medium text-text-secondary hover:underline"
-      >
+      </DangerButton>
+      <SecondaryButton type="button" onClick={() => setOpen(false)}>
         Cancel
-      </button>
+      </SecondaryButton>
       {error ? <ErrorText message={error} /> : null}
     </div>
   );
