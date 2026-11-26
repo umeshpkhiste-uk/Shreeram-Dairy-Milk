@@ -76,22 +76,20 @@ export default async function BillDetailPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <BackButton />
-          <div>
-            <h1 className="text-2xl font-semibold text-text">Bill {bill.bill_number}</h1>
-            <p className="mt-1 text-sm text-text-secondary">
-              {document.customer.fullName} ·{' '}
-              {formatBillPeriod(bill.billing_month, document.bill.billedThrough)}
-            </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {bill.status !== 'finalized' ? (
+              <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
+            ) : null}
+            {!isVoided ? <GenerateBillButton billId={id} paid={isPaid} /> : null}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
-          {!isVoided ? (
-            <GenerateBillButton billId={id} paid={isPaid} />
-          ) : null}
+        <div className="text-2xl font-semibold text-text">
+          <h1>{document.customer.fullName}</h1>
+          <p>Bill Number: {bill.bill_number}</p>
+          <p>{formatBillPeriod(bill.billing_month, document.bill.billedThrough)}</p>
         </div>
       </div>
 
