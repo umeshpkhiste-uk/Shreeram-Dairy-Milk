@@ -96,7 +96,8 @@ export default async function BillDetailPage({ params }: PageProps) {
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          {bill.status !== 'finalized' ? (
+          {/* The "Bill paid" button already says it. */}
+          {bill.status !== 'finalized' && !isPaid ? (
             <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
           ) : null}
           {!isVoided ? <GenerateBillButton billId={id} paid={isPaid} /> : null}
