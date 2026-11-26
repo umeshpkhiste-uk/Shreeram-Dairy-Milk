@@ -3,13 +3,12 @@ import Link from 'next/link';
 import { firstOfMonth, formatPaiseAsRupees, shiftMonth, todayInBusinessTimezone } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
-import { Badge, PageHeader, Table } from '@/components/ui';
+import { Badge, buttonClass, PageHeader, PrimaryButton, Table } from '@/components/ui';
 import { listBillsForMonth } from '@/lib/data/bills';
 import { listCustomers } from '@/lib/data/customers';
 import { createClient } from '@/lib/supabase/server';
 
 import { createDraftBillAction } from './actions';
-import { CreateBillButton } from './create-bill-button';
 
 type PageProps = { searchParams: Promise<{ month?: string }> };
 
@@ -93,7 +92,7 @@ export default async function BillingListPage({ searchParams }: PageProps) {
                 </td>
                 <td className="px-4 py-3 text-right">
                   {bill ? (
-                    <Link href={`/billing/${bill.id}`} className="font-medium text-primary">
+                    <Link href={`/billing/${bill.id}`} className={`inline-block ${buttonClass('info')}`}>
                       View
                     </Link>
                   ) : (
@@ -101,7 +100,7 @@ export default async function BillingListPage({ searchParams }: PageProps) {
                       key={month}
                       action={createDraftBillAction.bind(null, customer.id, month)}
                     >
-                      <CreateBillButton />
+                      <PrimaryButton type="submit">Create bill</PrimaryButton>
                     </ActionForm>
                   )}
                 </td>
