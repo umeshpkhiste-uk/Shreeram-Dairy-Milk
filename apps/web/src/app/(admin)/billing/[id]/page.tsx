@@ -83,16 +83,10 @@ export default async function BillDetailPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-start justify-between gap-2">
+      {/* Equal side columns keep the customer name centered on the page. */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-4">
+        <div>
           <BackButton />
-          <div className="flex flex-col items-end gap-2">
-            {bill.status !== 'finalized' ? (
-              <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
-            ) : null}
-            {!isVoided ? <GenerateBillButton billId={id} paid={isPaid} /> : null}
-            {canPay ? <NewPaymentLinkButton billId={id} expired={linkExpired} /> : null}
-          </div>
         </div>
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-text">{document.customer.fullName}</h1>
@@ -100,6 +94,13 @@ export default async function BillDetailPage({ params }: PageProps) {
             Bill Number: {bill.bill_number} ·{' '}
             {formatBillPeriod(bill.billing_month, document.bill.billedThrough)}
           </p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          {bill.status !== 'finalized' ? (
+            <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
+          ) : null}
+          {!isVoided ? <GenerateBillButton billId={id} paid={isPaid} /> : null}
+          {canPay ? <NewPaymentLinkButton billId={id} expired={linkExpired} /> : null}
         </div>
       </div>
 
