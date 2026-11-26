@@ -102,6 +102,7 @@ export async function listRecentPayments(
   const { data, error } = await supabase
     .from('payments')
     .select('*')
+    .is('voided_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;

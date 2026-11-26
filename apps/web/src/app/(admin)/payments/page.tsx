@@ -32,10 +32,7 @@ export default async function PaymentsPage() {
                 <td className="px-4 py-3">{p.payment_date}</td>
                 <td className="px-4 py-3 text-text-secondary">{p.method}</td>
                 <td className="px-4 py-3 text-text-secondary">{p.transaction_reference ?? '—'}</td>
-                <td className="px-4 py-3">
-                  {formatPaiseAsRupees(p.amount_paise)}
-                  {p.voided_at ? ' (undone)' : ''}
-                </td>
+                <td className="px-4 py-3">{formatPaiseAsRupees(p.amount_paise)}</td>
                 <td className="px-4 py-3">
                   <Link href={`/billing/${p.bill_id}`} className="font-medium text-primary">
                     View bill
