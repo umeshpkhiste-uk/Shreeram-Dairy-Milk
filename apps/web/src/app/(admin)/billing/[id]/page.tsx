@@ -255,7 +255,7 @@ export default async function BillDetailPage({ params }: PageProps) {
           <h2 className="mb-3 text-lg font-semibold text-text">Payments</h2>
           <PaymentForm key={payments.length} action={boundRecordPayment} duePaise={duePaise} />
           {payments.length > 0 ? (
-            <ul className="mt-4 grid gap-x-8 gap-y-2 text-sm md:grid-cols-2">
+            <ul className="mt-4 flex flex-col gap-2 text-sm">
               {payments.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-3">
                   <span className="text-text-secondary">

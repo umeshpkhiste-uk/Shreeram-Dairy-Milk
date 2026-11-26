@@ -14,7 +14,7 @@ export function AdjustmentForm({
   const [state, formAction, pending] = useActionState(action, { error: null });
 
   return (
-    <form action={formAction} className="flex flex-wrap items-end gap-3">
+    <form action={formAction} className="flex flex-1 flex-wrap items-end gap-3">
       <label className="flex flex-col gap-1 text-sm font-medium text-text">
         Amount (₹, negative = discount)
         <input
