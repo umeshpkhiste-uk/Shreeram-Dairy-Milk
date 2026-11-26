@@ -1,12 +1,13 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { AdminHeaderContent } from './admin-header';
 import { AdminNav } from './admin-nav';
 import { Icon } from './icon';
 import { ThemeToggle } from './theme-toggle';
+import { DangerButton, SecondaryButton } from './ui';
 
 /**
  * A round toggle collapses/expands the sidebar — same mechanism on
@@ -40,6 +41,7 @@ export function AdminShell({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(true);
+  const signOutDialog = useRef<HTMLDialogElement>(null);
   const railWidth = open ? 'md:w-64' : 'md:w-14';
   const initials =
     adminName
@@ -118,30 +120,44 @@ export function AdminShell({
                 {adminEmail ? <p className="truncate text-xs text-text-secondary">{adminEmail}</p> : null}
               </div>
             ) : null}
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                title="Sign out"
-                aria-label="Sign out"
-                className="shrink-0 rounded-md p-2 text-text-secondary transition hover:bg-surface-muted hover:text-text"
+            <button
+              type="button"
+              onClick={() => signOutDialog.current?.showModal()}
+              title="Sign out"
+              aria-label="Sign out"
+              className="shrink-0 rounded-md p-2 text-text-secondary transition hover:bg-surface-muted hover:text-text"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0"
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="shrink-0"
-                >
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-              </button>
-            </form>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+            <dialog
+              ref={signOutDialog}
+              className="m-auto w-[min(24rem,90vw)] rounded-lg border border-border bg-surface p-5 text-text shadow-lg backdrop:bg-black/40"
+            >
+              <h2 className="text-lg font-semibold">Sign out?</h2>
+              <p className="mt-2 text-sm text-text-secondary">
+                You will need to sign in again to use the admin pages.
+              </p>
+              <form action={signOutAction} className="mt-4 flex justify-end gap-2">
+                <SecondaryButton type="button" onClick={() => signOutDialog.current?.close()}>
+                  Cancel
+                </SecondaryButton>
+                <DangerButton type="submit">Sign out</DangerButton>
+              </form>
+            </dialog>
           </div>
         </aside>
         <main className="flex-1 overflow-y-auto bg-surface-muted p-6 md:p-10">{children}</main>
