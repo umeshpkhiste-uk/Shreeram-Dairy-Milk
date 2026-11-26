@@ -84,14 +84,14 @@ export default async function BillDetailPage({ params }: PageProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-start justify-between gap-2">
           <BackButton />
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col items-end gap-2">
             {bill.status !== 'finalized' ? (
               <Badge label={BILL_STATUS_LABEL[bill.status]} tone={BILL_STATUS_TONE[bill.status]} />
             ) : null}
-            {canPay ? <NewPaymentLinkButton billId={id} expired={linkExpired} /> : null}
             {!isVoided ? <GenerateBillButton billId={id} paid={isPaid} /> : null}
+            {canPay ? <NewPaymentLinkButton billId={id} expired={linkExpired} /> : null}
           </div>
         </div>
         <div className="text-center">
