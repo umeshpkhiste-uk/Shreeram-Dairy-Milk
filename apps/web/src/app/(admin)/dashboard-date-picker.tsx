@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 
 import { todayInBusinessTimezone } from '@shreeram/shared';
 
+import { buttonClass } from '@/components/ui';
+
 export function DashboardDatePicker({ date }: { date: string }) {
   const router = useRouter();
   const today = todayInBusinessTimezone();
@@ -23,7 +25,7 @@ export function DashboardDatePicker({ date }: { date: string }) {
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="rounded-md border border-border px-3 py-2 text-sm font-semibold text-text transition hover:bg-surface-muted"
+          className={buttonClass('secondary')}
         >
           Today
         </button>

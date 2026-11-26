@@ -171,13 +171,13 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
         <div className="mx-auto w-full max-w-xs">
           <div className="mb-3 flex items-center justify-between">
             <Link href={`?month=${shiftMonth(month, -1)}`}>
-              <SecondaryButton type="button" className="!px-2 !py-1 text-xs">
+              <SecondaryButton type="button">
                 ‹
               </SecondaryButton>
             </Link>
             <h2 className="text-sm font-semibold text-text">{monthLabel}</h2>
             <Link href={`?month=${shiftMonth(month, 1)}`}>
-              <SecondaryButton type="button" className="!px-2 !py-1 text-xs">
+              <SecondaryButton type="button">
                 ›
               </SecondaryButton>
             </Link>
