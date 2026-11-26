@@ -1,7 +1,7 @@
 import { customerProducts, formatQuantity } from '@shreeram/shared';
 import Link from 'next/link';
 
-import { Badge, Card, EmptyState, InfoButton, PageHeader, Table } from '@/components/ui';
+import { Badge, buttonClass, Card, EmptyState, InfoButton, PageHeader, Table } from '@/components/ui';
 import { listCustomers, type CustomerFilters } from '@/lib/data/customers';
 import { listAllMilkTypes } from '@/lib/data/milk-types';
 import { createClient } from '@/lib/supabase/server';
@@ -82,7 +82,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
             {customers.map((customer) => (
               <tr key={customer.id} className="hover:bg-surface-muted">
                 <td className="px-4 py-3">
-                  <Link href={`/customers/${customer.id}`} className="font-medium text-primary">
+                  <Link href={`/customers/${customer.id}`} className={`inline-block ${buttonClass('secondary')}`}>
                     {customer.full_name}
                   </Link>
                 </td>

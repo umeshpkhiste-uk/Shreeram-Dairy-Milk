@@ -158,7 +158,7 @@ function Calendar({ customerId, today }: { customerId: string; today: string }) 
 
   return (
     <>
-      <a href="/today" className="flex min-h-12 w-fit items-center text-primary">
+      <a href="/today" className="flex min-h-12 w-fit items-center rounded-md border border-border px-4 text-base font-semibold text-text hover:bg-surface-muted">
         ‹ Today&rsquo;s Route
       </a>
       <Title>{customer.full_name}</Title>

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { formatQuantity } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
-import { Badge, Card, EmptyState, PageHeader, SecondaryButton, Table, WarningButton } from '@/components/ui';
+import { Badge, buttonClass, Card, EmptyState, PageHeader, SecondaryButton, Table, WarningButton } from '@/components/ui';
 import { listCustomers } from '@/lib/data/customers';
 import { listAllMilkTypes } from '@/lib/data/milk-types';
 import { listReceivedRecords, listSyncFailures } from '@/lib/data/sync';
@@ -136,7 +136,7 @@ export default async function WorkerSyncPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/deliveries/${r.customer_id}?month=${date.slice(0, 7)}-01&day=${date}`}
-                      className="font-medium text-primary"
+                      className={`inline-block ${buttonClass('secondary')}`}
                     >
                       {date}
                     </Link>

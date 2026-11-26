@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { formatPaiseAsRupees } from '@shreeram/shared';
 
-import { EmptyState, PageHeader, Table } from '@/components/ui';
+import { buttonClass, EmptyState, PageHeader, Table } from '@/components/ui';
 import { listRecentPayments } from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/server';
 
@@ -34,7 +34,7 @@ export default async function PaymentsPage() {
                 <td className="px-4 py-3 text-text-secondary">{p.transaction_reference ?? '—'}</td>
                 <td className="px-4 py-3">{formatPaiseAsRupees(p.amount_paise)}</td>
                 <td className="px-4 py-3">
-                  <Link href={`/billing/${p.bill_id}`} className="font-medium text-primary">
+                  <Link href={`/billing/${p.bill_id}`} className={`inline-block ${buttonClass('info')}`}>
                     View bill
                   </Link>
                 </td>

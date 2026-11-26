@@ -39,7 +39,7 @@ export function CustomerDeliverySummary() {
   const summary = summarizeHistory(data.deliveries);
   return (
     <>
-      <a href="/history" className="flex min-h-12 w-fit items-center text-primary">
+      <a href="/history" className="flex min-h-12 w-fit items-center rounded-md border border-border px-4 text-base font-semibold text-text hover:bg-surface-muted">
         ‹ Delivery History
       </a>
       <Title>{data.customer.full_name}</Title>

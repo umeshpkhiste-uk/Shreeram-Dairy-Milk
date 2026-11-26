@@ -17,7 +17,7 @@ import {
 } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
-import { Badge, Card, DangerButton, PrimaryButton } from '@/components/ui';
+import { Badge, buttonClass, Card, DangerButton, PrimaryButton } from '@/components/ui';
 import { getBillDocument, getBillWithDetails, listUnbilledMonths } from '@/lib/data/bills';
 import { listPendingPaymentClaims } from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/server';
@@ -126,16 +126,15 @@ export default async function BillDetailPage({ params }: PageProps) {
 
       {unbilled.map((u) => (
         <Card key={u.billing_month} className="border-warning bg-warning-bg">
-          <p className="text-sm text-text">
-            There is no bill for {formatBillingMonth(u.billing_month)}, so its{' '}
-            {formatPaiseAsRupees(u.amount_paise)} is not in this bill.{' '}
-            <Link
-              href={`/billing?month=${u.billing_month}`}
-              className="font-medium text-primary hover:underline"
-            >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-text">
+              There is no bill for {formatBillingMonth(u.billing_month)}, so its{' '}
+              {formatPaiseAsRupees(u.amount_paise)} is not in this bill.
+            </p>
+            <Link href={`/billing?month=${u.billing_month}`} className={buttonClass('primary')}>
               Create it
             </Link>
-          </p>
+          </div>
         </Card>
       ))}
 

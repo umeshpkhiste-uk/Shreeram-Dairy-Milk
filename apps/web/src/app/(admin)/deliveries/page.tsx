@@ -158,7 +158,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
                   <td className="px-4 py-3 font-medium text-text">
                     <Link
                       href={`/deliveries/${row.customer.id}?month=${firstOfMonth(date)}&day=${date}`}
-                      className="text-primary hover:underline"
+                      className={`inline-block ${buttonClass('secondary')}`}
                     >
                       {row.customer.full_name}
                     </Link>

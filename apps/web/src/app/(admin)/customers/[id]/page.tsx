@@ -11,7 +11,7 @@ import {
 } from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
-import { Badge, Card, EmptyState, PageHeader, PrimaryButton, WarningButton } from '@/components/ui';
+import { Badge, buttonClass, Card, EmptyState, PageHeader, PrimaryButton, WarningButton } from '@/components/ui';
 import { listBillsForCustomer } from '@/lib/data/bills';
 import { listRatesForCustomer } from '@/lib/data/customer-rates';
 import { getCustomer, listCustomerProductsHistory } from '@/lib/data/customers';
@@ -133,7 +133,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
           <ul className="flex flex-col gap-2">
             {monthlyBills.map((bill) => (
               <li key={bill.id}>
-                <Link href={`/billing/${bill.id}`} className="font-medium text-primary">
+                <Link href={`/billing/${bill.id}`} className={`inline-block ${buttonClass('secondary')}`}>
                   {formatBillingMonth(bill.billing_month)}
                 </Link>
                 <span className="ml-2 text-sm text-text-secondary">
@@ -157,7 +157,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
           <ul className="flex flex-col gap-2">
             {orders.map(({ order, items, totalAmountPaise }) => (
               <li key={order.id}>
-                <Link href={`/orders/${order.id}/print`} className="font-medium text-primary">
+                <Link href={`/orders/${order.id}/print`} className={`inline-block ${buttonClass('secondary')}`}>
                   {items.map((i) => i.productName).join(', ') || 'Order'}
                 </Link>
                 <span className="ml-2 text-sm text-text-secondary">
