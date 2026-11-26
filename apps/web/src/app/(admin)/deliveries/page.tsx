@@ -66,7 +66,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
       />
 
       <Card className="mb-6">
-        <form className="flex flex-wrap items-end gap-3" method="get">
+        <form className="flex flex-wrap items-start gap-3" method="get">
           <label className="flex flex-col gap-1 text-sm font-medium text-text">
             Date
             <input
@@ -121,15 +121,18 @@ export default async function DeliveriesPage({ searchParams }: PageProps) {
               <option value="no_record">No record yet</option>
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-text">
-            Customer search
-            <input
-              name="search"
-              defaultValue={sp.search ?? ''}
-              className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
-            />
-          </label>
-          <InfoButton type="submit">Apply</InfoButton>
+          {/* Apply sits under the search box, right-aligned with it. */}
+          <div className="flex flex-col items-end gap-3">
+            <label className="flex flex-col gap-1 text-sm font-medium text-text">
+              Customer search
+              <input
+                name="search"
+                defaultValue={sp.search ?? ''}
+                className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
+              />
+            </label>
+            <InfoButton type="submit">Apply</InfoButton>
+          </div>
         </form>
       </Card>
 
