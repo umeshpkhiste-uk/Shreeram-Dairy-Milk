@@ -49,7 +49,7 @@ export function OrderItemsEditor({
         })}
       </div>
       {state.error ? <ErrorText message={state.error} /> : null}
-      <div className="flex gap-2">
+      <div className="flex justify-end gap-2">
         <PrimaryButton type="submit" disabled={pending}>
           {pending ? 'Saving…' : 'Save changes'}
         </PrimaryButton>

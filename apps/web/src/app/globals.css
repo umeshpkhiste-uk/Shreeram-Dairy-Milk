@@ -92,3 +92,9 @@ body {
     display: none !important;
   }
 }
+
+/* A date box is only as wide as a date, even inside a stretching column.
+   Unlayered, so it wins over Tailwind width utilities such as w-full. */
+input[type="date"] {
+  width: fit-content;
+}

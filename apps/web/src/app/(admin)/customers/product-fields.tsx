@@ -76,7 +76,7 @@ export function ProductFields({
       {rows.length < milkTypes.length ? (
         <InfoButton
           type="button"
-          className="mt-3"
+          className="mt-3 ml-auto block"
           onClick={() => setRows([...rows, { key: Math.max(...rows.map((r) => r.key)) + 1 }])}
         >
           Add product

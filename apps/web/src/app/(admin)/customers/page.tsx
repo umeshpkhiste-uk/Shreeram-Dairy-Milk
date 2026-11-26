@@ -62,7 +62,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
               <option value="all">All</option>
             </select>
           </label>
-          <InfoButton type="submit">Apply</InfoButton>
+          <InfoButton type="submit" className="ml-auto">Apply</InfoButton>
         </form>
       </Card>
 

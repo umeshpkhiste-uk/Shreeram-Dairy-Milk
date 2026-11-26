@@ -33,7 +33,7 @@ export function AdjustmentForm({
           className="w-64 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
         />
       </label>
-      <PrimaryButton type="submit" disabled={pending}>
+      <PrimaryButton type="submit" disabled={pending} className="ml-auto">
         {pending ? 'Adding…' : 'Add adjustment'}
       </PrimaryButton>
       {state.error ? <ErrorText message={state.error} /> : null}

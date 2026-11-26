@@ -178,7 +178,7 @@ export function CustomerForm({ customer, milkTypes, workers, action, submitLabel
 
       {state.error ? <ErrorText message={state.error} /> : null}
 
-      <PrimaryButton type="submit" disabled={pending}>
+      <PrimaryButton type="submit" disabled={pending} className="self-end">
         {pending ? 'Saving…' : submitLabel}
       </PrimaryButton>
     </form>

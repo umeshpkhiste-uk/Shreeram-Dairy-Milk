@@ -110,7 +110,7 @@ export default async function BillDetailPage({ params }: PageProps) {
         <Card className="border-warning bg-warning-bg">
           <p className="font-medium text-warning">Flagged for review</p>
           <p className="mt-1 text-sm text-warning">{bill.flagged_reason}</p>
-          <ActionForm action={acknowledgeBillFlagAction.bind(null, id)} className="mt-3">
+          <ActionForm action={acknowledgeBillFlagAction.bind(null, id)} className="mt-3 flex justify-end">
             <PrimaryButton type="submit">Acknowledge</PrimaryButton>
           </ActionForm>
         </Card>
@@ -149,7 +149,7 @@ export default async function BillDetailPage({ params }: PageProps) {
             {claim.transaction_reference}. Check it in your bank or UPI app before
             you confirm.
           </p>
-          <div className="mt-3 flex flex-wrap items-start gap-3">
+          <div className="mt-3 flex flex-wrap items-start justify-end gap-3">
             <ActionForm action={resolvePaymentClaimAction.bind(null, id, claim.id, true)}>
               <PrimaryButton type="submit">Payment received</PrimaryButton>
             </ActionForm>

@@ -52,7 +52,7 @@ export function NewWorkerForm({
         </label>
       </div>
       {state.error ? <ErrorText message={state.error} /> : null}
-      <PrimaryButton type="submit" disabled={pending}>
+      <PrimaryButton type="submit" disabled={pending} className="self-end">
         {pending ? 'Creating…' : 'Create worker account'}
       </PrimaryButton>
     </form>

@@ -322,7 +322,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
                   className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary"
                 />
               </label>
-              <div>
+              <div className="flex justify-end">
                 <WarningButton type="submit">Mark &ldquo;customer informed — no delivery&rdquo;</WarningButton>
               </div>
             </ActionForm>
@@ -380,7 +380,7 @@ export default async function CustomerDeliveryCalendarPage({ params, searchParam
           <ActionForm
             key={month}
             action={createBillForMonthAction.bind(null, customerId, month)}
-            className="mt-3"
+            className="mt-3 flex justify-end"
           >
             <PrimaryButton type="submit">Create draft bill for {monthLabel}</PrimaryButton>
           </ActionForm>

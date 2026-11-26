@@ -125,7 +125,7 @@ export function OrderForm({
 
       {state.error ? <ErrorText message={state.error} /> : null}
 
-      <div>
+      <div className="flex justify-end">
         <PrimaryButton type="submit" disabled={pending}>
           {pending ? 'Placing order…' : 'Place order'}
         </PrimaryButton>
