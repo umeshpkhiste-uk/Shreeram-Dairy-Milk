@@ -1,4 +1,10 @@
-import { firstOfMonth, formatPaiseAsRupees, shiftMonth, todayInBusinessTimezone } from '@shreeram/shared';
+import {
+  firstOfMonth,
+  formatBillingMonth,
+  formatPaiseAsRupees,
+  shiftMonth,
+  todayInBusinessTimezone,
+} from '@shreeram/shared';
 import Link from 'next/link';
 
 import { Card, EmptyState, PageHeader, Table, buttonClass } from '@/components/ui';
@@ -38,7 +44,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
             >
               ‹
             </Link>
-            <span className="px-2 text-sm font-medium text-text">{month}</span>
+            <span className="px-2 text-sm font-medium text-text">{formatBillingMonth(month)}</span>
             <Link
               href={`/reports?month=${nextMonth}`}
               className="rounded-md border border-border px-3 py-2 text-sm hover:bg-surface-muted"

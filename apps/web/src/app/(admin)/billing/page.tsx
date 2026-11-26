@@ -1,6 +1,12 @@
 import Link from 'next/link';
 
-import { firstOfMonth, formatPaiseAsRupees, shiftMonth, todayInBusinessTimezone } from '@shreeram/shared';
+import {
+  firstOfMonth,
+  formatBillingMonth,
+  formatPaiseAsRupees,
+  shiftMonth,
+  todayInBusinessTimezone,
+} from '@shreeram/shared';
 
 import { ActionForm } from '@/components/action-form';
 import { Badge, buttonClass, PageHeader, PrimaryButton, Table } from '@/components/ui';
@@ -49,7 +55,7 @@ export default async function BillingListPage({ searchParams }: PageProps) {
             >
               ‹
             </Link>
-            <span className="px-2 text-sm font-medium text-text">{month}</span>
+            <span className="px-2 text-sm font-medium text-text">{formatBillingMonth(month)}</span>
             <Link
               href={`/billing?month=${nextMonth}`}
               className="rounded-md border border-border px-3 py-2 text-sm hover:bg-surface-muted"

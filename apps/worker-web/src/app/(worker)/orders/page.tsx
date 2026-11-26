@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDate } from '@shreeram/shared';
 import { useEffect, useState } from 'react';
 
 import { Button, Card, EmptyState, ErrorText, LoadingState, Title } from '@/components/ui';
@@ -69,7 +70,7 @@ export default function OrdersPage() {
                 'Unknown customer'}
             </span>
             <span className="text-text-secondary">
-              {order.order_date.split('-').reverse().join('/')}
+              {formatDate(order.order_date)}
             </span>
             {items.map((item, index) => (
               <span key={index}>

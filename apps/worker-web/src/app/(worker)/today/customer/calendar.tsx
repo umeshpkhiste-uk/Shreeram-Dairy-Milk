@@ -9,6 +9,7 @@ import {
   type DeliveryStatus,
   firstOfMonth,
   formatBillingMonth,
+  formatDate,
   formatDateWithWeekday,
   formatQuantity,
   lastOfMonth,
@@ -344,7 +345,7 @@ function DayCell({
       onClick={onSelect}
       disabled={date > today}
       aria-pressed={selected}
-      aria-label={`${date}${status ? `, ${DELIVERY_STATUS_LABEL[status]}` : ''}`}
+      aria-label={`${formatDate(date)}${status ? `, ${DELIVERY_STATUS_LABEL[status]}` : ''}`}
       className={`aspect-square rounded-md text-sm disabled:opacity-35 ${background} ${border}`}
     >
       {Number(date.slice(8))}
