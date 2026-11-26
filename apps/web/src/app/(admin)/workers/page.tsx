@@ -31,7 +31,10 @@ export default async function WorkersPage() {
           <ul className="mt-4 flex flex-wrap gap-2">
             {routes.map((r) => (
               <li key={r.id}>
-                <Badge label={r.name} tone="neutral" />
+                {/* Same box as customer names in the Customers list; not a link, so no hover. */}
+                <span className="inline-block rounded-md border border-border px-4 py-2 text-sm font-semibold text-text">
+                  {r.name}
+                </span>
               </li>
             ))}
           </ul>
